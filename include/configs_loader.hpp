@@ -58,7 +58,7 @@ public:
     [[nodiscard]] bool is_initialized() const { return m_initialized; }
 
     // Generate help text from registered configs
-    [[nodiscard]] std::string generate_help(const std::string& program_name = "program") const {
+    [[nodiscard]] std::string generate_help(const std::string& program_name = "program", size_t max_width = 80) const {
         std::ostringstream help;
         
         // Build usage line with short flags
@@ -94,7 +94,6 @@ public:
         
         // Format and output
         const size_t desc_col = 2 + prefix_width + (prefix_width > 0 ? 1 : 0) + flags_width + 1 + type_width + 4;
-        const size_t max_width = 80;
         
         for (const auto& f : all_fields) {
             help << "  ";
