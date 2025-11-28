@@ -9,12 +9,16 @@
 #include <type_traits>
 #include <vector>
 #include <tuple>
+#include <string_view>
 
 // Current macro - requires listing all fields (C++20)
 #define REGISTER_CONFIG_FIELDS(...) \
     auto get_fields() { \
         return std::tie(__VA_ARGS__); \
     }
+
+// TODO(C++26): Move preset flag validation to compile-time using reflection
+// Currently checked at runtime in constructor due to C++20 limitations
 
 // Future macro - will use C++26 reflection to auto-detect fields
 // Reserved for future use - DO NOT IMPLEMENT until C++26 is available
@@ -33,6 +37,8 @@ public:
     }
 
     void parse_arguments(int argc, char* argv[]) {
+        validate_no_preset_override(); // Check at construction time
+        
         if (argc > 1) {
             std::optional<std::string> preset_path = extract_preset_path(argc, argv);
             
@@ -44,7 +50,6 @@ public:
         }
         
         validate_required_fields();
-        validate_no_preset_override();
     }
 
 private:
@@ -163,7 +168,7 @@ private:
     void check_not_preset_flag(const Config<T>& field) {
         for (const auto& flag : field.flags) {
             if (flag == "--preset" || flag == "-p") {
-                throw std::runtime_error("User configs cannot use reserved --preset/-p flags");
+                throw std::runtime_error("Config fields cannot use reserved --preset or -p flags");
             }
         }
     }
