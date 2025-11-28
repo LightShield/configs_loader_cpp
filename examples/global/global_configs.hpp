@@ -8,12 +8,14 @@ struct AppConfigs {
     Config<std::string> filename{
         .default_value = "input.txt",
         .flags = {"--file", "-f"},
-        .required = true
+        .required = true,
+        .description = "Input file to process"
     };
     
     Config<int> log_level{
         .default_value = 2,
-        .flags = {"--log-level", "-l"}
+        .flags = {"--log-level", "-l"},
+        .description = "Logging verbosity level (0-5)"
     };
 
     REGISTER_CONFIG_FIELDS(filename, log_level)

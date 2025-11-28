@@ -2,9 +2,21 @@
 #include <gtest/gtest.h>
 
 struct TestConfigs {
-    Config<std::string> filename{.default_value = "default.txt", .flags = {"--file", "-f"}};
-    Config<int> count{.default_value = 10, .flags = {"--count", "-c"}};
-    Config<bool> verbose{.default_value = false, .flags = {"--verbose", "-v"}};
+    Config<std::string> filename{
+        .default_value = "default.txt", 
+        .flags = {"--file", "-f"},
+        .description = "Input file to process"
+    };
+    Config<int> count{
+        .default_value = 10, 
+        .flags = {"--count", "-c"},
+        .description = "Number of iterations"
+    };
+    Config<bool> verbose{
+        .default_value = false, 
+        .flags = {"--verbose", "-v"},
+        .description = "Enable verbose output"
+    };
 
     REGISTER_CONFIG_FIELDS(filename, count, verbose)
 };
@@ -181,13 +193,49 @@ TEST(ConfigsLoaderTest, GenerateHelpMarksRequired) {
         Config<std::string> required_field{
             .default_value = "",
             .flags = {"--required"},
-            .required = true
+            .required = true,
+            .description = "A required configuration field"
         };
-        REGISTER_CONFIG_FIELDS(required_field)
+        Config<std::string> optional_field{
+            .default_value = "opt",
+            .flags = {"--optional"},
+            .description = "An optional configuration field"
+        };
+        REGISTER_CONFIG_FIELDS(required_field, optional_field)
     };
     
     ConfigsLoader<RequiredConfigs> loader;
     std::string help = loader.generate_help();
     
-    EXPECT_NE(help.find("[REQUIRED]"), std::string::npos);
+    // Check that [Required] appears before the flag
+    EXPECT_NE(help.find("[Required] --required"), std::string::npos);
+    
+    // Check that --help and --preset appear first
+    size_t help_pos = help.find("--help");
+    size_t preset_pos = help.find("--preset");
+    size_t required_pos = help.find("[Required] --required");
+    size_t optional_pos = help.find("--optional");
+    
+    EXPECT_LT(help_pos, preset_pos);
+    EXPECT_LT(preset_pos, required_pos);
+    EXPECT_LT(required_pos, optional_pos);
+    
+    // Check descriptions appear
+    EXPECT_NE(help.find("A required configuration field"), std::string::npos);
+    EXPECT_NE(help.find("An optional configuration field"), std::string::npos);
+}
+
+TEST(ConfigsLoaderTest, GenerateHelpShowsDefaultDescriptionWhenMissing) {
+    struct NoDescConfigs {
+        Config<std::string> field{
+            .default_value = "test",
+            .flags = {"--field"}
+        };
+        REGISTER_CONFIG_FIELDS(field)
+    };
+    
+    ConfigsLoader<NoDescConfigs> loader;
+    std::string help = loader.generate_help();
+    
+    EXPECT_NE(help.find("No description provided for this config"), std::string::npos);
 }

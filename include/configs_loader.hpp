@@ -63,12 +63,30 @@ public:
         help << "Usage: " << program_name << " [OPTIONS]\n\n";
         help << "Options:\n";
         
+        // Show --help first
+        help << "  --help, -h             Show this help message\n";
+        
+        // Show --preset second (reserved)
+        help << "  --preset, -p <file>    Load configuration from JSON file (reserved)\n";
+        
+        // Collect required and optional fields
+        std::vector<std::string> required_fields;
+        std::vector<std::string> optional_fields;
+        
         auto fields = configs.get_fields();
         std::apply([&](auto&... field) {
-            ((generate_field_help(help, field)), ...);
+            ((collect_field_help(field, required_fields, optional_fields)), ...);
         }, fields);
         
-        help << "  --preset, -p <file>    Load configuration from JSON file (reserved)\n";
+        // Show required fields
+        for (const auto& field_help : required_fields) {
+            help << field_help;
+        }
+        
+        // Show optional fields
+        for (const auto& field_help : optional_fields) {
+            help << field_help;
+        }
         
         return help.str();
     }
@@ -195,52 +213,70 @@ private:
     }
 
     template<typename T>
-    void generate_field_help(std::ostringstream& help, const Config<T>& field) const {
+    void collect_field_help(const Config<T>& field, std::vector<std::string>& required_fields, 
+                           std::vector<std::string>& optional_fields) const {
         if (field.flags.empty()) {
             return;
         }
         
+        std::ostringstream field_help;
+        
+        // Add [Required] marker at the start if needed
+        field_help << "  ";
+        if (field.is_required()) {
+            field_help << "[Required] ";
+        }
+        
         // Format flags
-        help << "  ";
         for (size_t i = 0; i < field.flags.size(); ++i) {
-            help << field.flags[i];
+            field_help << field.flags[i];
             if (i < field.flags.size() - 1) {
-                help << ", ";
+                field_help << ", ";
             }
         }
         
         // Add type hint
-        help << " <";
+        field_help << " <";
         if constexpr (std::is_same_v<T, std::string>) {
-            help << "string";
+            field_help << "string";
         } else if constexpr (std::is_same_v<T, int>) {
-            help << "int";
+            field_help << "int";
         } else if constexpr (std::is_same_v<T, bool>) {
-            help << "bool";
+            field_help << "bool";
         } else if constexpr (std::is_same_v<T, double>) {
-            help << "double";
+            field_help << "double";
         } else {
-            help << "value";
+            field_help << "value";
         }
-        help << ">";
+        field_help << ">";
+        
+        // Add description
+        field_help << "    ";
+        if (field.description.empty()) {
+            field_help << "No description provided for this config";
+        } else {
+            field_help << field.description;
+        }
         
         // Add default value
-        help << "    (default: ";
+        field_help << " (default: ";
         if constexpr (std::is_same_v<T, std::string>) {
-            help << "\"" << field.default_value << "\"";
+            field_help << "\"" << field.default_value << "\"";
         } else if constexpr (std::is_same_v<T, bool>) {
-            help << (field.default_value ? "true" : "false");
+            field_help << (field.default_value ? "true" : "false");
         } else {
-            help << field.default_value;
+            field_help << field.default_value;
         }
-        help << ")";
+        field_help << ")";
         
-        // Mark as required
+        field_help << "\n";
+        
+        // Add to appropriate vector
         if (field.is_required()) {
-            help << " [REQUIRED]";
+            required_fields.push_back(field_help.str());
+        } else {
+            optional_fields.push_back(field_help.str());
         }
-        
-        help << "\n";
     }
     
     bool m_initialized = false;
