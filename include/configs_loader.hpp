@@ -60,32 +60,65 @@ public:
     // Generate help text from registered configs
     [[nodiscard]] std::string generate_help(const std::string& program_name = "program") const {
         std::ostringstream help;
-        help << "Usage: " << program_name << " [OPTIONS]\n\n";
-        help << "Options:\n";
         
-        // Show --help first
-        help << "  --help, -h             Show this help message\n";
-        
-        // Show --preset second (reserved)
-        help << "  --preset, -p <file>    Load configuration from JSON file (reserved)\n";
-        
-        // Collect required and optional fields
-        std::vector<std::string> required_fields;
-        std::vector<std::string> optional_fields;
-        
+        // Build usage line with short flags
+        help << "Usage: " << program_name << " [OPTIONS]";
         auto fields = configs.get_fields();
         std::apply([&](auto&... field) {
-            ((collect_field_help(field, required_fields, optional_fields)), ...);
+            ((append_usage_field(help, field)), ...);
+        }, fields);
+        help << "\n\nOptions:\n";
+        
+        // Collect field info for alignment calculation
+        std::vector<FieldInfo> all_fields;
+        
+        all_fields.push_back({"", "--help, -h", "<void>", "Show this help message", ""});
+        all_fields.push_back({"", "--preset, -p", "<file>", "Load configuration from JSON file (reserved)", ""});
+        
+        std::vector<FieldInfo> required_fields;
+        std::vector<FieldInfo> optional_fields;
+        std::apply([&](auto&... field) {
+            ((collect_field_info(field, required_fields, optional_fields)), ...);
         }, fields);
         
-        // Show required fields
-        for (const auto& field_help : required_fields) {
-            help << field_help;
+        all_fields.insert(all_fields.end(), required_fields.begin(), required_fields.end());
+        all_fields.insert(all_fields.end(), optional_fields.begin(), optional_fields.end());
+        
+        // Calculate column widths
+        size_t prefix_width = 0, flags_width = 0, type_width = 0;
+        for (const auto& f : all_fields) {
+            prefix_width = std::max(prefix_width, f.prefix.length());
+            flags_width = std::max(flags_width, f.flags.length());
+            type_width = std::max(type_width, f.type.length());
         }
         
-        // Show optional fields
-        for (const auto& field_help : optional_fields) {
-            help << field_help;
+        // Format and output
+        const size_t desc_col = 2 + prefix_width + (prefix_width > 0 ? 1 : 0) + flags_width + 1 + type_width + 4;
+        const size_t max_width = 80;
+        
+        for (const auto& f : all_fields) {
+            help << "  ";
+            
+            // Prefix column (e.g., [Required])
+            if (prefix_width > 0) {
+                help << f.prefix << std::string(prefix_width - f.prefix.length(), ' ') << " ";
+            }
+            
+            // Flags column
+            help << f.flags << std::string(flags_width - f.flags.length(), ' ') << " ";
+            
+            // Type column
+            help << f.type << std::string(type_width - f.type.length(), ' ');
+            
+            help << "    ";
+            
+            std::string full_desc = f.description;
+            if (!f.default_val.empty()) {
+                full_desc += " (default: " + f.default_val + ")";
+            }
+            
+            wrap_text(help, full_desc, desc_col, max_width);
+            help << "\n";
         }
         
         return help.str();
@@ -212,70 +245,114 @@ private:
         }
     }
 
+    struct FieldInfo {
+        std::string prefix;
+        std::string flags;
+        std::string type;
+        std::string description;
+        std::string default_val;
+    };
+
     template<typename T>
-    void collect_field_help(const Config<T>& field, std::vector<std::string>& required_fields, 
-                           std::vector<std::string>& optional_fields) const {
-        if (field.flags.empty()) {
-            return;
-        }
+    void append_usage_field(std::ostringstream& usage, const Config<T>& field) const {
+        if (field.flags.empty()) return;
         
-        std::ostringstream field_help;
-        
-        // Add [Required] marker at the start if needed
-        field_help << "  ";
-        if (field.is_required()) {
-            field_help << "[Required] ";
-        }
-        
-        // Format flags
-        for (size_t i = 0; i < field.flags.size(); ++i) {
-            field_help << field.flags[i];
-            if (i < field.flags.size() - 1) {
-                field_help << ", ";
+        // Find shortest flag
+        std::string shortest = field.flags[0];
+        for (const auto& flag : field.flags) {
+            if (flag.length() < shortest.length()) {
+                shortest = flag;
             }
         }
         
-        // Add type hint
-        field_help << " <";
-        if constexpr (std::is_same_v<T, std::string>) {
-            field_help << "string";
-        } else if constexpr (std::is_same_v<T, int>) {
-            field_help << "int";
-        } else if constexpr (std::is_same_v<T, bool>) {
-            field_help << "bool";
-        } else if constexpr (std::is_same_v<T, double>) {
-            field_help << "double";
-        } else {
-            field_help << "value";
-        }
-        field_help << ">";
-        
-        // Add description
-        field_help << "    ";
-        if (field.description.empty()) {
-            field_help << "No description provided for this config";
-        } else {
-            field_help << field.description;
-        }
-        
-        // Add default value
-        field_help << " (default: ";
-        if constexpr (std::is_same_v<T, std::string>) {
-            field_help << "\"" << field.default_value << "\"";
-        } else if constexpr (std::is_same_v<T, bool>) {
-            field_help << (field.default_value ? "true" : "false");
-        } else {
-            field_help << field.default_value;
-        }
-        field_help << ")";
-        
-        field_help << "\n";
-        
-        // Add to appropriate vector
         if (field.is_required()) {
-            required_fields.push_back(field_help.str());
+            usage << " " << shortest << " <value>";
         } else {
-            optional_fields.push_back(field_help.str());
+            usage << " [" << shortest << " <value>]";
+        }
+    }
+
+    template<typename T>
+    void collect_field_info(const Config<T>& field, 
+                           std::vector<FieldInfo>& required_fields,
+                           std::vector<FieldInfo>& optional_fields) const {
+        if (field.flags.empty()) return;
+        
+        FieldInfo info;
+        info.prefix = field.is_required() ? "[Required]" : "";
+        
+        std::ostringstream flags_str;
+        for (size_t i = 0; i < field.flags.size(); ++i) {
+            flags_str << field.flags[i];
+            if (i < field.flags.size() - 1) flags_str << ", ";
+        }
+        info.flags = flags_str.str();
+        
+        info.type = "<";
+        if constexpr (std::is_same_v<T, std::string>) {
+            info.type += "string";
+        } else if constexpr (std::is_same_v<T, int>) {
+            info.type += "int";
+        } else if constexpr (std::is_same_v<T, bool>) {
+            info.type += "bool";
+        } else if constexpr (std::is_same_v<T, double>) {
+            info.type += "double";
+        } else {
+            info.type += "value";
+        }
+        info.type += ">";
+        
+        info.description = field.description.empty() ? "No description provided for this config" : field.description;
+        
+        std::ostringstream default_str;
+        if constexpr (std::is_same_v<T, std::string>) {
+            default_str << "\"" << field.default_value << "\"";
+        } else if constexpr (std::is_same_v<T, bool>) {
+            default_str << (field.default_value ? "true" : "false");
+        } else {
+            default_str << field.default_value;
+        }
+        info.default_val = default_str.str();
+        
+        if (field.is_required()) {
+            required_fields.push_back(info);
+        } else {
+            optional_fields.push_back(info);
+        }
+    }
+
+    void wrap_text(std::ostringstream& out, const std::string& text, size_t indent_col, size_t max_width) const {
+        if (text.empty()) return;
+        
+        size_t available = max_width - indent_col;
+        if (text.length() <= available) {
+            out << text;
+            return;
+        }
+        
+        size_t pos = 0;
+        bool first_line = true;
+        
+        while (pos < text.length()) {
+            if (!first_line) {
+                out << "\n" << std::string(indent_col, ' ');
+            }
+            first_line = false;
+            
+            size_t remaining = text.length() - pos;
+            if (remaining <= available) {
+                out << text.substr(pos);
+                break;
+            }
+            
+            size_t break_pos = text.rfind(' ', pos + available);
+            if (break_pos == std::string::npos || break_pos <= pos) {
+                break_pos = pos + available;
+            }
+            
+            out << text.substr(pos, break_pos - pos);
+            pos = break_pos;
+            while (pos < text.length() && text[pos] == ' ') ++pos;
         }
     }
     

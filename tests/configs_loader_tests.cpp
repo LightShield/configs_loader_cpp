@@ -207,18 +207,26 @@ TEST(ConfigsLoaderTest, GenerateHelpMarksRequired) {
     ConfigsLoader<RequiredConfigs> loader;
     std::string help = loader.generate_help();
     
-    // Check that [Required] appears before the flag
-    EXPECT_NE(help.find("[Required] --required"), std::string::npos);
+    // Find the Options section
+    size_t options_start = help.find("Options:");
+    ASSERT_NE(options_start, std::string::npos);
     
-    // Check that --help and --preset appear first
-    size_t help_pos = help.find("--help");
-    size_t preset_pos = help.find("--preset");
-    size_t required_pos = help.find("[Required] --required");
-    size_t optional_pos = help.find("--optional");
+    // Search only within the Options section
+    std::string options_section = help.substr(options_start);
+    
+    // Check that [Required] and --required both appear
+    EXPECT_NE(options_section.find("[Required]"), std::string::npos);
+    EXPECT_NE(options_section.find("--required"), std::string::npos);
+    
+    // Check ordering within options section
+    size_t help_pos = options_section.find("--help");
+    size_t preset_pos = options_section.find("--preset");
+    size_t required_marker_pos = options_section.find("[Required]");
+    size_t optional_pos = options_section.find("--optional");
     
     EXPECT_LT(help_pos, preset_pos);
-    EXPECT_LT(preset_pos, required_pos);
-    EXPECT_LT(required_pos, optional_pos);
+    EXPECT_LT(preset_pos, required_marker_pos);
+    EXPECT_LT(required_marker_pos, optional_pos);
     
     // Check descriptions appear
     EXPECT_NE(help.find("A required configuration field"), std::string::npos);
