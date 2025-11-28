@@ -17,16 +17,18 @@ struct MyConfigs {
 };
 
 int main(int argc, char* argv[]) {
+    ConfigsLoader<MyConfigs> loader;
+    
     try {
-        ConfigsLoader<MyConfigs> loader(argc, argv);
-        
-        std::cout << "Filename: " << loader.configs.filename.value << "\n";
-        std::cout << "Log Level: " << loader.configs.log_level.value << "\n";
-        
+        loader.Init(argc, argv);
     } catch (const std::exception& e) {
-        std::cerr << "Error: " << e.what() << "\n";
+        std::cerr << "Configuration error: " << e.what() << "\n";
         return 1;
     }
+    
+    // Usage never throws - safe to use
+    std::cout << "Filename: " << loader.configs.filename.value << "\n";
+    std::cout << "Log Level: " << loader.configs.log_level.value << "\n";
     
     return 0;
 }

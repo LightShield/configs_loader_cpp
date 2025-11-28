@@ -9,7 +9,6 @@
 #include <type_traits>
 #include <vector>
 #include <tuple>
-#include <string_view>
 
 // Current macro - requires listing all fields (C++20)
 #define REGISTER_CONFIG_FIELDS(...) \
@@ -17,13 +16,13 @@
         return std::tie(__VA_ARGS__); \
     }
 
-// TODO(C++26): Move preset flag validation to compile-time using reflection
-// Currently checked at runtime in constructor due to C++20 limitations
-
 // Future macro - will use C++26 reflection to auto-detect fields
 // Reserved for future use - DO NOT IMPLEMENT until C++26 is available
 #define REGISTER_CONFIG_STRUCT(StructName) \
     static_assert(false, "REGISTER_CONFIG_STRUCT requires C++26 reflection - use REGISTER_CONFIG_FIELDS for now");
+
+// TODO(C++26): Move preset flag validation to compile-time using reflection
+// Currently checked at Init() time due to C++20 limitations
 
 template<typename ConfigsType>
 class ConfigsLoader {
@@ -33,11 +32,11 @@ public:
     ConfigsLoader() = default;
 
     ConfigsLoader(int argc, char* argv[]) {
-        parse_arguments(argc, argv);
+        Init(argc, argv);
     }
 
-    void parse_arguments(int argc, char* argv[]) {
-        validate_no_preset_override(); // Check at construction time
+    void Init(int argc, char* argv[]) {
+        validate_no_preset_override();
         
         if (argc > 1) {
             std::optional<std::string> preset_path = extract_preset_path(argc, argv);
