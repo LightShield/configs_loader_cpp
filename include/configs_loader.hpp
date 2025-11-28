@@ -9,6 +9,8 @@
 #include <type_traits>
 #include <vector>
 #include <tuple>
+#include <iostream>
+#include <cstdlib>
 
 // Current macro - requires listing all fields (C++20)
 #define REGISTER_CONFIG_FIELDS(...) \
@@ -40,6 +42,15 @@ public:
 
     void Init(int argc, char* argv[]) {
         validate_no_preset_override();
+        
+        // Check for --help or -h flag
+        for (int i = 1; i < argc; ++i) {
+            std::string arg = argv[i];
+            if (arg == "--help" || arg == "-h") {
+                std::cout << generate_help(argv[0]) << std::endl;
+                std::exit(0);
+            }
+        }
         
         if (argc > 1) {
             std::optional<std::string> preset_path = extract_preset_path(argc, argv);
