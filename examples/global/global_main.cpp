@@ -9,7 +9,7 @@ void some_function();
 
 int main(int argc, char* argv[]) {
     try {
-        g_config_loader.Init(argc, argv);
+        g_config_loader.init(argc, argv);
     } catch (const std::exception& e) {
         std::cerr << "Configuration error: " << e.what() << "\n";
         return 1;

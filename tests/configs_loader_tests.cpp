@@ -161,7 +161,7 @@ TEST(ConfigsLoaderTest, IsNotInitializedByDefault) {
 TEST(ConfigsLoaderTest, IsInitializedAfterInit) {
     const char* argv[] = {"prog", "--file", "test.txt"};
     ConfigsLoader<TestConfigs> loader;
-    loader.Init(3, const_cast<char**>(argv));
+    loader.init(3, const_cast<char**>(argv));
     EXPECT_TRUE(loader.is_initialized());
 }
 
@@ -251,7 +251,7 @@ TEST(ConfigsLoaderTest, GenerateHelpShowsDefaultDescriptionWhenMissing) {
 TEST(ConfigsLoaderTest, DumpConfigsShowsAllValues) {
     ConfigsLoader<TestConfigs> loader;
     const char* argv[] = {"prog", "--file", "custom.txt", "--count", "42"};
-    loader.Init(5, const_cast<char**>(argv));
+    loader.init(5, const_cast<char**>(argv));
     
     std::string dump = loader.dump_configs();
     
@@ -263,7 +263,7 @@ TEST(ConfigsLoaderTest, DumpConfigsShowsAllValues) {
 TEST(ConfigsLoaderTest, DumpConfigsOnlyChangesShowsOnlyChanges) {
     ConfigsLoader<TestConfigs> loader;
     const char* argv[] = {"prog", "--file", "custom.txt", "--count", "42"};
-    loader.Init(5, const_cast<char**>(argv));
+    loader.init(5, const_cast<char**>(argv));
     
     std::string dump = loader.dump_configs(true);
     
@@ -278,7 +278,7 @@ TEST(ConfigsLoaderTest, DumpConfigsOnlyChangesShowsOnlyChanges) {
 TEST(ConfigsLoaderTest, DumpConfigsOnlyChangesEmptyWhenAllDefaults) {
     ConfigsLoader<TestConfigs> loader;
     const char* argv[] = {"prog"};
-    loader.Init(1, const_cast<char**>(argv));
+    loader.init(1, const_cast<char**>(argv));
     
     std::string dump = loader.dump_configs(true);
     

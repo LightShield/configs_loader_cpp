@@ -30,9 +30,9 @@ public:
 
     // Initialize from command-line arguments
     // Automatically handles --help/-h flags (prints help and exits)
-    void Init(int argc, char* argv[]);
+    void init(int argc, char* argv[]);
 
-    // Check if Init() has been called
+    // Check if init() has been called
     [[nodiscard]] bool is_initialized() const;
 
     // Generate help text

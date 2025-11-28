@@ -32,7 +32,7 @@ int main(int argc, char* argv[]) {
     ConfigsLoader<CliConfigs> loader;
     
     try {
-        loader.Init(argc, argv);  // --help is handled automatically
+        loader.init(argc, argv);  // --help is handled automatically
     } catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << "\n";
         std::cerr << "Use --help for usage information\n";

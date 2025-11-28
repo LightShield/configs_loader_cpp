@@ -26,7 +26,7 @@ int main() {
     ConfigsLoader<MyConfigs> loader;
     
     try {
-        loader.Init(argc, const_cast<char**>(argv));
+        loader.init(argc, const_cast<char**>(argv));
     } catch (const std::exception& e) {
         std::cerr << "Configuration error: " << e.what() << "\n";
         return 1;

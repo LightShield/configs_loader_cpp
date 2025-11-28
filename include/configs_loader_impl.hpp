@@ -25,11 +25,11 @@ struct ConfigsLoader<ConfigsType>::FieldInfo {
 
 template<typename ConfigsType>
 ConfigsLoader<ConfigsType>::ConfigsLoader(int argc, char* argv[]) {
-    Init(argc, argv);
+    init(argc, argv);
 }
 
 template<typename ConfigsType>
-void ConfigsLoader<ConfigsType>::Init(int argc, char* argv[]) {
+void ConfigsLoader<ConfigsType>::init(int argc, char* argv[]) {
     validate_no_preset_override();
     
     // Check for --help or -h flag
