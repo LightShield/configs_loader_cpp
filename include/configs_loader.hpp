@@ -1,6 +1,6 @@
 #pragma once
 
-#include "config.h"
+#include "config.hpp"
 #include <string>
 #include <stdexcept>
 #include <fstream>

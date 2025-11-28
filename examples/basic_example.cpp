@@ -1,4 +1,4 @@
-#include "configs_loader.h"
+#include "configs_loader.hpp"
 #include <iostream>
 
 struct MyConfigs {

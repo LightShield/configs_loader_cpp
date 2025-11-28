@@ -1,4 +1,4 @@
-#include "config.h"
+#include "config.hpp"
 #include <gtest/gtest.h>
 
 TEST(ConfigTest, DefaultValueIsSet) {
