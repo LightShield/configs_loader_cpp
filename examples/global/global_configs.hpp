@@ -22,10 +22,14 @@ struct AppConfigs {
 // Declare global loader - defined in main.cpp
 extern ConfigsLoader<AppConfigs> g_config_loader;
 
-// Convenience accessor with safety check
+// Safe accessor - checks initialization
 inline AppConfigs& GetConfigs() {
     if (!g_config_loader.is_initialized()) {
         throw std::runtime_error("Config loader not initialized - call Init() first");
     }
     return g_config_loader.configs;
 }
+
+// Unsafe direct access - no checks, faster but caller must ensure Init() was called
+// Use when performance is critical and initialization is guaranteed
+// Example: g_config_loader.configs.filename.value

@@ -1,17 +1,36 @@
 # configs_loader_cpp
 
-Configuration loader library for C++ projects.
+Header-only C++20 configuration loader library.
 
 ## Features
 
-- Clean designated initializer syntax (C++20)
-- CLI argument parsing (multiple formats: `--key value`, `-k value`, `--key=value`)
-- Required field validation
-- Type conversion (string, int, bool, double)
-- Custom verifier functions
-- Reserved `--preset`/`-p` flags for future JSON preset support
+- ✅ Header-only library (no linking required)
+- ✅ Clean designated initializer syntax (C++20)
+- ✅ CLI argument parsing (multiple formats: `--key value`, `-k value`, `--key=value`)
+- ✅ Required field validation
+- ✅ Type conversion (string, int, bool, double)
+- ✅ Custom verifier functions
+- ✅ Two-phase initialization (construction never throws)
+- ✅ Reserved `--preset`/`-p` flags for future JSON preset support
+- ✅ Initialization safety checks
 
-## Basic Usage
+## Installation
+
+Header-only library - just copy `include/` directory to your project.
+
+Or use CMake:
+
+```bash
+# As subdirectory
+add_subdirectory(configs_loader_cpp)
+target_link_libraries(your_target PRIVATE configs_loader_cpp)
+
+# Or install headers
+cmake -B build
+cmake --install build --prefix /usr/local
+```
+
+## Quick Start
 
 ```cpp
 #include "configs_loader.hpp"
@@ -117,6 +136,32 @@ Template class for loading and managing configurations.
 
 **Exceptions:**
 - `std::runtime_error` - Required field not set, invalid preset flags, or parse errors
+
+## Building Tests and Examples
+
+By default, only the library headers are available. Tests and examples are disabled for library usage.
+
+**Build with tests:**
+```bash
+cmake -B build -DBUILD_TESTS=ON
+cmake --build build
+ctest --test-dir build
+```
+
+**Build with examples:**
+```bash
+cmake -B build -DBUILD_EXAMPLES=ON
+cmake --build build
+./build/examples/basic_example --help
+```
+
+**Build both:**
+```bash
+cmake -B build -DBUILD_TESTS=ON -DBUILD_EXAMPLES=ON
+cmake --build build
+```
+
+See [examples/README.md](examples/README.md) and [tests/README.md](tests/README.md) for details.
 
 ## Future (C++26)
 

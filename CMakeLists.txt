@@ -5,16 +5,9 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-# Fetch GTest
-include(FetchContent)
-FetchContent_Declare(
-    googletest
-    GIT_REPOSITORY https://github.com/google/googletest.git
-    GIT_TAG v1.14.0
-)
-FetchContent_MakeAvailable(googletest)
-
-enable_testing()
+# Feature flags (default OFF for library usage)
+option(BUILD_TESTS "Build tests" OFF)
+option(BUILD_EXAMPLES "Build examples" OFF)
 
 # Library
 add_library(configs_loader_cpp INTERFACE)
@@ -43,7 +36,18 @@ set(WARNING_FLAGS
     -Wundef
 )
 
-# Tests
+# Tests (optional)
+if(BUILD_TESTS)
+    # Fetch GTest
+    include(FetchContent)
+    FetchContent_Declare(
+        googletest
+        GIT_REPOSITORY https://github.com/google/googletest.git
+        GIT_TAG v1.14.0
+    )
+    FetchContent_MakeAvailable(googletest)
+
+    enable_testing()
 add_executable(config_tests
     tests/config_tests.cpp
 )
@@ -71,6 +75,9 @@ target_compile_options(configs_loader_tests PRIVATE ${WARNING_FLAGS})
 include(GoogleTest)
 gtest_discover_tests(config_tests)
 gtest_discover_tests(configs_loader_tests)
+endif()
 
-# Examples
-add_subdirectory(examples)
+# Examples (optional)
+if(BUILD_EXAMPLES)
+    add_subdirectory(examples)
+endif()
