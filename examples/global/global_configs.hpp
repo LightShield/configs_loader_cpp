@@ -1,6 +1,7 @@
 #pragma once
 
 #include "configs_loader.hpp"
+#include <stdexcept>
 
 // Define your config structure
 struct AppConfigs {
@@ -21,7 +22,10 @@ struct AppConfigs {
 // Declare global loader - defined in main.cpp
 extern ConfigsLoader<AppConfigs> g_config_loader;
 
-// Convenience accessor
+// Convenience accessor with safety check
 inline AppConfigs& GetConfigs() {
+    if (!g_config_loader.is_initialized()) {
+        throw std::runtime_error("Config loader not initialized - call Init() first");
+    }
     return g_config_loader.configs;
 }

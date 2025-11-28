@@ -140,3 +140,15 @@ TEST(ConfigsLoaderTest, PresetShortFlagIsReserved) {
         ConfigsLoader<BadConfigs> loader(1, const_cast<char**>(argv));
     }, std::runtime_error);
 }
+
+TEST(ConfigsLoaderTest, IsNotInitializedByDefault) {
+    ConfigsLoader<TestConfigs> loader;
+    EXPECT_FALSE(loader.is_initialized());
+}
+
+TEST(ConfigsLoaderTest, IsInitializedAfterInit) {
+    const char* argv[] = {"prog", "--file", "test.txt"};
+    ConfigsLoader<TestConfigs> loader;
+    loader.Init(3, const_cast<char**>(argv));
+    EXPECT_TRUE(loader.is_initialized());
+}

@@ -72,27 +72,5 @@ include(GoogleTest)
 gtest_discover_tests(config_tests)
 gtest_discover_tests(configs_loader_tests)
 
-# Example
-add_executable(basic_example
-    examples/basic_example.cpp
-)
-
-target_link_libraries(basic_example
-    PRIVATE
-        configs_loader_cpp
-)
-
-target_compile_options(basic_example PRIVATE ${WARNING_FLAGS})
-
-# Global config example
-add_executable(global_example
-    examples/global_main.cpp
-    examples/other_file.cpp
-)
-
-target_link_libraries(global_example
-    PRIVATE
-        configs_loader_cpp
-)
-
-target_compile_options(global_example PRIVATE ${WARNING_FLAGS})
+# Examples
+add_subdirectory(examples)

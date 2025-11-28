@@ -49,7 +49,10 @@ public:
         }
         
         validate_required_fields();
+        m_initialized = true;
     }
+
+    [[nodiscard]] bool is_initialized() const { return m_initialized; }
 
 private:
     std::optional<std::string> extract_preset_path(int argc, char* argv[]) {
@@ -171,4 +174,6 @@ private:
             }
         }
     }
+    
+    bool m_initialized = false;
 };
