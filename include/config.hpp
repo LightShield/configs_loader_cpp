@@ -12,11 +12,10 @@ struct Config {
     bool required = false;
     std::function<bool(const T&)> verifier = [](const T&) { return true; };
 
-    // Runtime state (initialized after construction)
-    T m_value = default_value;
+    // Runtime state
+    T value = default_value;
     uint8_t m_is_set = 0u;
 
-    [[nodiscard]] const T& value() const { return m_value; }
     [[nodiscard]] bool is_set() const { return m_is_set != 0u; }
     [[nodiscard]] bool is_required() const { return required; }
 
@@ -24,13 +23,13 @@ struct Config {
         if (!verifier(val)) {
             return false;
         }
-        m_value = val;
+        value = val;
         m_is_set = 1u;
         return true;
     }
 
     void reset() {
-        m_value = default_value;
+        value = default_value;
         m_is_set = 0u;
     }
 };

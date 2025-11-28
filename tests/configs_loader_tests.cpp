@@ -11,65 +11,65 @@ struct TestConfigs {
 
 TEST(ConfigsLoaderTest, DefaultConstructorUsesDefaults) {
     ConfigsLoader<TestConfigs> loader;
-    EXPECT_EQ(loader.configs.filename.value(), "default.txt");
-    EXPECT_EQ(loader.configs.count.value(), 10);
-    EXPECT_FALSE(loader.configs.verbose.value());
+    EXPECT_EQ(loader.configs.filename.value, "default.txt");
+    EXPECT_EQ(loader.configs.count.value, 10);
+    EXPECT_FALSE(loader.configs.verbose.value);
 }
 
 TEST(ConfigsLoaderTest, ParsesLongFlagWithSpace) {
     const char* argv[] = {"prog", "--file", "test.txt"};
     ConfigsLoader<TestConfigs> loader(3, const_cast<char**>(argv));
-    EXPECT_EQ(loader.configs.filename.value(), "test.txt");
+    EXPECT_EQ(loader.configs.filename.value, "test.txt");
 }
 
 TEST(ConfigsLoaderTest, ParsesShortFlagWithSpace) {
     const char* argv[] = {"prog", "-f", "short.txt"};
     ConfigsLoader<TestConfigs> loader(3, const_cast<char**>(argv));
-    EXPECT_EQ(loader.configs.filename.value(), "short.txt");
+    EXPECT_EQ(loader.configs.filename.value, "short.txt");
 }
 
 TEST(ConfigsLoaderTest, ParsesLongFlagWithEquals) {
     const char* argv[] = {"prog", "--file=equals.txt"};
     ConfigsLoader<TestConfigs> loader(2, const_cast<char**>(argv));
-    EXPECT_EQ(loader.configs.filename.value(), "equals.txt");
+    EXPECT_EQ(loader.configs.filename.value, "equals.txt");
 }
 
 TEST(ConfigsLoaderTest, ParsesIntegerValue) {
     const char* argv[] = {"prog", "--count", "42"};
     ConfigsLoader<TestConfigs> loader(3, const_cast<char**>(argv));
-    EXPECT_EQ(loader.configs.count.value(), 42);
+    EXPECT_EQ(loader.configs.count.value, 42);
 }
 
 TEST(ConfigsLoaderTest, ParsesBooleanTrue) {
     const char* argv[] = {"prog", "--verbose", "true"};
     ConfigsLoader<TestConfigs> loader(3, const_cast<char**>(argv));
-    EXPECT_TRUE(loader.configs.verbose.value());
+    EXPECT_TRUE(loader.configs.verbose.value);
 }
 
 TEST(ConfigsLoaderTest, ParsesBooleanOne) {
     const char* argv[] = {"prog", "-v", "1"};
     ConfigsLoader<TestConfigs> loader(3, const_cast<char**>(argv));
-    EXPECT_TRUE(loader.configs.verbose.value());
+    EXPECT_TRUE(loader.configs.verbose.value);
 }
 
 TEST(ConfigsLoaderTest, ParsesMultipleArguments) {
     const char* argv[] = {"prog", "--file", "multi.txt", "--count", "99", "-v", "true"};
     ConfigsLoader<TestConfigs> loader(7, const_cast<char**>(argv));
-    EXPECT_EQ(loader.configs.filename.value(), "multi.txt");
-    EXPECT_EQ(loader.configs.count.value(), 99);
-    EXPECT_TRUE(loader.configs.verbose.value());
+    EXPECT_EQ(loader.configs.filename.value, "multi.txt");
+    EXPECT_EQ(loader.configs.count.value, 99);
+    EXPECT_TRUE(loader.configs.verbose.value);
 }
 
 TEST(ConfigsLoaderTest, LastValueWinsForDuplicates) {
     const char* argv[] = {"prog", "--count", "10", "--count", "20"};
     ConfigsLoader<TestConfigs> loader(5, const_cast<char**>(argv));
-    EXPECT_EQ(loader.configs.count.value(), 20);
+    EXPECT_EQ(loader.configs.count.value, 20);
 }
 
 TEST(ConfigsLoaderTest, UnknownFlagsAreIgnored) {
     const char* argv[] = {"prog", "--unknown", "value", "--file", "known.txt"};
     ConfigsLoader<TestConfigs> loader(5, const_cast<char**>(argv));
-    EXPECT_EQ(loader.configs.filename.value(), "known.txt");
+    EXPECT_EQ(loader.configs.filename.value, "known.txt");
 }
 
 TEST(ConfigsLoaderTest, RequiredFieldThrowsWhenNotSet) {
@@ -107,8 +107,8 @@ TEST(ConfigsLoaderTest, RequiredFieldDoesNotThrowWhenSet) {
 TEST(ConfigsLoaderTest, MixedFlagFormats) {
     const char* argv[] = {"prog", "--file=mixed.txt", "-c", "50"};
     ConfigsLoader<TestConfigs> loader(4, const_cast<char**>(argv));
-    EXPECT_EQ(loader.configs.filename.value(), "mixed.txt");
-    EXPECT_EQ(loader.configs.count.value(), 50);
+    EXPECT_EQ(loader.configs.filename.value, "mixed.txt");
+    EXPECT_EQ(loader.configs.count.value, 50);
 }
 
 TEST(ConfigsLoaderTest, PresetFlagIsReserved) {

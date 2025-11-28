@@ -3,7 +3,7 @@
 
 TEST(ConfigTest, DefaultValueIsSet) {
     Config<int> field{.default_value = 42};
-    EXPECT_EQ(field.value(), 42);
+    EXPECT_EQ(field.value, 42);
 }
 
 TEST(ConfigTest, IsNotSetInitially) {
@@ -15,7 +15,7 @@ TEST(ConfigTest, SetValueMarksAsSet) {
     Config<int> field{.default_value = 42};
     EXPECT_TRUE(field.set_value(100));
     EXPECT_TRUE(field.is_set());
-    EXPECT_EQ(field.value(), 100);
+    EXPECT_EQ(field.value, 100);
 }
 
 TEST(ConfigTest, ResetRestoresDefault) {
@@ -23,7 +23,7 @@ TEST(ConfigTest, ResetRestoresDefault) {
     field.set_value(100);
     field.reset();
     EXPECT_FALSE(field.is_set());
-    EXPECT_EQ(field.value(), 42);
+    EXPECT_EQ(field.value, 42);
 }
 
 TEST(ConfigTest, RequiredFieldIsRequired) {
@@ -50,7 +50,7 @@ TEST(ConfigTest, VerifierRejectsInvalidValue) {
         .verifier = [](const int& val) { return val > 0; }
     };
     EXPECT_FALSE(field.set_value(-10));
-    EXPECT_EQ(field.value(), 42);
+    EXPECT_EQ(field.value, 42);
 }
 
 TEST(ConfigTest, VerifierAcceptsValidValue) {
@@ -59,26 +59,26 @@ TEST(ConfigTest, VerifierAcceptsValidValue) {
         .verifier = [](const int& val) { return val > 0; }
     };
     EXPECT_TRUE(field.set_value(100));
-    EXPECT_EQ(field.value(), 100);
+    EXPECT_EQ(field.value, 100);
 }
 
 TEST(ConfigTest, StringFieldWorks) {
     Config<std::string> field{.default_value = "default"};
-    EXPECT_EQ(field.value(), "default");
+    EXPECT_EQ(field.value, "default");
     field.set_value("changed");
-    EXPECT_EQ(field.value(), "changed");
+    EXPECT_EQ(field.value, "changed");
 }
 
 TEST(ConfigTest, BoolFieldWorks) {
     Config<bool> field{.default_value = false};
-    EXPECT_FALSE(field.value());
+    EXPECT_FALSE(field.value);
     field.set_value(true);
-    EXPECT_TRUE(field.value());
+    EXPECT_TRUE(field.value);
 }
 
 TEST(ConfigTest, DoubleFieldWorks) {
     Config<double> field{.default_value = 3.14};
-    EXPECT_DOUBLE_EQ(field.value(), 3.14);
+    EXPECT_DOUBLE_EQ(field.value, 3.14);
     field.set_value(2.71);
-    EXPECT_DOUBLE_EQ(field.value(), 2.71);
+    EXPECT_DOUBLE_EQ(field.value, 2.71);
 }
