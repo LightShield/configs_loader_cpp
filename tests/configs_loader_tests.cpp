@@ -6,7 +6,7 @@ struct TestConfigs {
     Config<int> count{.default_value = 10, .flags = {"--count", "-c"}};
     Config<bool> verbose{.default_value = false, .flags = {"--verbose", "-v"}};
 
-    REGISTER_CONFIG_STRUCT(filename, count, verbose)
+    REGISTER_CONFIG_FIELDS(filename, count, verbose)
 };
 
 TEST(ConfigsLoaderTest, DefaultConstructorUsesDefaults) {
@@ -79,7 +79,7 @@ TEST(ConfigsLoaderTest, RequiredFieldThrowsWhenNotSet) {
             .flags = {"--required"},
             .required = true
         };
-        REGISTER_CONFIG_STRUCT(required_field)
+        REGISTER_CONFIG_FIELDS(required_field)
     };
     
     const char* argv[] = {"prog"};
@@ -95,7 +95,7 @@ TEST(ConfigsLoaderTest, RequiredFieldDoesNotThrowWhenSet) {
             .flags = {"--required"},
             .required = true
         };
-        REGISTER_CONFIG_STRUCT(required_field)
+        REGISTER_CONFIG_FIELDS(required_field)
     };
     
     const char* argv[] = {"prog", "--required", "value"};
@@ -117,7 +117,7 @@ TEST(ConfigsLoaderTest, PresetFlagIsReserved) {
             .default_value = "",
             .flags = {"--preset"}
         };
-        REGISTER_CONFIG_STRUCT(preset)
+        REGISTER_CONFIG_FIELDS(preset)
     };
     
     const char* argv[] = {"prog"};
@@ -132,7 +132,7 @@ TEST(ConfigsLoaderTest, PresetShortFlagIsReserved) {
             .default_value = "",
             .flags = {"-p"}
         };
-        REGISTER_CONFIG_STRUCT(my_preset)
+        REGISTER_CONFIG_FIELDS(my_preset)
     };
     
     const char* argv[] = {"prog"};

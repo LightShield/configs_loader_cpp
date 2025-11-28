@@ -10,10 +10,16 @@
 #include <vector>
 #include <tuple>
 
-#define REGISTER_CONFIG_STRUCT(...) \
+// Current macro - requires listing all fields (C++20)
+#define REGISTER_CONFIG_FIELDS(...) \
     auto get_fields() { \
         return std::tie(__VA_ARGS__); \
     }
+
+// Future macro - will use C++26 reflection to auto-detect fields
+// Reserved for future use - DO NOT IMPLEMENT until C++26 is available
+#define REGISTER_CONFIG_STRUCT(StructName) \
+    static_assert(false, "REGISTER_CONFIG_STRUCT requires C++26 reflection - use REGISTER_CONFIG_FIELDS for now");
 
 template<typename ConfigsType>
 class ConfigsLoader {

@@ -13,7 +13,7 @@ struct MyConfigs {
         .flags = {"--log-level", "-l"}
     };
 
-    REGISTER_CONFIG_STRUCT(filename, log_level)
+    REGISTER_CONFIG_FIELDS(filename, log_level)
 };
 
 int main(int argc, char* argv[]) {
