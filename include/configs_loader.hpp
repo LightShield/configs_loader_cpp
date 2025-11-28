@@ -14,6 +14,9 @@
 #define REGISTER_CONFIG_FIELDS(...) \
     auto get_fields() { \
         return std::tie(__VA_ARGS__); \
+    } \
+    auto get_fields() const { \
+        return std::tie(__VA_ARGS__); \
     }
 
 // Future macro - will use C++26 reflection to auto-detect fields
@@ -53,6 +56,22 @@ public:
     }
 
     [[nodiscard]] bool is_initialized() const { return m_initialized; }
+
+    // Generate help text from registered configs
+    [[nodiscard]] std::string generate_help(const std::string& program_name = "program") const {
+        std::ostringstream help;
+        help << "Usage: " << program_name << " [OPTIONS]\n\n";
+        help << "Options:\n";
+        
+        auto fields = configs.get_fields();
+        std::apply([&](auto&... field) {
+            ((generate_field_help(help, field)), ...);
+        }, fields);
+        
+        help << "  --preset, -p <file>    Load configuration from JSON file (reserved)\n";
+        
+        return help.str();
+    }
 
 private:
     std::optional<std::string> extract_preset_path(int argc, char* argv[]) {
@@ -173,6 +192,55 @@ private:
                 throw std::runtime_error("Config fields cannot use reserved --preset or -p flags");
             }
         }
+    }
+
+    template<typename T>
+    void generate_field_help(std::ostringstream& help, const Config<T>& field) const {
+        if (field.flags.empty()) {
+            return;
+        }
+        
+        // Format flags
+        help << "  ";
+        for (size_t i = 0; i < field.flags.size(); ++i) {
+            help << field.flags[i];
+            if (i < field.flags.size() - 1) {
+                help << ", ";
+            }
+        }
+        
+        // Add type hint
+        help << " <";
+        if constexpr (std::is_same_v<T, std::string>) {
+            help << "string";
+        } else if constexpr (std::is_same_v<T, int>) {
+            help << "int";
+        } else if constexpr (std::is_same_v<T, bool>) {
+            help << "bool";
+        } else if constexpr (std::is_same_v<T, double>) {
+            help << "double";
+        } else {
+            help << "value";
+        }
+        help << ">";
+        
+        // Add default value
+        help << "    (default: ";
+        if constexpr (std::is_same_v<T, std::string>) {
+            help << "\"" << field.default_value << "\"";
+        } else if constexpr (std::is_same_v<T, bool>) {
+            help << (field.default_value ? "true" : "false");
+        } else {
+            help << field.default_value;
+        }
+        help << ")";
+        
+        // Mark as required
+        if (field.is_required()) {
+            help << " [REQUIRED]";
+        }
+        
+        help << "\n";
     }
     
     bool m_initialized = false;

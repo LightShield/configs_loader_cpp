@@ -1,5 +1,6 @@
 #include "configs_loader.hpp"
 #include <iostream>
+#include <cstring>
 
 struct MyConfigs {
     Config<std::string> filename{
@@ -19,10 +20,19 @@ struct MyConfigs {
 int main(int argc, char* argv[]) {
     ConfigsLoader<MyConfigs> loader;
     
+    // Check for help flag
+    for (int i = 1; i < argc; ++i) {
+        if (std::strcmp(argv[i], "--help") == 0 || std::strcmp(argv[i], "-h") == 0) {
+            std::cout << loader.generate_help(argv[0]) << "\n";
+            return 0;
+        }
+    }
+    
     try {
         loader.Init(argc, argv);
     } catch (const std::exception& e) {
         std::cerr << "Configuration error: " << e.what() << "\n";
+        std::cerr << "\nUse --help for usage information\n";
         return 1;
     }
     

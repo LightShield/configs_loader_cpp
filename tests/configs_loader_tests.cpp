@@ -152,3 +152,42 @@ TEST(ConfigsLoaderTest, IsInitializedAfterInit) {
     loader.Init(3, const_cast<char**>(argv));
     EXPECT_TRUE(loader.is_initialized());
 }
+
+TEST(ConfigsLoaderTest, GenerateHelpIncludesAllFields) {
+    ConfigsLoader<TestConfigs> loader;
+    std::string help = loader.generate_help("test_prog");
+    
+    EXPECT_NE(help.find("test_prog"), std::string::npos);
+    EXPECT_NE(help.find("--file"), std::string::npos);
+    EXPECT_NE(help.find("-f"), std::string::npos);
+    EXPECT_NE(help.find("--count"), std::string::npos);
+    EXPECT_NE(help.find("-c"), std::string::npos);
+    EXPECT_NE(help.find("--verbose"), std::string::npos);
+    EXPECT_NE(help.find("-v"), std::string::npos);
+    EXPECT_NE(help.find("--preset"), std::string::npos);
+}
+
+TEST(ConfigsLoaderTest, GenerateHelpShowsDefaults) {
+    ConfigsLoader<TestConfigs> loader;
+    std::string help = loader.generate_help();
+    
+    EXPECT_NE(help.find("default: \"default.txt\""), std::string::npos);
+    EXPECT_NE(help.find("default: 10"), std::string::npos);
+    EXPECT_NE(help.find("default: false"), std::string::npos);
+}
+
+TEST(ConfigsLoaderTest, GenerateHelpMarksRequired) {
+    struct RequiredConfigs {
+        Config<std::string> required_field{
+            .default_value = "",
+            .flags = {"--required"},
+            .required = true
+        };
+        REGISTER_CONFIG_FIELDS(required_field)
+    };
+    
+    ConfigsLoader<RequiredConfigs> loader;
+    std::string help = loader.generate_help();
+    
+    EXPECT_NE(help.find("[REQUIRED]"), std::string::npos);
+}
