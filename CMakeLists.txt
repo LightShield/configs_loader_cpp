@@ -5,6 +5,17 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+# Fetch GTest
+include(FetchContent)
+FetchContent_Declare(
+    googletest
+    GIT_REPOSITORY https://github.com/google/googletest.git
+    GIT_TAG v1.14.0
+)
+FetchContent_MakeAvailable(googletest)
+
+enable_testing()
+
 # Library
 add_library(configs_loader_cpp INTERFACE)
 
@@ -12,6 +23,54 @@ target_include_directories(configs_loader_cpp
     INTERFACE
         ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
+
+# Compiler warnings
+set(WARNING_FLAGS
+    -Werror
+    -Wall
+    -Wextra
+    -Wshadow
+    -Wconversion
+    -Wsign-conversion
+    -Wfloat-equal
+    -Wold-style-cast
+    -Woverloaded-virtual
+    -Wnon-virtual-dtor
+    -Wzero-as-null-pointer-constant
+    -Wmissing-declarations
+    -Wformat=2
+    -Wswitch-enum
+    -Wundef
+)
+
+# Tests
+add_executable(config_field_tests
+    tests/config_field_tests.cpp
+)
+
+target_link_libraries(config_field_tests
+    PRIVATE
+        configs_loader_cpp
+        GTest::gtest_main
+)
+
+target_compile_options(config_field_tests PRIVATE ${WARNING_FLAGS})
+
+add_executable(configs_loader_tests
+    tests/configs_loader_tests.cpp
+)
+
+target_link_libraries(configs_loader_tests
+    PRIVATE
+        configs_loader_cpp
+        GTest::gtest_main
+)
+
+target_compile_options(configs_loader_tests PRIVATE ${WARNING_FLAGS})
+
+include(GoogleTest)
+gtest_discover_tests(config_field_tests)
+gtest_discover_tests(configs_loader_tests)
 
 # Example
 add_executable(basic_example
@@ -23,17 +82,4 @@ target_link_libraries(basic_example
         configs_loader_cpp
 )
 
-# Compiler warnings
-if(MSVC)
-    target_compile_options(basic_example PRIVATE /W4)
-else()
-    target_compile_options(basic_example PRIVATE 
-        -Wall -Wextra -Wpedantic -Wshadow
-        -Wconversion -Wsign-conversion
-        -Wfloat-equal -Wold-style-cast
-        -Woverloaded-virtual -Wnon-virtual-dtor
-        -Wzero-as-null-pointer-constant
-        -Wmissing-declarations -Wformat=2
-        -Wswitch-enum -Wundef
-    )
-endif()
+target_compile_options(basic_example PRIVATE ${WARNING_FLAGS})

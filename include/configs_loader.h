@@ -27,17 +27,16 @@ public:
     }
 
     void parse_arguments(int argc, char* argv[]) {
-        if (argc <= 1) {
-            return;
-        }
+        if (argc > 1) {
+            std::optional<std::string> preset_path = extract_preset_path(argc, argv);
+            
+            if (preset_path.has_value()) {
+                load_preset_file(preset_path.value());
+            }
 
-        std::optional<std::string> preset_path = extract_preset_path(argc, argv);
+            parse_cli_arguments(argc, argv);
+        }
         
-        if (preset_path.has_value()) {
-            load_preset_file(preset_path.value());
-        }
-
-        parse_cli_arguments(argc, argv);
         validate_required_fields();
     }
 
