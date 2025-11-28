@@ -1,18 +1,39 @@
 # configs_loader_cpp
 
-Header-only C++20 configuration loader library.
+Header-only C++20 configuration loader library with clean API separation.
 
 ## Features
 
 - ✅ Header-only library (no linking required)
+- ✅ Clean public API (`configs_loader.hpp`) with implementation details hidden
+- ✅ Automatic `--help`/`-h` handling (prints help and exits)
 - ✅ Clean designated initializer syntax (C++20)
 - ✅ CLI argument parsing (multiple formats: `--key value`, `-k value`, `--key=value`)
+- ✅ Column-aligned help output with text wrapping
+- ✅ Config dumping (all values or only changes from defaults)
 - ✅ Required field validation
 - ✅ Type conversion (string, int, bool, double)
 - ✅ Custom verifier functions
 - ✅ Two-phase initialization (construction never throws)
 - ✅ Reserved `--preset`/`-p` flags for future JSON preset support
 - ✅ Initialization safety checks
+
+## Library Structure
+
+The library is split into two headers for clean API separation:
+
+- **`configs_loader.hpp`** - Public API (include this in your code)
+  - Clean interface showing only public methods
+  - Well-documented API surface
+  - Hides implementation details
+
+- **`configs_loader_impl.hpp`** - Implementation details (automatically included)
+  - Template implementations
+  - Helper functions
+  - Internal utilities
+  - Users should not include this directly
+
+This separation keeps the public API clean and easy to understand while maintaining the header-only design.
 
 ## Installation
 
@@ -39,12 +60,14 @@ struct MyConfigs {
     Config<std::string> filename{
         .default_value = "input.txt",
         .flags = {"--file", "-f"},
-        .required = true
+        .required = true,
+        .description = "Input file to process"
     };
     
     Config<int> log_level{
         .default_value = 2,
-        .flags = {"--log-level", "-l"}
+        .flags = {"--log-level", "-l"},
+        .description = "Logging verbosity level (0-5)"
     };
 
     REGISTER_CONFIG_FIELDS(filename, log_level)
