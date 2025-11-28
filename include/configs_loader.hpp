@@ -68,6 +68,16 @@ public:
 
     [[nodiscard]] bool is_initialized() const { return m_initialized; }
 
+    // Dump config values (only_changes=true dumps only non-default values)
+    [[nodiscard]] std::string dump_configs(bool only_changes = false) const {
+        std::ostringstream dump;
+        auto fields = configs.get_fields();
+        std::apply([&](auto&... field) {
+            ((dump_field(dump, field, only_changes)), ...);
+        }, fields);
+        return dump.str();
+    }
+
     // Generate help text from registered configs
     [[nodiscard]] std::string generate_help(const std::string& program_name = "program", size_t max_width = 80) const {
         std::ostringstream help;
@@ -329,6 +339,29 @@ private:
         } else {
             optional_fields.push_back(info);
         }
+    }
+
+    template<typename T>
+    void dump_field(std::ostringstream& out, const Config<T>& field, bool only_changed) const {
+        if (field.flags.empty()) return;
+        
+        // Skip if only dumping changes and value equals default
+        if (only_changed && field.value == field.default_value) {
+            return;
+        }
+        
+        // Use first flag as the key
+        out << field.flags[0] << "=";
+        
+        if constexpr (std::is_same_v<T, std::string>) {
+            out << "\"" << field.value << "\"";
+        } else if constexpr (std::is_same_v<T, bool>) {
+            out << (field.value ? "true" : "false");
+        } else {
+            out << field.value;
+        }
+        
+        out << "\n";
     }
 
     void wrap_text(std::ostringstream& out, const std::string& text, size_t indent_col, size_t max_width) const {

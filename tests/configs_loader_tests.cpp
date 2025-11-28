@@ -247,3 +247,41 @@ TEST(ConfigsLoaderTest, GenerateHelpShowsDefaultDescriptionWhenMissing) {
     
     EXPECT_NE(help.find("No description provided for this config"), std::string::npos);
 }
+
+TEST(ConfigsLoaderTest, DumpConfigsShowsAllValues) {
+    ConfigsLoader<TestConfigs> loader;
+    const char* argv[] = {"prog", "--file", "custom.txt", "--count", "42"};
+    loader.Init(5, const_cast<char**>(argv));
+    
+    std::string dump = loader.dump_configs();
+    
+    EXPECT_NE(dump.find("--file=\"custom.txt\""), std::string::npos);
+    EXPECT_NE(dump.find("--count=42"), std::string::npos);
+    EXPECT_NE(dump.find("--verbose=false"), std::string::npos);
+}
+
+TEST(ConfigsLoaderTest, DumpConfigsOnlyChangesShowsOnlyChanges) {
+    ConfigsLoader<TestConfigs> loader;
+    const char* argv[] = {"prog", "--file", "custom.txt", "--count", "42"};
+    loader.Init(5, const_cast<char**>(argv));
+    
+    std::string dump = loader.dump_configs(true);
+    
+    // Changed values should appear
+    EXPECT_NE(dump.find("--file=\"custom.txt\""), std::string::npos);
+    EXPECT_NE(dump.find("--count=42"), std::string::npos);
+    
+    // Unchanged value should NOT appear
+    EXPECT_EQ(dump.find("--verbose"), std::string::npos);
+}
+
+TEST(ConfigsLoaderTest, DumpConfigsOnlyChangesEmptyWhenAllDefaults) {
+    ConfigsLoader<TestConfigs> loader;
+    const char* argv[] = {"prog"};
+    loader.Init(1, const_cast<char**>(argv));
+    
+    std::string dump = loader.dump_configs(true);
+    
+    // Should be empty since all values are defaults
+    EXPECT_TRUE(dump.empty() || dump.find("--") == std::string::npos);
+}
