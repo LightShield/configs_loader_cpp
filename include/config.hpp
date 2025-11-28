@@ -8,7 +8,7 @@
 template<typename T>
 struct Config {
     T default_value;
-    std::vector<std::string> flags = {};
+    std::vector<std::string> flags = {};  // TODO(C++26): Use constexpr container for compile-time validation
     bool required = false;
     std::function<bool(const T&)> verifier = [](const T&) { return true; };
 
