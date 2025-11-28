@@ -1,3 +1,8 @@
 add_executable(cli_example cli_example.cpp)
-target_include_directories(cli_example PRIVATE ${CMAKE_SOURCE_DIR}/include)
-target_compile_features(cli_example PRIVATE cxx_std_20)
+
+target_link_libraries(cli_example
+    PRIVATE
+        configs_loader_cpp
+)
+
+target_compile_options(cli_example PRIVATE ${WARNING_FLAGS})

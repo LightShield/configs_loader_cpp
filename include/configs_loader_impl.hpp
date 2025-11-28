@@ -4,6 +4,7 @@
 // This file is automatically included by configs_loader.hpp
 // Users should not include this file directly
 
+#include "preset_parser.hpp"
 #include <stdexcept>
 #include <fstream>
 #include <sstream>
@@ -13,6 +14,7 @@
 #include <tuple>
 #include <iostream>
 #include <cstdlib>
+#include <memory>
 
 template<typename ConfigsType>
 struct ConfigsLoader<ConfigsType>::FieldInfo {
@@ -158,8 +160,14 @@ std::optional<std::string> ConfigsLoader<ConfigsType>::extract_preset_path(int a
 }
 
 template<typename ConfigsType>
-void ConfigsLoader<ConfigsType>::load_preset_file([[maybe_unused]] const std::string& path) {
-    // TODO: Implement JSON parsing
+void ConfigsLoader<ConfigsType>::load_preset_file(const std::string& path) {
+    auto parser = create_preset_parser(path);
+    parser->parse_file(path);
+    
+    auto fields = configs.get_fields();
+    std::apply([&](auto&... field) {
+        ((load_field_from_parser(field, *parser)), ...);
+    }, fields);
 }
 
 template<typename ConfigsType>
@@ -394,5 +402,37 @@ void ConfigsLoader<ConfigsType>::wrap_text(std::ostringstream& out, const std::s
         out << text.substr(pos, break_pos - pos);
         pos = break_pos;
         while (pos < text.length() && text[pos] == ' ') ++pos;
+    }
+}
+
+template<typename ConfigsType>
+template<typename T>
+void ConfigsLoader<ConfigsType>::load_field_from_parser(Config<T>& field, const PresetParser& parser) {
+    if (field.flags.empty()) return;
+    
+    // Use first flag without dashes as the key
+    std::string key = field.flags[0];
+    if (key.starts_with("--")) {
+        key = key.substr(2);
+    } else if (key.starts_with("-")) {
+        key = key.substr(1);
+    }
+    
+    if constexpr (std::is_same_v<T, std::string>) {
+        if (auto val = parser.get_string(key)) {
+            field.set_value(*val);
+        }
+    } else if constexpr (std::is_same_v<T, int>) {
+        if (auto val = parser.get_int(key)) {
+            field.set_value(*val);
+        }
+    } else if constexpr (std::is_same_v<T, bool>) {
+        if (auto val = parser.get_bool(key)) {
+            field.set_value(*val);
+        }
+    } else if constexpr (std::is_same_v<T, double>) {
+        if (auto val = parser.get_double(key)) {
+            field.set_value(*val);
+        }
     }
 }

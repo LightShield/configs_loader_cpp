@@ -3,6 +3,9 @@
 #include "config.hpp"
 #include <string>
 
+// Forward declarations
+class PresetParser;
+
 // Current macro - requires listing all fields (C++20)
 #define REGISTER_CONFIG_FIELDS(...) \
     auto get_fields() { \
@@ -63,6 +66,7 @@ private:
     template<typename T> void append_usage_field(std::ostringstream& usage, const Config<T>& field) const;
     template<typename T> void collect_field_info(const Config<T>& field, std::vector<FieldInfo>& required, std::vector<FieldInfo>& optional) const;
     template<typename T> void dump_field(std::ostringstream& out, const Config<T>& field, bool only_changed) const;
+    template<typename T> void load_field_from_parser(Config<T>& field, const PresetParser& parser);
 };
 
 // Include implementation

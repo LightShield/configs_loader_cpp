@@ -8,6 +8,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 # Feature flags (default OFF for library usage)
 option(BUILD_TESTS "Build tests" OFF)
 option(BUILD_EXAMPLES "Build examples" OFF)
+option(ENABLE_TOML_PRESETS "Enable TOML preset file support" OFF)
 
 # Library
 add_library(configs_loader_cpp INTERFACE)
@@ -15,6 +16,54 @@ add_library(configs_loader_cpp INTERFACE)
 target_include_directories(configs_loader_cpp
     INTERFACE
         ${CMAKE_CURRENT_SOURCE_DIR}/include
+)
+
+# Preset parser implementation (not header-only)
+add_library(configs_loader_preset_parser
+    src/preset_parser.cpp
+)
+
+target_include_directories(configs_loader_preset_parser
+    PUBLIC
+        ${CMAKE_CURRENT_SOURCE_DIR}/include
+)
+
+target_compile_features(configs_loader_preset_parser PUBLIC cxx_std_20)
+
+# Optional TOML support
+if(ENABLE_TOML_PRESETS)
+    message(STATUS "TOML preset support: ENABLED")
+    
+    # Add toml++ as submodule or fetch
+    if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/third_party/tomlplusplus/CMakeLists.txt")
+        include(FetchContent)
+        FetchContent_Declare(
+            tomlplusplus
+            GIT_REPOSITORY https://github.com/marzer/tomlplusplus.git
+            GIT_TAG v3.4.0
+        )
+        FetchContent_MakeAvailable(tomlplusplus)
+    else()
+        add_subdirectory(third_party/tomlplusplus)
+    endif()
+    
+    target_sources(configs_loader_preset_parser PRIVATE
+        src/parsers/toml_parser.cpp
+    )
+    
+    target_link_libraries(configs_loader_preset_parser PUBLIC
+        tomlplusplus::tomlplusplus
+    )
+    
+    target_compile_definitions(configs_loader_preset_parser PUBLIC
+        CONFIGS_LOADER_ENABLE_TOML
+    )
+else()
+    message(STATUS "TOML preset support: DISABLED (use -DENABLE_TOML_PRESETS=ON to enable)")
+endif()
+
+target_link_libraries(configs_loader_cpp INTERFACE
+    configs_loader_preset_parser
 )
 
 # Compiler warnings
