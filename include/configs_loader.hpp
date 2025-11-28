@@ -10,7 +10,7 @@
 #include <vector>
 #include <tuple>
 
-#define REGISTER_CONFIG_FIELDS(...) \
+#define REGISTER_CONFIG_STRUCT(...) \
     auto get_fields() { \
         return std::tie(__VA_ARGS__); \
     }
@@ -38,6 +38,7 @@ public:
         }
         
         validate_required_fields();
+        validate_no_preset_override();
     }
 
 private:
@@ -46,6 +47,14 @@ private:
             std::string arg = argv[i];
             if (arg == "--preset" || arg == "-p") {
                 return std::string(argv[i + 1]);
+            }
+            
+            size_t equals_pos = arg.find('=');
+            if (equals_pos != std::string::npos) {
+                std::string flag = arg.substr(0, equals_pos);
+                if (flag == "--preset" || flag == "-p") {
+                    return arg.substr(equals_pos + 1);
+                }
             }
         }
         return std::nullopt;
@@ -63,13 +72,23 @@ private:
                 continue;
             }
 
+            // Skip preset flag - it's internal
+            if (arg == "--preset" || arg == "-p") {
+                ++i; // Skip the value too
+                continue;
+            }
+
             std::string value;
             bool has_value = false;
 
             size_t equals_pos = arg.find('=');
             if (equals_pos != std::string::npos) {
+                std::string flag = arg.substr(0, equals_pos);
+                if (flag == "--preset" || flag == "-p") {
+                    continue; // Skip preset
+                }
                 value = arg.substr(equals_pos + 1);
-                arg = arg.substr(0, equals_pos);
+                arg = flag;
                 has_value = true;
             } else if (i + 1 < argc && argv[i + 1][0] != '-') {
                 value = argv[i + 1];
@@ -124,6 +143,22 @@ private:
     void validate_field(const Config<T>& field) {
         if (field.is_required() && !field.is_set()) {
             throw std::runtime_error("Required config field not set");
+        }
+    }
+
+    void validate_no_preset_override() {
+        auto fields = configs.get_fields();
+        std::apply([&](auto&... field) {
+            ((check_not_preset_flag(field)), ...);
+        }, fields);
+    }
+
+    template<typename T>
+    void check_not_preset_flag(const Config<T>& field) {
+        for (const auto& flag : field.flags) {
+            if (flag == "--preset" || flag == "-p") {
+                throw std::runtime_error("User configs cannot use reserved --preset/-p flags");
+            }
         }
     }
 };

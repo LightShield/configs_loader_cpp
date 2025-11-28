@@ -6,7 +6,7 @@ struct TestConfigs {
     Config<int> count{.default_value = 10, .flags = {"--count", "-c"}};
     Config<bool> verbose{.default_value = false, .flags = {"--verbose", "-v"}};
 
-    REGISTER_CONFIG_FIELDS(filename, count, verbose)
+    REGISTER_CONFIG_STRUCT(filename, count, verbose)
 };
 
 TEST(ConfigsLoaderTest, DefaultConstructorUsesDefaults) {
@@ -79,7 +79,7 @@ TEST(ConfigsLoaderTest, RequiredFieldThrowsWhenNotSet) {
             .flags = {"--required"},
             .required = true
         };
-        REGISTER_CONFIG_FIELDS(required_field)
+        REGISTER_CONFIG_STRUCT(required_field)
     };
     
     const char* argv[] = {"prog"};
@@ -95,7 +95,7 @@ TEST(ConfigsLoaderTest, RequiredFieldDoesNotThrowWhenSet) {
             .flags = {"--required"},
             .required = true
         };
-        REGISTER_CONFIG_FIELDS(required_field)
+        REGISTER_CONFIG_STRUCT(required_field)
     };
     
     const char* argv[] = {"prog", "--required", "value"};
@@ -109,4 +109,34 @@ TEST(ConfigsLoaderTest, MixedFlagFormats) {
     ConfigsLoader<TestConfigs> loader(4, const_cast<char**>(argv));
     EXPECT_EQ(loader.configs.filename.value(), "mixed.txt");
     EXPECT_EQ(loader.configs.count.value(), 50);
+}
+
+TEST(ConfigsLoaderTest, PresetFlagIsReserved) {
+    struct BadConfigs {
+        Config<std::string> preset{
+            .default_value = "",
+            .flags = {"--preset"}
+        };
+        REGISTER_CONFIG_STRUCT(preset)
+    };
+    
+    const char* argv[] = {"prog"};
+    EXPECT_THROW({
+        ConfigsLoader<BadConfigs> loader(1, const_cast<char**>(argv));
+    }, std::runtime_error);
+}
+
+TEST(ConfigsLoaderTest, PresetShortFlagIsReserved) {
+    struct BadConfigs {
+        Config<std::string> my_preset{
+            .default_value = "",
+            .flags = {"-p"}
+        };
+        REGISTER_CONFIG_STRUCT(my_preset)
+    };
+    
+    const char* argv[] = {"prog"};
+    EXPECT_THROW({
+        ConfigsLoader<BadConfigs> loader(1, const_cast<char**>(argv));
+    }, std::runtime_error);
 }

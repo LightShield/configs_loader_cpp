@@ -8,17 +8,12 @@ struct MyConfigs {
         .required = true
     };
     
-    Config<std::string> preset{
-        .default_value = "",
-        .flags = {"--preset", "-p"}
-    };
-    
     Config<int> log_level{
         .default_value = 2,
         .flags = {"--log-level", "-l"}
     };
 
-    REGISTER_CONFIG_FIELDS(filename, preset, log_level)
+    REGISTER_CONFIG_STRUCT(filename, log_level)
 };
 
 int main(int argc, char* argv[]) {
