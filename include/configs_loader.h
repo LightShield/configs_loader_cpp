@@ -1,6 +1,6 @@
 #pragma once
 
-#include "config_field.h"
+#include "config.h"
 #include <string>
 #include <stdexcept>
 #include <fstream>
@@ -84,7 +84,7 @@ private:
     }
 
     template<typename T>
-    bool try_set_field_value(ConfigField<T>& field, const std::string& flag, const std::string& value) {
+    bool try_set_field_value(Config<T>& field, const std::string& flag, const std::string& value) {
         const auto& flags = field.flags;
         if (std::find(flags.begin(), flags.end(), flag) == flags.end()) {
             return false;
@@ -121,7 +121,7 @@ private:
     }
 
     template<typename T>
-    void validate_field(const ConfigField<T>& field) {
+    void validate_field(const Config<T>& field) {
         if (field.is_required() && !field.is_set()) {
             throw std::runtime_error("Required config field not set");
         }

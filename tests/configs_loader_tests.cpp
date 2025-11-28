@@ -2,9 +2,9 @@
 #include <gtest/gtest.h>
 
 struct TestConfigs {
-    ConfigField<std::string> filename{.default_value = "default.txt", .flags = {"--file", "-f"}};
-    ConfigField<int> count{.default_value = 10, .flags = {"--count", "-c"}};
-    ConfigField<bool> verbose{.default_value = false, .flags = {"--verbose", "-v"}};
+    Config<std::string> filename{.default_value = "default.txt", .flags = {"--file", "-f"}};
+    Config<int> count{.default_value = 10, .flags = {"--count", "-c"}};
+    Config<bool> verbose{.default_value = false, .flags = {"--verbose", "-v"}};
 
     REGISTER_CONFIG_FIELDS(filename, count, verbose)
 };
@@ -74,7 +74,7 @@ TEST(ConfigsLoaderTest, UnknownFlagsAreIgnored) {
 
 TEST(ConfigsLoaderTest, RequiredFieldThrowsWhenNotSet) {
     struct RequiredConfigs {
-        ConfigField<std::string> required_field{
+        Config<std::string> required_field{
             .default_value = "",
             .flags = {"--required"},
             .required = true
@@ -90,7 +90,7 @@ TEST(ConfigsLoaderTest, RequiredFieldThrowsWhenNotSet) {
 
 TEST(ConfigsLoaderTest, RequiredFieldDoesNotThrowWhenSet) {
     struct RequiredConfigs {
-        ConfigField<std::string> required_field{
+        Config<std::string> required_field{
             .default_value = "",
             .flags = {"--required"},
             .required = true

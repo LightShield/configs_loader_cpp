@@ -2,18 +2,18 @@
 #include <iostream>
 
 struct MyConfigs {
-    ConfigField<std::string> filename{
+    Config<std::string> filename{
         .default_value = "input.txt",
         .flags = {"--file", "-f"},
         .required = true
     };
     
-    ConfigField<std::string> preset{
+    Config<std::string> preset{
         .default_value = "",
         .flags = {"--preset", "-p"}
     };
     
-    ConfigField<int> log_level{
+    Config<int> log_level{
         .default_value = 2,
         .flags = {"--log-level", "-l"}
     };

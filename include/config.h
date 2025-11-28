@@ -6,7 +6,7 @@
 #include <cstdint>
 
 template<typename T>
-struct ConfigField {
+struct Config {
     T default_value;
     std::vector<std::string> flags = {};
     bool required = false;

@@ -44,17 +44,17 @@ set(WARNING_FLAGS
 )
 
 # Tests
-add_executable(config_field_tests
-    tests/config_field_tests.cpp
+add_executable(config_tests
+    tests/config_tests.cpp
 )
 
-target_link_libraries(config_field_tests
+target_link_libraries(config_tests
     PRIVATE
         configs_loader_cpp
         GTest::gtest_main
 )
 
-target_compile_options(config_field_tests PRIVATE ${WARNING_FLAGS})
+target_compile_options(config_tests PRIVATE ${WARNING_FLAGS})
 
 add_executable(configs_loader_tests
     tests/configs_loader_tests.cpp
@@ -69,7 +69,7 @@ target_link_libraries(configs_loader_tests
 target_compile_options(configs_loader_tests PRIVATE ${WARNING_FLAGS})
 
 include(GoogleTest)
-gtest_discover_tests(config_field_tests)
+gtest_discover_tests(config_tests)
 gtest_discover_tests(configs_loader_tests)
 
 # Example
