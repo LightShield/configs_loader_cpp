@@ -85,7 +85,7 @@ private:
 
     template<typename T>
     bool try_set_field_value(ConfigField<T>& field, const std::string& flag, const std::string& value) {
-        const auto& flags = field.flags();
+        const auto& flags = field.flags;
         if (std::find(flags.begin(), flags.end(), flag) == flags.end()) {
             return false;
         }
