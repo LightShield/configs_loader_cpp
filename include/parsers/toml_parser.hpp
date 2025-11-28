@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../preset_parser.hpp"
+#include "preset_parser.hpp"
 
 #ifdef CONFIGS_LOADER_ENABLE_TOML
 

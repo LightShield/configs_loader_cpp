@@ -45,6 +45,10 @@ public:
     // Dump current configuration values
     // only_changes: If true, only dump values that differ from defaults
     [[nodiscard]] std::string dump_configs(bool only_changes = false) const;
+    
+    // Dump configuration to TOML format
+    // only_changes: If true, only dump values that differ from defaults
+    [[nodiscard]] std::string dump_to_toml(bool only_changes = false) const;
 
 private:
     bool m_initialized = false;
@@ -66,6 +70,7 @@ private:
     template<typename T> void append_usage_field(std::ostringstream& usage, const Config<T>& field) const;
     template<typename T> void collect_field_info(const Config<T>& field, std::vector<FieldInfo>& required, std::vector<FieldInfo>& optional) const;
     template<typename T> void dump_field(std::ostringstream& out, const Config<T>& field, bool only_changed) const;
+    template<typename T> void dump_field_toml(std::ostringstream& out, const Config<T>& field, bool only_changed) const;
     template<typename T> void load_field_from_parser(Config<T>& field, const PresetParser& parser);
 };
 

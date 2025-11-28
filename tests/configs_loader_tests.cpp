@@ -285,3 +285,56 @@ TEST(ConfigsLoaderTest, DumpConfigsOnlyChangesEmptyWhenAllDefaults) {
     // Should be empty since all values are defaults
     EXPECT_TRUE(dump.empty() || dump.find("--") == std::string::npos);
 }
+
+TEST(ConfigsLoaderTest, DumpToTomlFormat) {
+    ConfigsLoader<TestConfigs> loader;
+    const char* argv[] = {"prog", "--file", "test.txt", "--count", "99"};
+    loader.init(5, const_cast<char**>(argv));
+    
+    std::string toml = loader.dump_to_toml();
+    
+    // Should have TOML format (key = value)
+    EXPECT_NE(toml.find("file = \"test.txt\""), std::string::npos);
+    EXPECT_NE(toml.find("count = 99"), std::string::npos);
+    EXPECT_NE(toml.find("verbose = false"), std::string::npos);
+}
+
+TEST(ConfigsLoaderTest, DumpToTomlOnlyChanges) {
+    ConfigsLoader<TestConfigs> loader;
+    const char* argv[] = {"prog", "--file", "changed.txt"};
+    loader.init(3, const_cast<char**>(argv));
+    
+    std::string toml = loader.dump_to_toml(true);
+    
+    // Should only have changed value
+    EXPECT_NE(toml.find("file = \"changed.txt\""), std::string::npos);
+    EXPECT_EQ(toml.find("count"), std::string::npos);
+    EXPECT_EQ(toml.find("verbose"), std::string::npos);
+}
+
+#ifdef CONFIGS_LOADER_ENABLE_TOML
+TEST(ConfigsLoaderTest, RoundTripTomlDumpAndLoad) {
+    // Create initial config
+    ConfigsLoader<TestConfigs> loader1;
+    const char* argv[] = {"prog", "--file", "original.txt", "--count", "42", "--verbose", "true"};
+    loader1.init(7, const_cast<char**>(argv));
+    
+    // Dump to TOML
+    std::string toml = loader1.dump_to_toml();
+    
+    // Write to file
+    std::ofstream out("/tmp/roundtrip.toml");
+    out << toml;
+    out.close();
+    
+    // Load from TOML preset
+    ConfigsLoader<TestConfigs> loader2;
+    const char* argv2[] = {"prog", "--preset", "/tmp/roundtrip.toml"};
+    loader2.init(3, const_cast<char**>(argv2));
+    
+    // Values should match
+    EXPECT_EQ(loader2.configs.filename.value, "original.txt");
+    EXPECT_EQ(loader2.configs.count.value, 42);
+    EXPECT_TRUE(loader2.configs.verbose.value);
+}
+#endif

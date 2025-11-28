@@ -4,7 +4,7 @@
 // This file is automatically included by configs_loader.hpp
 // Users should not include this file directly
 
-#include "preset_parser.hpp"
+#include "parsers/preset_parser.hpp"
 #include <stdexcept>
 #include <fstream>
 #include <sstream>
@@ -68,6 +68,16 @@ std::string ConfigsLoader<ConfigsType>::dump_configs(bool only_changes) const {
     auto fields = configs.get_fields();
     std::apply([&](auto&... field) {
         ((dump_field(dump, field, only_changes)), ...);
+    }, fields);
+    return dump.str();
+}
+
+template<typename ConfigsType>
+std::string ConfigsLoader<ConfigsType>::dump_to_toml(bool only_changes) const {
+    std::ostringstream dump;
+    auto fields = configs.get_fields();
+    std::apply([&](auto&... field) {
+        ((dump_field_toml(dump, field, only_changes)), ...);
     }, fields);
     return dump.str();
 }
@@ -370,6 +380,37 @@ void ConfigsLoader<ConfigsType>::dump_field(std::ostringstream& out, const Confi
 }
 
 template<typename ConfigsType>
+template<typename T>
+void ConfigsLoader<ConfigsType>::dump_field_toml(std::ostringstream& out, const Config<T>& field, bool only_changed) const {
+    if (field.flags.empty()) return;
+    
+    // Skip if only dumping changes and value equals default
+    if (only_changed && field.value == field.default_value) {
+        return;
+    }
+    
+    // Use first flag without dashes as TOML key
+    std::string key = field.flags[0];
+    if (key.starts_with("--")) {
+        key = key.substr(2);
+    } else if (key.starts_with("-")) {
+        key = key.substr(1);
+    }
+    
+    out << key << " = ";
+    
+    if constexpr (std::is_same_v<T, std::string>) {
+        out << "\"" << field.value << "\"";
+    } else if constexpr (std::is_same_v<T, bool>) {
+        out << (field.value ? "true" : "false");
+    } else {
+        out << field.value;
+    }
+    
+    out << "\n";
+}
+
+template<typename ConfigsType>
 void ConfigsLoader<ConfigsType>::wrap_text(std::ostringstream& out, const std::string& text, size_t indent_col, size_t max_width) const {
     if (text.empty()) return;
     
@@ -410,29 +451,29 @@ template<typename T>
 void ConfigsLoader<ConfigsType>::load_field_from_parser(Config<T>& field, const PresetParser& parser) {
     if (field.flags.empty()) return;
     
-    // Use first flag without dashes as the key
-    std::string key = field.flags[0];
-    if (key.starts_with("--")) {
-        key = key.substr(2);
-    } else if (key.starts_with("-")) {
-        key = key.substr(1);
-    }
-    
-    if constexpr (std::is_same_v<T, std::string>) {
-        if (auto val = parser.get_string(key)) {
-            field.set_value(*val);
+    // Try all flags as keys (without dashes)
+    for (const auto& flag : field.flags) {
+        std::string key = flag;
+        if (key.starts_with("--")) {
+            key = key.substr(2);
+        } else if (key.starts_with("-")) {
+            key = key.substr(1);
         }
-    } else if constexpr (std::is_same_v<T, int>) {
-        if (auto val = parser.get_int(key)) {
-            field.set_value(*val);
+        
+        std::optional<T> value;
+        if constexpr (std::is_same_v<T, std::string>) {
+            value = parser.get_string(key);
+        } else if constexpr (std::is_same_v<T, int>) {
+            value = parser.get_int(key);
+        } else if constexpr (std::is_same_v<T, bool>) {
+            value = parser.get_bool(key);
+        } else if constexpr (std::is_same_v<T, double>) {
+            value = parser.get_double(key);
         }
-    } else if constexpr (std::is_same_v<T, bool>) {
-        if (auto val = parser.get_bool(key)) {
-            field.set_value(*val);
-        }
-    } else if constexpr (std::is_same_v<T, double>) {
-        if (auto val = parser.get_double(key)) {
-            field.set_value(*val);
+        
+        if (value.has_value()) {
+            field.set_value(*value);
+            return; // Found value, stop trying other flags
         }
     }
 }

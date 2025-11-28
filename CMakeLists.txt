@@ -8,7 +8,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 # Feature flags (default OFF for library usage)
 option(BUILD_TESTS "Build tests" OFF)
 option(BUILD_EXAMPLES "Build examples" OFF)
-option(ENABLE_TOML_PRESETS "Enable TOML preset file support" OFF)
+option(ENABLE_TOML_PRESETS "Enable TOML preset file support" ON)
 
 # Library
 add_library(configs_loader_cpp INTERFACE)
@@ -20,7 +20,7 @@ target_include_directories(configs_loader_cpp
 
 # Preset parser implementation (not header-only)
 add_library(configs_loader_preset_parser
-    src/preset_parser.cpp
+    src/parsers/preset_parser.cpp
 )
 
 target_include_directories(configs_loader_preset_parser
@@ -121,9 +121,22 @@ target_link_libraries(configs_loader_tests
 
 target_compile_options(configs_loader_tests PRIVATE ${WARNING_FLAGS})
 
+add_executable(toml_parser_tests
+    tests/toml_parser_tests.cpp
+)
+
+target_link_libraries(toml_parser_tests
+    PRIVATE
+        configs_loader_cpp
+        GTest::gtest_main
+)
+
+target_compile_options(toml_parser_tests PRIVATE ${WARNING_FLAGS})
+
 include(GoogleTest)
 gtest_discover_tests(config_tests)
 gtest_discover_tests(configs_loader_tests)
+gtest_discover_tests(toml_parser_tests)
 endif()
 
 # Examples (optional)
