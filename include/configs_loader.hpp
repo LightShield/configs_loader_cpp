@@ -69,6 +69,9 @@ private:
     void try_set_config_value(const std::string& flag, const std::string& value);
     void wrap_text(std::ostringstream& out, const std::string& text, size_t indent_col, size_t max_width) const;
     
+    template<typename T> void print_field_hierarchical(std::ostringstream& out, const Config<T>& field, size_t indent, bool use_colors, size_t max_width, const std::string& prefix = "") const;
+    template<typename T> void print_field_hierarchical(std::ostringstream& out, const ConfigGroup<T>& group, size_t indent, bool use_colors, size_t max_width, const std::string& prefix = "") const;
+    
     template<typename T> bool try_set_field_value(Config<T>& field, const std::string& flag, const std::string& value);
     template<typename T> bool try_set_field_value(ConfigGroup<T>& group, const std::string& flag, const std::string& value);
     template<typename T> void validate_field(const Config<T>& field);

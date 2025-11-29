@@ -35,6 +35,16 @@ inline std::string colorize(const std::string& text, const char* color, bool use
     return std::string(color) + text + ansi::RESET;
 }
 
+// Helper to get type name as string
+template<typename T>
+inline std::string get_type_name() {
+    if constexpr (std::is_same_v<T, std::string>) return "string";
+    else if constexpr (std::is_same_v<T, int>) return "int";
+    else if constexpr (std::is_same_v<T, bool>) return "bool";
+    else if constexpr (std::is_same_v<T, double>) return "double";
+    else return "unknown";
+}
+
 template<typename ConfigsType>
 struct ConfigsLoader<ConfigsType>::FieldInfo {
     std::string prefix;
@@ -106,7 +116,7 @@ std::string ConfigsLoader<ConfigsType>::generate_help(const std::string& program
     std::ostringstream help;
     const bool use_colors = help_config.use_colors;
     
-    // Build usage line with short flags
+    // Build usage line
     help << colorize("Usage: ", ansi::BOLD, use_colors) << program_name << " [OPTIONS]";
     auto fields = configs.get_fields();
     std::apply([&](auto&... field) {
@@ -114,64 +124,18 @@ std::string ConfigsLoader<ConfigsType>::generate_help(const std::string& program
     }, fields);
     help << "\n\n" << colorize("Options:", ansi::BOLD, use_colors) << "\n";
     
-    // Collect field info for alignment calculation
-    std::vector<FieldInfo> all_fields;
+    // Built-in options
+    help << "  " << colorize("--help, -h", ansi::CYAN, use_colors) 
+         << "   " << colorize("<void>", ansi::YELLOW, use_colors) 
+         << "  Show this help message\n";
+    help << "  " << colorize("--preset, -p", ansi::CYAN, use_colors) 
+         << " " << colorize("<file>", ansi::YELLOW, use_colors) 
+         << "  Load configuration from JSON file (reserved)\n";
     
-    all_fields.push_back({"", "--help, -h", "<void>", "Show this help message", ""});
-    all_fields.push_back({"", "--preset, -p", "<file>", "Load configuration from JSON file (reserved)", ""});
-    
-    std::vector<FieldInfo> required_fields;
-    std::vector<FieldInfo> optional_fields;
+    // Print fields hierarchically
     std::apply([&](auto&... field) {
-        ((collect_field_info(field, required_fields, optional_fields)), ...);
+        ((print_field_hierarchical(help, field, 0, use_colors, max_width)), ...);
     }, fields);
-    
-    all_fields.insert(all_fields.end(), required_fields.begin(), required_fields.end());
-    all_fields.insert(all_fields.end(), optional_fields.begin(), optional_fields.end());
-    
-    // Calculate column widths
-    size_t prefix_width = 0, flags_width = 0, type_width = 0;
-    for (const auto& f : all_fields) {
-        prefix_width = std::max(prefix_width, f.prefix.length());
-        flags_width = std::max(flags_width, f.flags.length());
-        type_width = std::max(type_width, f.type.length());
-    }
-    
-    // Format and output
-    const size_t desc_col = 2 + prefix_width + (prefix_width > 0 ? 1 : 0) + flags_width + 1 + type_width + 4;
-    
-    for (const auto& f : all_fields) {
-        help << "  ";
-        
-        // Prefix column (e.g., [Required]) - RED for required
-        if (prefix_width > 0) {
-            std::string prefix_text = f.prefix + std::string(prefix_width - f.prefix.length(), ' ');
-            if (!f.prefix.empty()) {
-                help << colorize(prefix_text, ansi::RED, use_colors);
-            } else {
-                help << prefix_text;
-            }
-            help << " ";
-        }
-        
-        // Flags column - CYAN
-        help << colorize(f.flags, ansi::CYAN, use_colors);
-        help << std::string(flags_width - f.flags.length(), ' ') << " ";
-        
-        // Type column - YELLOW
-        help << colorize(f.type, ansi::YELLOW, use_colors);
-        help << std::string(type_width - f.type.length(), ' ');
-        
-        help << "    ";
-        
-        std::string full_desc = f.description;
-        if (!f.default_val.empty()) {
-            full_desc += " " + colorize("(default: " + f.default_val + ")", ansi::GRAY, use_colors);
-        }
-        
-        wrap_text(help, full_desc, desc_col, max_width);
-        help << "\n";
-    }
     
     return help.str();
 }
@@ -679,5 +643,78 @@ void ConfigsLoader<ConfigsType>::load_field_from_parser(ConfigGroup<T>& group, c
     auto fields = group.config.get_fields();
     std::apply([&](auto&... field) {
         ((load_field_from_parser(field, parser)), ...);
+    }, fields);
+}
+
+// Hierarchical help printing
+template<typename ConfigsType>
+template<typename T>
+void ConfigsLoader<ConfigsType>::print_field_hierarchical(std::ostringstream& out, const Config<T>& field, size_t indent, bool use_colors, size_t, const std::string& prefix) const {
+    if (field.flags.empty()) return;
+    
+    std::string indent_str(indent * 2, ' ');
+    
+    // Format: "  --flag, -f  <type>  description (default: value)"
+    out << "  " << indent_str;
+    
+    // Required marker
+    if (field.is_required()) {
+        out << colorize("[Required] ", ansi::RED, use_colors);
+    }
+    
+    // Flags with prefix
+    std::ostringstream flags_str;
+    for (size_t i = 0; i < field.flags.size(); ++i) {
+        if (i > 0) flags_str << ", ";
+        std::string flag = field.flags[i];
+        if (!prefix.empty()) {
+            // Insert prefix after -- or -
+            if (flag.starts_with("--")) {
+                flags_str << "--" << prefix << "." << flag.substr(2);
+            } else if (flag.starts_with("-") && flag.length() == 2) {
+                flags_str << flag;  // Short flags don't get prefix
+            } else {
+                flags_str << flag;
+            }
+        } else {
+            flags_str << flag;
+        }
+    }
+    out << colorize(flags_str.str(), ansi::CYAN, use_colors);
+    
+    // Type
+    out << "  " << colorize("<" + get_type_name<T>() + ">", ansi::YELLOW, use_colors);
+    
+    // Description
+    std::string desc = field.description.empty() ? "No description provided for this config" : field.description;
+    out << "  " << desc;
+    
+    // Default value
+    if constexpr (std::is_same_v<T, std::string>) {
+        out << " " << colorize("(default: \"" + field.default_value + "\")", ansi::GRAY, use_colors);
+    } else if constexpr (std::is_same_v<T, bool>) {
+        out << " " << colorize("(default: " + std::string(field.default_value ? "true" : "false") + ")", ansi::GRAY, use_colors);
+    } else {
+        out << " " << colorize("(default: " + std::to_string(field.default_value) + ")", ansi::GRAY, use_colors);
+    }
+    
+    out << "\n";
+}
+
+template<typename ConfigsType>
+template<typename T>
+void ConfigsLoader<ConfigsType>::print_field_hierarchical(std::ostringstream& out, const ConfigGroup<T>& group, size_t indent, bool use_colors, size_t max_width, const std::string& prefix) const {
+    std::string indent_str(indent * 2, ' ');
+    
+    // Group header
+    out << "  " << indent_str << colorize(group.name_ + ":", ansi::GREEN, use_colors) << "\n";
+    
+    // Build full prefix for nested fields
+    std::string full_prefix = prefix.empty() ? group.name_ : prefix + "." + group.name_;
+    
+    // Print nested fields with increased indentation
+    auto fields = group.config.get_fields();
+    std::apply([&](auto&... field) {
+        ((print_field_hierarchical(out, field, indent + 1, use_colors, max_width, full_prefix)), ...);
     }, fields);
 }
