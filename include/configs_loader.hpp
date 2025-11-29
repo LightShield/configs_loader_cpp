@@ -6,9 +6,9 @@
 // Forward declarations
 class PresetParser;
 
-enum class SerializationFormat {
-    CLI,   // --flag=value format
-    TOML   // key = value format
+enum class SerializationFormat : uint8_t {
+    CLI,
+    TOML
 };
 
 // Current macro - requires listing all fields (C++20)

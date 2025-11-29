@@ -1,23 +1,20 @@
 #pragma once
 
-// Implementation details for ConfigsLoader
-// This file is automatically included by configs_loader.hpp
-// Users should not include this file directly
-
-#include "serialization/preset_deserializer.hpp"
-#include "serialization/cli_serializer.hpp"
-#include "serialization/toml_serializer.hpp"
-#include "help/help_generator.hpp"
-#include <stdexcept>
-#include <fstream>
-#include <sstream>
 #include <algorithm>
+#include <cstdlib>
+#include <fstream>
+#include <iostream>
+#include <memory>
+#include <sstream>
+#include <stdexcept>
+#include <tuple>
 #include <type_traits>
 #include <vector>
-#include <tuple>
-#include <iostream>
-#include <cstdlib>
-#include <memory>
+
+#include "help/help_generator.hpp"
+#include "serialization/cli_serializer.hpp"
+#include "serialization/preset_deserializer.hpp"
+#include "serialization/toml_serializer.hpp"
 
 template<typename ConfigsType>
 struct ConfigsLoader<ConfigsType>::FieldInfo {
