@@ -91,7 +91,7 @@ std::string ConfigsLoader<ConfigsType>::dump_configs(SerializationFormat format,
 
 template<typename ConfigsType>
 std::string ConfigsLoader<ConfigsType>::generate_help(const std::string& program_name, size_t max_width, const std::string& filter) const {
-    HelpGenerator<ConfigsType> generator(configs, help_config.use_colors, help_config.enable_interactive);
+    HelpGenerator<ConfigsType> generator(configs, help_config);
     return generator.generate(program_name, max_width, filter);
 }
 

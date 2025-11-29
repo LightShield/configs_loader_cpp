@@ -1,6 +1,7 @@
 #pragma once
 
 #include "config.hpp"
+#include "help/help_generator.hpp"
 #include "serialization/serialization_format.hpp"
 #include <string>
 
@@ -25,12 +26,7 @@ template<typename ConfigsType>
 class ConfigsLoader {
 public:
     ConfigsType configs;
-    
-    // Configuration for help output
-    struct HelpConfig {
-        bool use_colors = true;           // Enable ANSI colors in help output
-        bool enable_interactive = true;   // Enable --help <filter> for filtered help
-    } help_config;
+    HelpConfig help_config;
 
     ConfigsLoader() = default;
     ConfigsLoader(int argc, char* argv[]);

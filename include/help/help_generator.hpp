@@ -1,9 +1,15 @@
 #pragma once
 
 #include "help_colors.hpp"
+#include <cstdint>
+#include <sstream>
 #include <string>
 #include <vector>
-#include <sstream>
+
+struct HelpConfig {
+    bool use_colors = true;
+    bool enable_interactive = true;
+};
 
 template<typename ConfigsType>
 class HelpGenerator {
@@ -12,8 +18,8 @@ class HelpGenerator {
     const bool m_enable_interactive;
 
 public:
-    HelpGenerator(const ConfigsType& configs, const bool use_colors, const bool enable_interactive)
-        : m_configs(configs), m_use_colors(use_colors), m_enable_interactive(enable_interactive) {}
+    HelpGenerator(const ConfigsType& configs, const HelpConfig& config)
+        : m_configs(configs), m_use_colors(config.use_colors), m_enable_interactive(config.enable_interactive) {}
 
     std::string generate(const std::string& program_name, size_t max_width, const std::string& filter) const;
 
