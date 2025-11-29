@@ -1,29 +1,6 @@
 # Real World Application Example
 
-Demonstrates a realistic application structure with proper include/src separation, module composition, and sub-module config passing.
-
-## Design Philosophy
-
-This example showcases the library's core design principles:
-
-### 1. Compile-Time First
-- **Type safety**: All config access is type-checked at compile time
-- **Direct memory access**: `config.api_server.config.port.value` resolves to fixed memory offset
-- **IDE support**: Full autocomplete and type information in IDEs
-- **Zero runtime overhead**: No virtual functions, no pointer indirection
-- **Designated initializers**: Different defaults set at compile time (C++20)
-
-### 2. Developer Experience
-- **Hierarchical organization**: Configs mirror application architecture
-- **Context awareness**: Modules only know their own config, not hierarchy
-- **Automatic features**: Help generation, required field validation, type conversion
-- **Input validation**: Custom verifier functions per field
-- **Reusability**: Same config type used multiple times with different defaults
-
-### 3. Runtime Efficiency
-- **Direct access**: All member access is compile-time resolved
-- **Thread safety**: Wrap config types with `std::atomic<T>` if needed
-- **No overhead**: Composition adds minimal cost (one pointer per ConfigGroup)
+Demonstrates advanced patterns: proper include/src separation, sub-module configs, multiple instances with different compile-time defaults, and three config passing strategies.
 
 ## Structure
 
@@ -56,54 +33,60 @@ real_world/
 
 ```
 AppConfig
-├── api_server (ServerConfig)           # API server with its own database
+├── api_server (ServerConfig)           # Port 8080 (compile-time default)
 │   ├── database (DatabaseConfig)
-│   │   ├── host
-│   │   ├── port
 │   │   └── pool (ConnectionPoolConfig)  # Sub-module
 │   │       ├── min_connections
 │   │       └── max_connections
-│   └── port
-├── admin_server (ServerConfig)         # Admin server with different database
-│   ├── database (DatabaseConfig)
-│   │   ├── host
-│   │   ├── port
-│   │   └── pool (ConnectionPoolConfig)
-│   │       ├── min_connections
-│   │       └── max_connections
-│   └── port
-└── shared_cache (CacheConfig)          # Shared cache for both servers
-    ├── host
-    └── port
+│   ├── session_cache (CacheConfig)     # Port 6379
+│   ├── data_cache (CacheConfig)        # Port 6380
+│   └── query_cache (CacheConfig)       # Port 6381
+└── admin_server (ServerConfig)         # Port 9090 (compile-time default)
+    ├── database (DatabaseConfig)
+    │   └── pool (ConnectionPoolConfig)
+    │       ├── min_connections
+    │       └── max_connections
+    ├── session_cache (CacheConfig)     # Port 6379
+    ├── data_cache (CacheConfig)        # Port 6380
+    └── query_cache (CacheConfig)       # Port 6381
 ```
 
-## Key Patterns
+## Advanced Patterns
 
-### Multiple Instances with Different Defaults
-Two servers with different default ports (compile-time via designated initializers):
+### 1. Multiple Instances with Different Compile-Time Defaults
+
+Using designated initializers to override nested defaults:
+
 ```cpp
 struct AppConfig {
     ConfigGroup<ServerConfig> api_server{
         .config = {
-            .port = {.default_value = 8080}  // Override just the port
+            .port = {.default_value = 8080},  // Override just the port
+            .session_cache = {.config = {.port = {.default_value = 6379}}},
+            .data_cache = {.config = {.port = {.default_value = 6380}}},
+            .query_cache = {.config = {.port = {.default_value = 6381}}}
         },
         .name_ = "api_server"
     };
     
     ConfigGroup<ServerConfig> admin_server{
         .config = {
-            .port = {.default_value = 9090}  // Different port
+            .port = {.default_value = 9090},  // Different port
+            .session_cache = {.config = {.port = {.default_value = 6379}}},
+            .data_cache = {.config = {.port = {.default_value = 6380}}},
+            .query_cache = {.config = {.port = {.default_value = 6381}}}
         },
         .name_ = "admin_server"
     };
 };
-
-// Fully compile-time initialization, no constructor needed
-// Can override any nested field using designated initializers
 ```
 
-### Sub-Module Config
+**Key benefit**: Fully compile-time initialization, no constructor overhead, can override any nested field.
+
+### 2. Sub-Module Config
+
 Database has a connection pool sub-module with its own config:
+
 ```cpp
 struct DatabaseConfig {
     Config<std::string> host{...};
@@ -113,64 +96,107 @@ struct DatabaseConfig {
 };
 ```
 
-### Config Passing
-Server takes its own config plus shared cache config:
-```cpp
-class Server {
-    Server(const ServerConfig& config, const CacheConfig& cache_config) 
-        : db_(config.database)    // Own database config
-        , cache_(cache_config)    // Shared cache config
-    {}
-};
+Access: `loader.configs.api_server.config.database.config.pool.config.min_connections.value`
 
-// Usage
-Server api_server(loader.configs.api_server, loader.configs.shared_cache);
-Server admin_server(loader.configs.admin_server, loader.configs.shared_cache);
+### 3. Three Config Passing Patterns
+
+**Pattern 1: Hold config reference (Database)**
+```cpp
+class Database {
+    const DatabaseConfig& config_;  // Reference to config
+public:
+    Database(const DatabaseConfig& config) : config_(config) {}
+    void connect() {
+        // Access config each time - always up-to-date (reactive)
+        std::cout << config_.host.value << ":" << config_.port.value;
+    }
+};
 ```
 
-### Config Access (4 levels deep)
+**Pattern 2: Copy values during construction (Cache)**
 ```cpp
-loader.configs.api_server.database.pool.min_connections.value
-loader.configs.admin_server.database.pool.max_connections.value
+class Cache {
+    std::string host_;  // Copied value
+    int port_;          // Copied value
+public:
+    Cache(const CacheConfig& config) 
+        : host_(config.host.value)
+        , port_(config.port.value) 
+    {}
+    void connect() {
+        // Uses snapshot - won't see config changes (immutable)
+        std::cout << host_ << ":" << port_;
+    }
+};
+```
+
+**Pattern 3: Hold references to individual values (Server)**
+```cpp
+class Server {
+    const int& port_;  // Reference to value
+public:
+    Server(const ServerConfig& config) 
+        : port_(config.port.value)
+    {}
+    void start() {
+        // Sees changes if config.port.value is modified (reactive)
+        std::cout << "Port: " << port_;
+    }
+};
+```
+
+**When to use each:**
+- Pattern 1: Need full config access, want reactivity
+- Pattern 2: Only need few values, want snapshot/immutability
+- Pattern 3: Need reactivity but only for specific values
+
+### 4. Access Patterns for Deep Hierarchies
+
+**Direct access (4 levels deep):**
+```cpp
+loader.configs.api_server.config.database.config.pool.config.min_connections.value
+```
+
+**Scoped alias for cleaner access:**
+```cpp
+const auto& api_cfg = loader.configs.api_server.config;
+std::cout << api_cfg.database.config.pool.config.min_connections.value;
+
+// Or multiple levels
+const auto& pool = api_cfg.database.config.pool.config;
+std::cout << pool.min_connections.value;
 ```
 
 ## Usage
 
 ```bash
-# Configure two servers with different databases but shared cache
+# Configure two servers with different databases and multiple caches
 ./real_world_example \
   --name production-app \
   --api_server.port 8080 \
   --api_server.database.host api-db.prod.com \
   --api_server.database.pool.min 10 \
   --api_server.database.pool.max 50 \
+  --api_server.session_cache.host cache1.prod.com \
+  --api_server.data_cache.host cache2.prod.com \
   --admin_server.port 9090 \
-  --admin_server.database.host admin-db.prod.com \
-  --admin_server.database.pool.min 5 \
-  --admin_server.database.pool.max 20 \
-  --shared_cache.host cache.prod.com
+  --admin_server.database.host admin-db.prod.com
 ```
 
-## Benefits
+## Design Philosophy
 
-### Performance
-1. **Compile-time resolution**: All config access resolves to direct memory offsets
-2. **Zero runtime overhead**: No virtual functions, no pointer indirection
-3. **Init-time only**: Constructor runs once at startup, not during usage
-4. **Thread-safe option**: Wrap types with `std::atomic<T>` if needed
+### Compile-Time First
+- Type safety: All config access is type-checked at compile time
+- Direct memory access: Resolves to fixed memory offsets
+- IDE support: Full autocomplete and type information
+- Designated initializers: Different defaults set at compile time (C++20)
 
 ### Developer Experience
-5. **IDE support**: Full autocomplete and type information
-6. **Type safety**: Compile-time checking of all config access
-7. **Hierarchical organization**: Configs mirror application structure
-8. **Context awareness**: Modules only know their own config
+- Hierarchical organization: Configs mirror application architecture
+- Context awareness: Modules only know their own config, not hierarchy
+- Automatic features: Help generation, required field validation, type conversion
 
-### Features
-9. **Multiple instances**: Reuse config types with different defaults
-10. **Sub-modules**: Nested config hierarchies (database.pool)
-11. **Shared configs**: Multiple modules can share same config
-12. **Automatic features**: Help, validation, type conversion
-
-### Structure
-13. **Proper separation**: include/ for headers, src/ for implementation
-14. **Real patterns**: Mimics actual C++ project organization
+### Runtime Efficiency
+- Direct access: All member access is compile-time resolved
+- Minimal overhead: Composition adds one pointer per ConfigGroup
+- Thread safety: Wrap config types with `std::atomic<T>` if needed

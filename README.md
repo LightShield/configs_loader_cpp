@@ -148,14 +148,14 @@ struct DatabaseConfig {
 };
 
 struct ServerConfig {
-    CONFIG_GROUP(DatabaseConfig, primary_db);  // Auto-name: "primary_db"
-    CONFIG_GROUP(DatabaseConfig, replica_db);  // Auto-name: "replica_db"
+    CONFIG_GROUP(DatabaseConfig, primary_db);
+    CONFIG_GROUP(DatabaseConfig, replica_db);
     Config<int> timeout{.default_value = 30, .flags = {"--timeout"}};
     REGISTER_CONFIG_FIELDS(primary_db, replica_db, timeout)
 };
 
 struct AppConfig {
-    CONFIG_GROUP(ServerConfig, backend);  // Auto-name: "backend"
+    CONFIG_GROUP(ServerConfig, backend);
     Config<std::string> app_name{.default_value = "myapp", .flags = {"--name"}};
     REGISTER_CONFIG_FIELDS(backend, app_name)
 };
@@ -166,20 +166,25 @@ loader.init(argc, argv);
 
 // CLI: --backend.primary_db.host db1.example.com --backend.primary_db.port 3306
 
-// Direct access via inheritance - zero overhead
-std::cout << loader.configs.backend.primary_db.host.value;
+// Access via .config member
+std::cout << loader.configs.backend.config.primary_db.config.host.value;
+
+// Or use scoped alias for cleaner access
+const auto& backend = loader.configs.backend.config;
+std::cout << backend.primary_db.config.host.value;
 ```
 
 **Key points:**
 - `CONFIG_GROUP(Type, name)` macro automatically uses variable name as group name
-- ConfigGroup inherits from the config type for direct member access (no `.config` needed)
+- ConfigGroup uses composition with a `.config` member to enable designated initializers
+- Access nested configs via `.config` or use scoped aliases for cleaner syntax
 - Flags in nested configs don't include prefix - it's applied automatically during CLI parsing
-- Zero runtime overhead - inheritance adds no cost when no virtual functions are used
+- Minimal overhead - one pointer per ConfigGroup for name storage
 - Group name stored as `name_` (trailing underscore) to avoid collisions with user fields
 - Prefixes accumulate for multi-level hierarchies (e.g., `backend.primary_db.host`)
 - Each config struct calls `REGISTER_CONFIG_FIELDS` for its own fields
 
-See `examples/hierarchy/` for a complete example.
+See `examples/hierarchy/`, `examples/multi_file/`, and `examples/real_world/` for complete examples.
 
 ## API Reference
 
@@ -197,14 +202,18 @@ Template struct for defining configuration fields.
 
 ### ConfigGroup<T>
 
-Template struct for creating hierarchical config structures. Inherits from `T` for direct member access.
+Template struct for creating hierarchical config structures using composition.
 
 **Members:**
+- `T config` - The nested config instance (access via `.config`)
 - `std::string name_` - Group name used as prefix for nested flags (trailing underscore avoids collisions)
-- All members of `T` (via inheritance)
 
 **Macro:**
 - `CONFIG_GROUP(Type, name)` - Creates a ConfigGroup with automatic name from variable name
+
+**Access Pattern:**
+- Direct: `loader.configs.group_name.config.field.value`
+- Scoped alias: `const auto& cfg = loader.configs.group_name.config;` then `cfg.field.value`
 
 ### ConfigsLoader<ConfigsType>
 

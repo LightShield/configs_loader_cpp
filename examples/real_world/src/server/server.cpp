@@ -2,7 +2,7 @@
 #include <iostream>
 
 Server::Server(const ServerConfig& config) 
-    : config_(config)
+    : port_(config.port.value)  // Reference to value
     , db_(config.database.config)
     , session_cache_(config.session_cache.config)
     , data_cache_(config.data_cache.config)
@@ -10,7 +10,7 @@ Server::Server(const ServerConfig& config)
 {}
 
 void Server::start() {
-    std::cout << "Starting server on port " << config_.port.value << "\n";
+    std::cout << "Starting server on port " << port_ << "\n";
     db_.connect();
     session_cache_.connect();
     data_cache_.connect();

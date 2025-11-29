@@ -1,13 +1,13 @@
 # Hierarchical Configs Example
 
-This example demonstrates how to use `ConfigGroup` to create hierarchical configuration structures with automatic prefix handling.
+Demonstrates how to use `ConfigGroup` to create nested configuration structures with automatic prefix handling.
 
 ## Features
 
 - **Nested config structures**: Organize related configs into reusable groups
 - **Automatic prefix generation**: Use `CONFIG_GROUP(Type, name)` macro to auto-generate prefixes from variable names
 - **Multi-level hierarchy**: ConfigGroups can contain other ConfigGroups
-- **Direct member access**: Zero-overhead access via `.config` member
+- **Composition-based access**: Access nested configs via `.config` member
 - **Prefixed CLI flags**: Flags automatically include full path (e.g., `--backend.primary_db.host`)
 
 ## Structure
@@ -42,22 +42,27 @@ AppConfig
   --backend.timeout 60
 ```
 
-## Access Pattern
+## Access Patterns
 
 ```cpp
-// Direct member access via inheritance - zero overhead
+// Direct access via .config member
 loader.configs.app_name.value
-loader.configs.backend.timeout.value
-loader.configs.backend.primary_db.host.value
-loader.configs.backend.primary_db.port.value
+loader.configs.backend.config.timeout.value
+loader.configs.backend.config.primary_db.config.host.value
+
+// Using scoped alias for cleaner access
+const auto& backend = loader.configs.backend.config;
+backend.timeout.value
+backend.primary_db.config.host.value
 ```
 
 ## Key Points
 
 - Each config struct calls `REGISTER_CONFIG_FIELDS` for its own fields
 - `CONFIG_GROUP(Type, name)` automatically uses variable name as group name
-- ConfigGroup inherits from the config type for direct member access
+- ConfigGroup uses composition with `.config` member to enable designated initializers
 - Flags in nested configs don't include prefix - it's applied automatically
-- Zero runtime overhead - inheritance adds no cost when no virtual functions
+- Minimal overhead - one pointer per ConfigGroup for name storage
 - Group name stored as `name_` (trailing underscore) to avoid collisions
 - Prefixes are accumulated for multi-level hierarchies (e.g., `backend.primary_db.host`)
+- Use scoped aliases (`const auto&`) for cleaner access to deeply nested configs

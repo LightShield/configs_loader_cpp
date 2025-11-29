@@ -28,9 +28,14 @@ int main(int argc, char* argv[]) {
     std::cout << "Admin Server:\n";
     admin_server.start();
     
-    std::cout << "\n=== Config Access Patterns For Global Scope===\n";
+    std::cout << "\n=== Module Config Usage Patterns ===\n";
+    std::cout << "Database: Pattern 1 - holds config reference (always up-to-date)\n";
+    std::cout << "Cache: Pattern 2 - copies values at construction (snapshot)\n";
+    std::cout << "Server: Pattern 3 - holds references to individual values (reactive)\n";
     
-    // Pattern 1: Using scoped aliases (cleaner)
+    std::cout << "\n=== Config Access Patterns (Global Scope) ===\n";
+    
+    // Scoped aliases (cleaner)
     std::cout << "Admin server caches (using scoped alias):\n";
     std::cout << "  session_cache: " << admin_cfg.session_cache.config.port.value << "\n";
     std::cout << "  data_cache: " << admin_cfg.data_cache.config.port.value << "\n";

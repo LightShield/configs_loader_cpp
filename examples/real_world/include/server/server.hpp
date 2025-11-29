@@ -3,13 +3,14 @@
 #include "database/database.hpp"
 #include "cache/cache.hpp"
 
+// Pattern 3: Hold references to individual config values (reactive to changes)
 class Server {
 public:
     explicit Server(const ServerConfig& config);
     void start();
 
 private:
-    const ServerConfig& config_;
+    const int& port_;  // Reference to value (reactive)
     Database db_;
     Cache session_cache_;
     Cache data_cache_;

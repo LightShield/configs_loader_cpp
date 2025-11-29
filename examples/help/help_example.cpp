@@ -45,5 +45,12 @@ int main() {
     std::cout << "Wide width (120 chars):\n";
     std::cout << loader.generate_help("myapp", 120) << "\n";
     
+    std::cout << "\n" << std::string(60, '=') << "\n\n";
+    
+    // Generate help without colors
+    std::cout << "Without colors:\n";
+    loader.help_config.use_colors = false;
+    std::cout << loader.generate_help("myapp") << "\n";
+    
     return 0;
 }

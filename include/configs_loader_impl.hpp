@@ -16,6 +16,25 @@
 #include <cstdlib>
 #include <memory>
 
+// ANSI color codes for help output
+namespace ansi {
+    constexpr const char* RESET = "\033[0m";
+    constexpr const char* BOLD = "\033[1m";
+    constexpr const char* RED = "\033[31m";
+    constexpr const char* GREEN = "\033[32m";
+    constexpr const char* YELLOW = "\033[33m";
+    constexpr const char* BLUE = "\033[34m";
+    constexpr const char* MAGENTA = "\033[35m";
+    constexpr const char* CYAN = "\033[36m";
+    constexpr const char* GRAY = "\033[90m";
+}
+
+// Helper to conditionally apply colors
+inline std::string colorize(const std::string& text, const char* color, bool use_colors) {
+    if (!use_colors) return text;
+    return std::string(color) + text + ansi::RESET;
+}
+
 template<typename ConfigsType>
 struct ConfigsLoader<ConfigsType>::FieldInfo {
     std::string prefix;
@@ -85,14 +104,15 @@ std::string ConfigsLoader<ConfigsType>::dump_to_toml(bool only_changes) const {
 template<typename ConfigsType>
 std::string ConfigsLoader<ConfigsType>::generate_help(const std::string& program_name, size_t max_width) const {
     std::ostringstream help;
+    const bool use_colors = help_config.use_colors;
     
     // Build usage line with short flags
-    help << "Usage: " << program_name << " [OPTIONS]";
+    help << colorize("Usage: ", ansi::BOLD, use_colors) << program_name << " [OPTIONS]";
     auto fields = configs.get_fields();
     std::apply([&](auto&... field) {
         ((append_usage_field(help, field)), ...);
     }, fields);
-    help << "\n\nOptions:\n";
+    help << "\n\n" << colorize("Options:", ansi::BOLD, use_colors) << "\n";
     
     // Collect field info for alignment calculation
     std::vector<FieldInfo> all_fields;
@@ -123,22 +143,30 @@ std::string ConfigsLoader<ConfigsType>::generate_help(const std::string& program
     for (const auto& f : all_fields) {
         help << "  ";
         
-        // Prefix column (e.g., [Required])
+        // Prefix column (e.g., [Required]) - RED for required
         if (prefix_width > 0) {
-            help << f.prefix << std::string(prefix_width - f.prefix.length(), ' ') << " ";
+            std::string prefix_text = f.prefix + std::string(prefix_width - f.prefix.length(), ' ');
+            if (!f.prefix.empty()) {
+                help << colorize(prefix_text, ansi::RED, use_colors);
+            } else {
+                help << prefix_text;
+            }
+            help << " ";
         }
         
-        // Flags column
-        help << f.flags << std::string(flags_width - f.flags.length(), ' ') << " ";
+        // Flags column - CYAN
+        help << colorize(f.flags, ansi::CYAN, use_colors);
+        help << std::string(flags_width - f.flags.length(), ' ') << " ";
         
-        // Type column
-        help << f.type << std::string(type_width - f.type.length(), ' ');
+        // Type column - YELLOW
+        help << colorize(f.type, ansi::YELLOW, use_colors);
+        help << std::string(type_width - f.type.length(), ' ');
         
         help << "    ";
         
         std::string full_desc = f.description;
         if (!f.default_val.empty()) {
-            full_desc += " (default: " + f.default_val + ")";
+            full_desc += " " + colorize("(default: " + f.default_val + ")", ansi::GRAY, use_colors);
         }
         
         wrap_text(help, full_desc, desc_col, max_width);

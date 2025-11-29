@@ -27,6 +27,11 @@ template<typename ConfigsType>
 class ConfigsLoader {
 public:
     ConfigsType configs;
+    
+    // Configuration for help output
+    struct HelpConfig {
+        bool use_colors = true;  // Enable ANSI colors in help output
+    } help_config;
 
     ConfigsLoader() = default;
     ConfigsLoader(int argc, char* argv[]);

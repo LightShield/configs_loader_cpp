@@ -167,6 +167,7 @@ TEST(ConfigsLoaderTest, IsInitializedAfterInit) {
 
 TEST(ConfigsLoaderTest, GenerateHelpIncludesAllFields) {
     ConfigsLoader<TestConfigs> loader;
+    loader.help_config.use_colors = false;
     std::string help = loader.generate_help("test_prog");
     
     EXPECT_NE(help.find("test_prog"), std::string::npos);
@@ -181,6 +182,7 @@ TEST(ConfigsLoaderTest, GenerateHelpIncludesAllFields) {
 
 TEST(ConfigsLoaderTest, GenerateHelpShowsDefaults) {
     ConfigsLoader<TestConfigs> loader;
+    loader.help_config.use_colors = false;  // Disable colors for test
     std::string help = loader.generate_help();
     
     EXPECT_NE(help.find("default: \"default.txt\""), std::string::npos);
@@ -205,6 +207,7 @@ TEST(ConfigsLoaderTest, GenerateHelpMarksRequired) {
     };
     
     ConfigsLoader<RequiredConfigs> loader;
+    loader.help_config.use_colors = false;
     std::string help = loader.generate_help();
     
     // Find the Options section
@@ -243,6 +246,7 @@ TEST(ConfigsLoaderTest, GenerateHelpShowsDefaultDescriptionWhenMissing) {
     };
     
     ConfigsLoader<NoDescConfigs> loader;
+    loader.help_config.use_colors = false;
     std::string help = loader.generate_help();
     
     EXPECT_NE(help.find("No description provided for this config"), std::string::npos);
