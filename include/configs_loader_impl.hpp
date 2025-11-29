@@ -63,11 +63,16 @@ template<typename ConfigsType>
 void ConfigsLoader<ConfigsType>::init(int argc, char* argv[]) {
     validate_no_preset_override();
     
-    // Check for --help or -h flag
+    // Check for --help or -h flag (with optional filter)
     for (int i = 1; i < argc; ++i) {
         std::string arg = argv[i];
         if (arg == "--help" || arg == "-h") {
-            std::cout << generate_help(argv[0]) << std::endl;
+            // Check if there's a filter argument after --help
+            std::string filter;
+            if (help_config.enable_interactive && i + 1 < argc && argv[i + 1][0] != '-') {
+                filter = argv[i + 1];
+            }
+            std::cout << generate_help(argv[0], 80, filter) << std::endl;
             std::exit(0);
         }
     }
@@ -112,9 +117,28 @@ std::string ConfigsLoader<ConfigsType>::dump_to_toml(bool only_changes) const {
 }
 
 template<typename ConfigsType>
-std::string ConfigsLoader<ConfigsType>::generate_help(const std::string& program_name, size_t max_width) const {
+std::string ConfigsLoader<ConfigsType>::generate_help(const std::string& program_name, size_t max_width, const std::string& filter) const {
     std::ostringstream help;
     const bool use_colors = help_config.use_colors;
+    
+    // Handle special filters
+    if (!filter.empty()) {
+        if (filter == "required") {
+            return generate_help_required(program_name, use_colors);
+        } else if (filter == "filters" || filter == "help") {
+            return generate_help_filters(program_name, use_colors);
+        } else if (filter == "groups") {
+            return generate_help_groups(program_name, use_colors);
+        } else if (filter == "all") {
+            // Fall through to show full help
+        } else {
+            // Filter by group name
+            return generate_help_filtered(program_name, use_colors, filter);
+        }
+    } else if (help_config.enable_interactive) {
+        // In interactive mode with no filter, show navigation help instead of full config
+        return generate_help_navigation(program_name, use_colors);
+    }
     
     // Build usage line
     help << colorize("Usage: ", ansi::BOLD, use_colors) << program_name << " [OPTIONS]";
@@ -125,9 +149,13 @@ std::string ConfigsLoader<ConfigsType>::generate_help(const std::string& program
     help << "\n\n" << colorize("Options:", ansi::BOLD, use_colors) << "\n";
     
     // Built-in options
+    std::string help_desc = "Show this help message";
+    if (help_config.enable_interactive) {
+        help_desc += " (use --help <filter> for filtered help)";
+    }
     help << "  " << colorize("--help, -h", ansi::CYAN, use_colors) 
          << "   " << colorize("<void>", ansi::YELLOW, use_colors) 
-         << "  Show this help message\n";
+         << "  " << help_desc << "\n";
     help << "  " << colorize("--preset, -p", ansi::CYAN, use_colors) 
          << " " << colorize("<file>", ansi::YELLOW, use_colors) 
          << "  Load configuration from JSON file (reserved)\n";
@@ -136,6 +164,15 @@ std::string ConfigsLoader<ConfigsType>::generate_help(const std::string& program
     std::apply([&](auto&... field) {
         ((print_field_hierarchical(help, field, 0, use_colors, max_width)), ...);
     }, fields);
+    
+    // Add interactive help hint at the end
+    if (help_config.enable_interactive) {
+        help << "\n" << colorize("Interactive Help:", ansi::BOLD, use_colors) << "\n";
+        help << "  --help all           Show all configuration options\n";
+        help << "  --help required      Show only required fields\n";
+        help << "  --help <group>       Show only fields in specific group\n";
+        help << "  --help filters       Show all available filters\n";
+    }
     
     return help.str();
 }
@@ -716,5 +753,208 @@ void ConfigsLoader<ConfigsType>::print_field_hierarchical(std::ostringstream& ou
     auto fields = group.config.get_fields();
     std::apply([&](auto&... field) {
         ((print_field_hierarchical(out, field, indent + 1, use_colors, max_width, full_prefix)), ...);
+    }, fields);
+}
+
+// Filtered help implementations
+template<typename ConfigsType>
+std::string ConfigsLoader<ConfigsType>::generate_help_navigation(const std::string& program_name, bool use_colors) const {
+    std::ostringstream help;
+    
+    help << colorize(program_name, ansi::BOLD, use_colors) << " has many configuration options.\n\n";
+    help << "Interactive help is enabled to help you navigate its usage.\n";
+    help << "Run " << colorize("--help", ansi::CYAN, use_colors) << " with one of the following:\n\n";
+    
+    help << "  " << colorize("all", ansi::CYAN, use_colors) << "       - Show all configuration options\n";
+    help << "  " << colorize("groups", ansi::CYAN, use_colors) << "    - Show only the configuration group structure\n";
+    help << "  " << colorize("required", ansi::CYAN, use_colors) << "  - Show only required fields\n";
+    help << "  " << colorize("filters", ansi::CYAN, use_colors) << "   - List all available groups and filters\n";
+    help << "  " << colorize("<group>", ansi::CYAN, use_colors) << "   - Show only a specific configuration group\n";
+    
+    help << "\n" << colorize("Examples:", ansi::BOLD, use_colors) << "\n";
+    help << "  " << program_name << " --help " << colorize("all", ansi::CYAN, use_colors) << "\n";
+    help << "  " << program_name << " --help " << colorize("groups", ansi::CYAN, use_colors) << "\n";
+    help << "  " << program_name << " --help " << colorize("required", ansi::CYAN, use_colors) << "\n";
+    help << "  " << program_name << " --help " << colorize("filters", ansi::CYAN, use_colors) << "\n";
+    
+    return help.str();
+}
+
+template<typename ConfigsType>
+std::string ConfigsLoader<ConfigsType>::generate_help_required(const std::string& program_name, bool use_colors) const {
+    std::ostringstream help;
+    help << colorize("Required Fields for ", ansi::BOLD, use_colors) << program_name << ":\n\n";
+    
+    std::ostringstream fields_out;
+    auto fields = configs.get_fields();
+    std::apply([&](auto&... field) {
+        ((print_field_if_required(fields_out, field, use_colors)), ...);
+    }, fields);
+    
+    if (fields_out.str().empty()) {
+        help << "No required fields found.\n";
+    } else {
+        help << fields_out.str();
+    }
+    
+    return help.str();
+}
+
+template<typename ConfigsType>
+std::string ConfigsLoader<ConfigsType>::generate_help_groups(const std::string& program_name, bool use_colors) const {
+    std::ostringstream help;
+    help << colorize("Configuration Groups for ", ansi::BOLD, use_colors) << program_name << ":\n\n";
+    
+    auto fields = configs.get_fields();
+    std::apply([&](auto&... field) {
+        ((print_group_structure(help, field, 0, use_colors)), ...);
+    }, fields);
+    
+    return help.str();
+}
+
+template<typename ConfigsType>
+std::string ConfigsLoader<ConfigsType>::generate_help_filtered(const std::string&, bool use_colors, const std::string& group_filter) const {
+    std::ostringstream help;
+    help << colorize("Help for group '", ansi::BOLD, use_colors) << group_filter << "':\n\n";
+    
+    bool found = false;
+    auto fields = configs.get_fields();
+    std::apply([&](auto&... field) {
+        ((found = print_field_if_matches(help, field, use_colors, group_filter) || found), ...);
+    }, fields);
+    
+    if (!found) {
+        help << "No group found matching '" << group_filter << "'\n";
+        help << "Use --help filters to see available groups\n";
+    }
+    
+    return help.str();
+}
+
+template<typename ConfigsType>
+std::string ConfigsLoader<ConfigsType>::generate_help_filters(const std::string&, bool use_colors) const {
+    std::ostringstream help;
+    help << colorize("Available Help Filters:", ansi::BOLD, use_colors) << "\n\n";
+    help << colorize("  all", ansi::CYAN, use_colors) << "       - Show all configuration options\n";
+    help << colorize("  groups", ansi::CYAN, use_colors) << "    - Show only the configuration group structure\n";
+    help << colorize("  required", ansi::CYAN, use_colors) << "  - Show only required fields\n";
+    
+    std::vector<std::string> group_names;
+    collect_group_names(group_names);
+    
+    if (!group_names.empty()) {
+        help << "\n" << colorize("Available Groups:", ansi::BOLD, use_colors) << "\n";
+        for (const auto& name : group_names) {
+            help << colorize("  " + name, ansi::CYAN, use_colors) << "\n";
+        }
+    }
+    
+    return help.str();
+}
+
+template<typename ConfigsType>
+void ConfigsLoader<ConfigsType>::collect_group_names(std::vector<std::string>& names, const std::string& prefix) const {
+    auto fields = configs.get_fields();
+    std::apply([&](auto&... field) {
+        ((collect_group_names_from_field(field, names, prefix)), ...);
+    }, fields);
+}
+
+// Template implementations for filtering
+template<typename ConfigsType>
+template<typename T>
+void ConfigsLoader<ConfigsType>::print_field_if_required(std::ostringstream& out, const Config<T>& field, bool use_colors, const std::string& prefix) const {
+    if (!field.is_required() || field.flags.empty()) return;
+    
+    // Build flag with prefix
+    std::string flag = field.flags[0];
+    if (!prefix.empty() && flag.starts_with("--")) {
+        flag = "--" + prefix + "." + flag.substr(2);
+    }
+    
+    out << "  " << colorize(flag, ansi::CYAN, use_colors) 
+        << "  " << colorize("<" + get_type_name<T>() + ">", ansi::YELLOW, use_colors)
+        << "  " << field.description << "\n";
+}
+
+template<typename ConfigsType>
+template<typename T>
+void ConfigsLoader<ConfigsType>::print_field_if_required(std::ostringstream& out, const ConfigGroup<T>& group, bool use_colors, const std::string& prefix) const {
+    std::string full_prefix = prefix.empty() ? group.name_ : prefix + "." + group.name_;
+    auto fields = group.config.get_fields();
+    std::apply([&](auto&... field) {
+        ((print_field_if_required(out, field, use_colors, full_prefix)), ...);
+    }, fields);
+}
+
+template<typename ConfigsType>
+template<typename T>
+bool ConfigsLoader<ConfigsType>::print_field_if_matches(std::ostringstream&, const Config<T>&, bool, const std::string&, const std::string&) const {
+    return false;  // Regular fields don't match group filters
+}
+
+template<typename ConfigsType>
+template<typename T>
+bool ConfigsLoader<ConfigsType>::print_field_if_matches(std::ostringstream& out, const ConfigGroup<T>& group, bool use_colors, const std::string& filter, const std::string& prefix) const {
+    std::string full_prefix = prefix.empty() ? group.name_ : prefix + "." + group.name_;
+    
+    // Check if this group matches the filter
+    if (group.name_ == filter || full_prefix == filter) {
+        // Print this group and all its contents
+        print_field_hierarchical(out, group, 0, use_colors, 80, prefix);
+        return true;
+    }
+    
+    // Check nested groups
+    bool found = false;
+    auto fields = group.config.get_fields();
+    std::apply([&](auto&... field) {
+        ((found = print_field_if_matches(out, field, use_colors, filter, full_prefix) || found), ...);
+    }, fields);
+    
+    return found;
+}
+
+template<typename ConfigsType>
+template<typename T>
+void ConfigsLoader<ConfigsType>::collect_group_names_from_field(const Config<T>&, std::vector<std::string>&, const std::string&) const {
+    // Regular fields don't contribute group names
+}
+
+template<typename ConfigsType>
+template<typename T>
+void ConfigsLoader<ConfigsType>::collect_group_names_from_field(const ConfigGroup<T>& group, std::vector<std::string>& names, const std::string& prefix) const {
+    std::string full_name = prefix.empty() ? group.name_ : prefix + "." + group.name_;
+    names.push_back(full_name);
+    
+    // Recursively collect from nested groups
+    auto fields = group.config.get_fields();
+    std::apply([&](auto&... field) {
+        ((collect_group_names_from_field(field, names, full_name)), ...);
+    }, fields);
+}
+
+// Print group structure (groups only, no individual fields)
+template<typename ConfigsType>
+template<typename T>
+void ConfigsLoader<ConfigsType>::print_group_structure(std::ostringstream&, const Config<T>&, size_t, bool, const std::string&) const {
+    // Regular fields don't print in group structure view
+}
+
+template<typename ConfigsType>
+template<typename T>
+void ConfigsLoader<ConfigsType>::print_group_structure(std::ostringstream& out, const ConfigGroup<T>& group, size_t indent, bool use_colors, const std::string& prefix) const {
+    std::string indent_str(indent * 2, ' ');
+    std::string full_prefix = prefix.empty() ? group.name_ : prefix + "." + group.name_;
+    
+    // Print group name
+    out << "  " << indent_str << colorize(group.name_, ansi::GREEN, use_colors) 
+        << " " << colorize("(" + full_prefix + ")", ansi::GRAY, use_colors) << "\n";
+    
+    // Recursively print nested groups
+    auto fields = group.config.get_fields();
+    std::apply([&](auto&... field) {
+        ((print_group_structure(out, field, indent + 1, use_colors, full_prefix)), ...);
     }, fields);
 }

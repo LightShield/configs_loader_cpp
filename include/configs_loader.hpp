@@ -30,7 +30,8 @@ public:
     
     // Configuration for help output
     struct HelpConfig {
-        bool use_colors = true;  // Enable ANSI colors in help output
+        bool use_colors = true;           // Enable ANSI colors in help output
+        bool enable_interactive = true;   // Enable --help <filter> for filtered help
     } help_config;
 
     ConfigsLoader() = default;
@@ -45,7 +46,8 @@ public:
 
     // Generate help text
     // max_width: Maximum line width for text wrapping (default: 80)
-    [[nodiscard]] std::string generate_help(const std::string& program_name = "program", size_t max_width = 80) const;
+    // filter: Optional filter for interactive help (e.g., "required", "group_name")
+    [[nodiscard]] std::string generate_help(const std::string& program_name = "program", size_t max_width = 80, const std::string& filter = "") const;
 
     // Dump current configuration values
     // only_changes: If true, only dump values that differ from defaults
@@ -69,8 +71,23 @@ private:
     void try_set_config_value(const std::string& flag, const std::string& value);
     void wrap_text(std::ostringstream& out, const std::string& text, size_t indent_col, size_t max_width) const;
     
+    std::string generate_help_navigation(const std::string& program_name, bool use_colors) const;
+    std::string generate_help_groups(const std::string& program_name, bool use_colors) const;
+    std::string generate_help_required(const std::string& program_name, bool use_colors) const;
+    std::string generate_help_filtered(const std::string& program_name, bool use_colors, const std::string& group_filter) const;
+    std::string generate_help_filters(const std::string& program_name, bool use_colors) const;
+    void collect_group_names(std::vector<std::string>& names, const std::string& prefix = "") const;
+    
     template<typename T> void print_field_hierarchical(std::ostringstream& out, const Config<T>& field, size_t indent, bool use_colors, size_t max_width, const std::string& prefix = "") const;
     template<typename T> void print_field_hierarchical(std::ostringstream& out, const ConfigGroup<T>& group, size_t indent, bool use_colors, size_t max_width, const std::string& prefix = "") const;
+    template<typename T> void print_field_if_required(std::ostringstream& out, const Config<T>& field, bool use_colors, const std::string& prefix = "") const;
+    template<typename T> void print_field_if_required(std::ostringstream& out, const ConfigGroup<T>& group, bool use_colors, const std::string& prefix = "") const;
+    template<typename T> void print_group_structure(std::ostringstream& out, const Config<T>& field, size_t indent, bool use_colors, const std::string& prefix = "") const;
+    template<typename T> void print_group_structure(std::ostringstream& out, const ConfigGroup<T>& group, size_t indent, bool use_colors, const std::string& prefix = "") const;
+    template<typename T> bool print_field_if_matches(std::ostringstream& out, const Config<T>& field, bool use_colors, const std::string& filter, const std::string& prefix = "") const;
+    template<typename T> bool print_field_if_matches(std::ostringstream& out, const ConfigGroup<T>& group, bool use_colors, const std::string& filter, const std::string& prefix = "") const;
+    template<typename T> void collect_group_names_from_field(const Config<T>& field, std::vector<std::string>& names, const std::string& prefix) const;
+    template<typename T> void collect_group_names_from_field(const ConfigGroup<T>& group, std::vector<std::string>& names, const std::string& prefix) const;
     
     template<typename T> bool try_set_field_value(Config<T>& field, const std::string& flag, const std::string& value);
     template<typename T> bool try_set_field_value(ConfigGroup<T>& group, const std::string& flag, const std::string& value);
