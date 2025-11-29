@@ -28,7 +28,7 @@ int main(int argc, char* argv[]) {
     std::cout << "Admin Server:\n";
     admin_server.start();
     
-    std::cout << "\n=== Config Access Patterns ===\n";
+    std::cout << "\n=== Config Access Patterns For Global Scope===\n";
     
     // Pattern 1: Using scoped aliases (cleaner)
     std::cout << "Admin server caches (using scoped alias):\n";
