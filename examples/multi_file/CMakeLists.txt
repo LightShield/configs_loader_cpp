@@ -1,0 +1,2 @@
+add_executable(multi_file_example multi_file_example.cpp)
+target_link_libraries(multi_file_example PRIVATE configs_loader_cpp)
