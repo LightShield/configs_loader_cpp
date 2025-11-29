@@ -70,7 +70,7 @@ private:
     void validate_no_preset_override();
     void try_set_config_value(const std::string& flag, const std::string& value);
     
-    // Help generation methods (implemented in help/help_generator_impl.hpp)
+    // Help generation private helpers (implementation in help/help_generator_impl.hpp)
     std::string generate_help_navigation(const std::string& program_name, bool use_colors) const;
     std::string generate_help_groups(const std::string& program_name, bool use_colors) const;
     std::string generate_help_required(const std::string& program_name, bool use_colors) const;
