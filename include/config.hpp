@@ -36,7 +36,8 @@ struct Config {
 };
 
 template<typename T>
-struct ConfigGroup : T {
+struct ConfigGroup {
+    T config;
     std::string name_;  // Trailing underscore avoids collision with user config fields
 };
 

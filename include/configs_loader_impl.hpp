@@ -270,7 +270,7 @@ void ConfigsLoader<ConfigsType>::validate_field(const Config<T>& field) {
 template<typename ConfigsType>
 template<typename T>
 void ConfigsLoader<ConfigsType>::validate_field(const ConfigGroup<T>& group) {
-    auto fields = group.get_fields();
+    auto fields = group.config.get_fields();
     std::apply([&](auto&... field) {
         ((validate_field(field)), ...);
     }, fields);
@@ -297,7 +297,7 @@ void ConfigsLoader<ConfigsType>::check_not_preset_flag(const Config<T>& field) {
 template<typename ConfigsType>
 template<typename T>
 void ConfigsLoader<ConfigsType>::check_not_preset_flag(const ConfigGroup<T>& group) {
-    auto fields = group.get_fields();
+    auto fields = group.config.get_fields();
     std::apply([&](auto&... field) {
         ((check_not_preset_flag(field)), ...);
     }, fields);
@@ -329,7 +329,7 @@ bool ConfigsLoader<ConfigsType>::try_set_field_value(ConfigGroup<T>& group, cons
     std::string nested_flag_body = flag_body.substr(prefix_with_dot.length());
     std::string nested_flag = flag_prefix + nested_flag_body;
     
-    auto fields = group.get_fields();
+    auto fields = group.config.get_fields();
     return std::apply([&](auto&... field) {
         return (try_set_field_value(field, nested_flag, value) || ...);
     }, fields);
@@ -410,7 +410,7 @@ template<typename ConfigsType>
 template<typename T>
 void ConfigsLoader<ConfigsType>::append_usage_field(std::ostringstream& usage, const ConfigGroup<T>& group) const {
     // Recursively append usage for nested fields - prefix will be handled in CLI parsing
-    auto fields = group.get_fields();
+    auto fields = group.config.get_fields();
     std::apply([&](auto&... field) {
         ((append_usage_field(usage, field)), ...);
     }, fields);
@@ -422,7 +422,7 @@ void ConfigsLoader<ConfigsType>::collect_field_info(const ConfigGroup<T>& group,
                        std::vector<FieldInfo>& required_fields,
                        std::vector<FieldInfo>& optional_fields) const {
     // Collect field info with prefix prepended to flags
-    auto fields = group.get_fields();
+    auto fields = group.config.get_fields();
     std::apply([&](auto&... field) {
         ((collect_field_info_with_prefix(field, group.name_, required_fields, optional_fields)), ...);
     }, fields);
@@ -497,7 +497,7 @@ void ConfigsLoader<ConfigsType>::collect_field_info_with_prefix(const ConfigGrou
                        std::vector<FieldInfo>& optional_fields) const {
     // Accumulate prefix
     std::string full_prefix = parent_prefix.empty() ? group.name_ : parent_prefix + "." + group.name_;
-    auto fields = group.get_fields();
+    auto fields = group.config.get_fields();
     std::apply([&](auto&... field) {
         ((collect_field_info_with_prefix(field, full_prefix, required_fields, optional_fields)), ...);
     }, fields);
@@ -630,7 +630,7 @@ void ConfigsLoader<ConfigsType>::load_field_from_parser(Config<T>& field, const 
 template<typename ConfigsType>
 template<typename T>
 void ConfigsLoader<ConfigsType>::dump_field(std::ostringstream& out, const ConfigGroup<T>& group, bool only_changed) const {
-    auto fields = group.get_fields();
+    auto fields = group.config.get_fields();
     std::apply([&](auto&... field) {
         ((dump_field(out, field, only_changed)), ...);
     }, fields);
@@ -639,7 +639,7 @@ void ConfigsLoader<ConfigsType>::dump_field(std::ostringstream& out, const Confi
 template<typename ConfigsType>
 template<typename T>
 void ConfigsLoader<ConfigsType>::dump_field_toml(std::ostringstream& out, const ConfigGroup<T>& group, bool only_changed) const {
-    auto fields = group.get_fields();
+    auto fields = group.config.get_fields();
     std::apply([&](auto&... field) {
         ((dump_field_toml(out, field, only_changed)), ...);
     }, fields);
@@ -648,7 +648,7 @@ void ConfigsLoader<ConfigsType>::dump_field_toml(std::ostringstream& out, const 
 template<typename ConfigsType>
 template<typename T>
 void ConfigsLoader<ConfigsType>::load_field_from_parser(ConfigGroup<T>& group, const PresetParser& parser) {
-    auto fields = group.get_fields();
+    auto fields = group.config.get_fields();
     std::apply([&](auto&... field) {
         ((load_field_from_parser(field, parser)), ...);
     }, fields);

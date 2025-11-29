@@ -54,18 +54,18 @@ int main(int argc, char* argv[]) {
     
     // Access nested configs with direct member access - zero overhead
     std::cout << "App Name: " << loader.configs.app_name.value << "\n";
-    std::cout << "Backend Timeout: " << loader.configs.backend.timeout.value << "\n";
-    std::cout << "Primary DB Host: " << loader.configs.backend.primary_db.host.value << "\n";
-    std::cout << "Primary DB Port: " << loader.configs.backend.primary_db.port.value << "\n";
-    std::cout << "Replica DB Host: " << loader.configs.backend.replica_db.host.value << "\n";
-    std::cout << "Replica DB Port: " << loader.configs.backend.replica_db.port.value << "\n";
+    std::cout << "Backend Timeout: " << loader.configs.backend.config.timeout.value << "\n";
+    std::cout << "Primary DB Host: " << loader.configs.backend.config.primary_db.config.host.value << "\n";
+    std::cout << "Primary DB Port: " << loader.configs.backend.config.primary_db.config.port.value << "\n";
+    std::cout << "Replica DB Host: " << loader.configs.backend.config.replica_db.config.host.value << "\n";
+    std::cout << "Replica DB Port: " << loader.configs.backend.config.replica_db.config.port.value << "\n";
     
     // Agnostic pattern: use references to eliminate repetitive access
-    const auto& primary = loader.configs.backend.primary_db;
-    const auto& replica = loader.configs.backend.replica_db;
+    const auto& primary = loader.configs.backend.config.primary_db;
+    const auto& replica = loader.configs.backend.config.replica_db;
     std::cout << "\nUsing references:\n";
-    std::cout << "Primary: " << primary.host.value << ":" << primary.port.value << "\n";
-    std::cout << "Replica: " << replica.host.value << ":" << replica.port.value << "\n";
+    std::cout << "Primary: " << primary.config.host.value << ":" << primary.config.port.value << "\n";
+    std::cout << "Replica: " << replica.config.host.value << ":" << replica.config.port.value << "\n";
     
     return 0;
 }
