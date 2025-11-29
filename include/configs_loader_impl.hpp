@@ -5,7 +5,7 @@
 // Users should not include this file directly
 
 #include "parsers/preset_parser.hpp"
-#include "help_colors.hpp"
+#include "help/help_colors.hpp"
 #include <stdexcept>
 #include <fstream>
 #include <sstream>
@@ -89,7 +89,7 @@ std::string ConfigsLoader<ConfigsType>::dump_to_toml(bool only_changes) const {
 }
 
 // Help generation implementation
-#include "help_generator_impl.hpp"
+#include "help/help_generator_impl.hpp"
 
 // Private method implementations
 
