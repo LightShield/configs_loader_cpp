@@ -2,6 +2,12 @@
 #include "server/server.hpp"
 #include <iostream>
 
+// Helper function using type alias for parameter
+void print_server_info(const ServerConfig& cfg, const std::string& name) {
+    std::cout << name << " - Port: " << cfg.port.value 
+              << ", DB: " << cfg.database.config.host.value << "\n";
+}
+
 int main(int argc, char* argv[]) {
     ConfigsLoader<AppConfig> loader;
     
@@ -16,12 +22,18 @@ int main(int argc, char* argv[]) {
     
     // Pattern 1: Type alias for compile-time type (useful for function parameters)
     using ApiServerConfig = decltype(loader.configs.api_server.config);
+    const ApiServerConfig& api_cfg = loader.configs.api_server.config;
     
     // Pattern 2: Reference alias for runtime access (cleaner code)
     const auto& admin_cfg = loader.configs.admin_server.config;
     
+    // Use type alias in function call
+    print_server_info(api_cfg, "API Server");
+    print_server_info(admin_cfg, "Admin Server");
+    std::cout << "\n";
+    
     // Two servers, each with three caches
-    Server api_server(loader.configs.api_server.config);
+    Server api_server(api_cfg);
     std::cout << "API Server:\n";
     api_server.start();
     
