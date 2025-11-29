@@ -2,8 +2,9 @@
 #include "server/server.hpp"
 #include <iostream>
 
-// Helper function using type alias for parameter
-void print_server_info(const ServerConfig& cfg, const std::string& name) {
+// Helper function using type alias for parameter (cleaner signature)
+using ServerConfigType = ServerConfig;
+void print_server_info(const ServerConfigType& cfg, const std::string& name) {
     std::cout << name << " - Port: " << cfg.port.value 
               << ", DB: " << cfg.database.config.host.value << "\n";
 }
@@ -20,14 +21,11 @@ int main(int argc, char* argv[]) {
     
     std::cout << "=== " << loader.configs.name.value << " ===\n\n";
     
-    // Pattern 1: Type alias for compile-time type (useful for function parameters)
-    using ApiServerConfig = decltype(loader.configs.api_server.config);
-    const ApiServerConfig& api_cfg = loader.configs.api_server.config;
-    
-    // Pattern 2: Reference alias for runtime access (cleaner code)
+    // Pattern 1: Reference alias for value access (most common)
+    const auto& api_cfg = loader.configs.api_server.config;
     const auto& admin_cfg = loader.configs.admin_server.config;
     
-    // Use type alias in function call
+    // Use reference aliases - much cleaner than full paths
     print_server_info(api_cfg, "API Server");
     print_server_info(admin_cfg, "Admin Server");
     std::cout << "\n";
