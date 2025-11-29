@@ -121,6 +121,18 @@ target_link_libraries(configs_loader_tests
 
 target_compile_options(configs_loader_tests PRIVATE ${WARNING_FLAGS})
 
+add_executable(help_generator_tests
+    tests/help/help_generator_tests.cpp
+)
+
+target_link_libraries(help_generator_tests
+    PRIVATE
+        configs_loader_cpp
+        GTest::gtest_main
+)
+
+target_compile_options(help_generator_tests PRIVATE ${WARNING_FLAGS})
+
 add_executable(toml_parser_tests
     tests/toml_parser_tests.cpp
 )
@@ -136,6 +148,7 @@ target_compile_options(toml_parser_tests PRIVATE ${WARNING_FLAGS})
 include(GoogleTest)
 gtest_discover_tests(config_tests)
 gtest_discover_tests(configs_loader_tests)
+gtest_discover_tests(help_generator_tests)
 gtest_discover_tests(toml_parser_tests)
 endif()
 
