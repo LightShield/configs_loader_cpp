@@ -1,24 +1,8 @@
-#include "app_config.hpp"
+#include "config/app_config.hpp"
+#include "src/database/database.hpp"
+#include "src/cache/cache.hpp"
+#include "src/logging/logger.hpp"
 #include <iostream>
-
-// Simulated database module that only knows about DatabaseConfig
-void connect_database(const DatabaseConfig& db, const std::string& name) {
-    std::cout << name << " DB: " << db.username.value << "@" 
-              << db.host.value << ":" << db.port.value << "\n";
-}
-
-// Simulated cache module that only knows about CacheConfig
-void connect_cache(const CacheConfig& cache) {
-    std::cout << "Cache: " << cache.host.value << ":" << cache.port.value 
-              << " (TTL: " << cache.ttl.value << "s)\n";
-}
-
-// Simulated logger that only knows about LoggingConfig
-void init_logger(const LoggingConfig& log) {
-    std::cout << "Logger: level=" << log.level.value 
-              << ", output=" << log.output.value 
-              << ", timestamps=" << (log.timestamps.value ? "on" : "off") << "\n";
-}
 
 int main(int argc, char* argv[]) {
     ConfigsLoader<AppConfig> loader;
@@ -37,25 +21,25 @@ int main(int argc, char* argv[]) {
     std::cout << "Server Port: " << loader.configs.server.port.value << "\n";
     std::cout << "Server Timeout: " << loader.configs.server.timeout.value << "s\n\n";
     
-    // Access nested configs directly
-    std::cout << "=== Direct Access ===\n";
-    std::cout << "Primary DB Host: " << loader.configs.server.primary_db.host.value << "\n";
-    std::cout << "Primary DB Port: " << loader.configs.server.primary_db.port.value << "\n";
-    std::cout << "Replica DB Host: " << loader.configs.server.replica_db.host.value << "\n";
-    std::cout << "Cache Host: " << loader.configs.server.cache.host.value << "\n";
-    std::cout << "Log Level: " << loader.configs.logging.level.value << "\n\n";
-    
-    // Use references for cleaner access
-    std::cout << "=== Using References ===\n";
-    const auto& server = loader.configs.server;
-    std::cout << "Server: " << server.primary_db.host.value << ":" << server.port.value << "\n\n";
-    
-    // Pass to module-specific functions (agnostic pattern)
+    // Initialize modules - each module only knows about its own config
+    // The modules are unaware of where their config comes from in the hierarchy
     std::cout << "=== Module Initialization ===\n";
-    connect_database(loader.configs.server.primary_db, "Primary");
-    connect_database(loader.configs.server.replica_db, "Replica");
-    connect_cache(loader.configs.server.cache);
-    init_logger(loader.configs.logging);
+    Database primary_db(loader.configs.server.primary_db);
+    Database replica_db(loader.configs.server.replica_db);
+    Cache cache(loader.configs.server.cache);
+    Logger logger(loader.configs.logging);
+    
+    // Use modules - they internally access their configs
+    primary_db.connect();
+    replica_db.connect();
+    cache.connect();
+    
+    std::cout << "\n=== Module Operations ===\n";
+    primary_db.query("SELECT * FROM users");
+    cache.set("user:123", "John Doe");
+    cache.get("user:123");
+    logger.log(2, "Application started successfully");
+    logger.log(3, "This is a warning message");
     
     return 0;
 }

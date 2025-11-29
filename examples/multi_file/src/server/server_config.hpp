@@ -1,7 +1,7 @@
 #pragma once
 #include "configs_loader.hpp"
-#include "database_config.hpp"
-#include "cache_config.hpp"
+#include "../database/database_config.hpp"
+#include "../cache/cache_config.hpp"
 
 struct ServerConfig {
     CONFIG_GROUP(DatabaseConfig, primary_db);

@@ -6,13 +6,33 @@ This example demonstrates how to organize hierarchical configs across multiple f
 
 ```
 multi_file/
-├── database_config.hpp    # Database module config
-├── cache_config.hpp       # Cache module config
-├── logging_config.hpp     # Logging module config
-├── server_config.hpp      # Server config (aggregates database + cache)
-├── app_config.hpp         # Main app config (aggregates server + logging)
-└── multi_file_example.cpp # Main application
+├── config/
+│   └── app_config.hpp         # Main app config (aggregates all)
+├── src/
+│   ├── database/
+│   │   ├── database_config.hpp # Database config definition
+│   │   ├── database.hpp        # Database class (uses DatabaseConfig)
+│   │   └── database.cpp        # Database implementation
+│   ├── cache/
+│   │   ├── cache_config.hpp    # Cache config definition
+│   │   ├── cache.hpp           # Cache class (uses CacheConfig)
+│   │   └── cache.cpp           # Cache implementation
+│   ├── logging/
+│   │   ├── logging_config.hpp  # Logging config definition
+│   │   ├── logger.hpp          # Logger class (uses LoggingConfig)
+│   │   └── logger.cpp          # Logger implementation
+│   └── server/
+│       └── server_config.hpp   # Server config (aggregates db + cache)
+└── multi_file_example.cpp      # Main application
 ```
+
+This structure mimics a real application where:
+- Each module lives in its own directory under `src/`
+- Each module defines its own config independently
+- Each module has implementation files that use their config internally
+- **Modules are unaware of where their config comes from in the hierarchy**
+- The main application config lives in `config/`
+- Config aggregation follows the module dependency hierarchy
 
 ## Config Hierarchy
 
@@ -78,13 +98,26 @@ std::cout << server.primary_db.host.value;
 
 ### Module-Agnostic Pattern
 ```cpp
-// Module only knows about its own config type
-void connect_database(const DatabaseConfig& db) {
-    // Use db.host.value, db.port.value, etc.
+// database.hpp - Module only knows about its own config
+class Database {
+public:
+    explicit Database(const DatabaseConfig& config);
+    void connect();
+    void query(const std::string& sql);
+private:
+    const DatabaseConfig& config_;  // Stores reference, unaware of hierarchy
+};
+
+// database.cpp - Uses config internally
+void Database::connect() {
+    std::cout << config_.username.value << "@"
+              << config_.host.value << ":" 
+              << config_.port.value << "\n";
 }
 
-// Pass nested config to module
-connect_database(loader.configs.server.primary_db);
+// main.cpp - Passes nested config to module
+Database primary_db(loader.configs.server.primary_db);
+primary_db.connect();  // Module uses config internally
 ```
 
 ## Key Benefits

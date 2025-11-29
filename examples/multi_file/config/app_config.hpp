@@ -1,7 +1,7 @@
 #pragma once
 #include "configs_loader.hpp"
-#include "server_config.hpp"
-#include "logging_config.hpp"
+#include "../src/server/server_config.hpp"
+#include "../src/logging/logging_config.hpp"
 
 struct AppConfig {
     CONFIG_GROUP(ServerConfig, server);
