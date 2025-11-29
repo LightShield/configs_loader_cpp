@@ -20,7 +20,7 @@ target_include_directories(configs_loader_cpp
 
 # Preset parser implementation (not header-only)
 add_library(configs_loader_preset_parser
-    src/parsers/preset_parser.cpp
+    src/serialization/preset_parser.cpp
 )
 
 target_include_directories(configs_loader_preset_parser
@@ -48,7 +48,7 @@ if(ENABLE_TOML_PRESETS)
     endif()
     
     target_sources(configs_loader_preset_parser PRIVATE
-        src/parsers/toml_parser.cpp
+        src/serialization/toml_parser.cpp
     )
     
     target_link_libraries(configs_loader_preset_parser PUBLIC

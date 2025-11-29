@@ -4,7 +4,9 @@
 // This file is automatically included by configs_loader.hpp
 // Users should not include this file directly
 
-#include "parsers/preset_parser.hpp"
+#include "serialization/preset_deserializer.hpp"
+#include "serialization/cli_serializer.hpp"
+#include "serialization/toml_serializer.hpp"
 #include "help/help_generator.hpp"
 #include <stdexcept>
 #include <fstream>
@@ -70,22 +72,14 @@ bool ConfigsLoader<ConfigsType>::is_initialized() const {
 
 template<typename ConfigsType>
 std::string ConfigsLoader<ConfigsType>::dump_configs(bool only_changes) const {
-    std::ostringstream dump;
-    auto fields = configs.get_fields();
-    std::apply([&](auto&... field) {
-        ((dump_field(dump, field, only_changes)), ...);
-    }, fields);
-    return dump.str();
+    CliSerializer<ConfigsType> serializer(configs, only_changes);
+    return serializer.serialize();
 }
 
 template<typename ConfigsType>
 std::string ConfigsLoader<ConfigsType>::dump_to_toml(bool only_changes) const {
-    std::ostringstream dump;
-    auto fields = configs.get_fields();
-    std::apply([&](auto&... field) {
-        ((dump_field_toml(dump, field, only_changes)), ...);
-    }, fields);
-    return dump.str();
+    TomlSerializer<ConfigsType> serializer(configs, only_changes);
+    return serializer.serialize();
 }
 
 template<typename ConfigsType>
@@ -281,61 +275,6 @@ bool ConfigsLoader<ConfigsType>::try_set_field_value(ConfigGroup<T>& group, cons
 
 template<typename ConfigsType>
 template<typename T>
-void ConfigsLoader<ConfigsType>::dump_field(std::ostringstream& out, const Config<T>& field, bool only_changed) const {
-    if (field.flags.empty()) return;
-    
-    // Skip if only dumping changes and value equals default
-    if (only_changed && field.value == field.default_value) {
-        return;
-    }
-    
-    // Use first flag as the key
-    out << field.flags[0] << "=";
-    
-    if constexpr (std::is_same_v<T, std::string>) {
-        out << "\"" << field.value << "\"";
-    } else if constexpr (std::is_same_v<T, bool>) {
-        out << (field.value ? "true" : "false");
-    } else {
-        out << field.value;
-    }
-    
-    out << "\n";
-}
-
-template<typename ConfigsType>
-template<typename T>
-void ConfigsLoader<ConfigsType>::dump_field_toml(std::ostringstream& out, const Config<T>& field, bool only_changed) const {
-    if (field.flags.empty()) return;
-    
-    // Skip if only dumping changes and value equals default
-    if (only_changed && field.value == field.default_value) {
-        return;
-    }
-    
-    // Use first flag without dashes as TOML key
-    std::string key = field.flags[0];
-    if (key.starts_with("--")) {
-        key = key.substr(2);
-    } else if (key.starts_with("-")) {
-        key = key.substr(1);
-    }
-    
-    out << key << " = ";
-    
-    if constexpr (std::is_same_v<T, std::string>) {
-        out << "\"" << field.value << "\"";
-    } else if constexpr (std::is_same_v<T, bool>) {
-        out << (field.value ? "true" : "false");
-    } else {
-        out << field.value;
-    }
-    
-    out << "\n";
-}
-
-template<typename ConfigsType>
-template<typename T>
 void ConfigsLoader<ConfigsType>::load_field_from_parser(Config<T>& field, const PresetParser& parser) {
     if (field.flags.empty()) return;
     
@@ -364,25 +303,6 @@ void ConfigsLoader<ConfigsType>::load_field_from_parser(Config<T>& field, const 
             return; // Found value, stop trying other flags
         }
     }
-}
-
-// ConfigGroup overloads - recursively process nested configs with prefix
-template<typename ConfigsType>
-template<typename T>
-void ConfigsLoader<ConfigsType>::dump_field(std::ostringstream& out, const ConfigGroup<T>& group, bool only_changed) const {
-    auto fields = group.config.get_fields();
-    std::apply([&](auto&... field) {
-        ((dump_field(out, field, only_changed)), ...);
-    }, fields);
-}
-
-template<typename ConfigsType>
-template<typename T>
-void ConfigsLoader<ConfigsType>::dump_field_toml(std::ostringstream& out, const ConfigGroup<T>& group, bool only_changed) const {
-    auto fields = group.config.get_fields();
-    std::apply([&](auto&... field) {
-        ((dump_field_toml(out, field, only_changed)), ...);
-    }, fields);
 }
 
 template<typename ConfigsType>

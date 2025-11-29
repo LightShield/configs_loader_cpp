@@ -75,10 +75,6 @@ private:
     template<typename T> void validate_field(const ConfigGroup<T>& group);
     template<typename T> void check_not_preset_flag(const Config<T>& field);
     template<typename T> void check_not_preset_flag(const ConfigGroup<T>& group);
-    template<typename T> void dump_field(std::ostringstream& out, const Config<T>& field, bool only_changed) const;
-    template<typename T> void dump_field(std::ostringstream& out, const ConfigGroup<T>& group, bool only_changed) const;
-    template<typename T> void dump_field_toml(std::ostringstream& out, const Config<T>& field, bool only_changed) const;
-    template<typename T> void dump_field_toml(std::ostringstream& out, const ConfigGroup<T>& group, bool only_changed) const;
     template<typename T> void load_field_from_parser(Config<T>& field, const PresetParser& parser);
     template<typename T> void load_field_from_parser(ConfigGroup<T>& group, const PresetParser& parser);
 };
