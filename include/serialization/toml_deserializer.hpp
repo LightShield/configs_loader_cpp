@@ -7,8 +7,7 @@
 #include <toml++/toml.h>
 #include <memory>
 
-// Wrapper around toml++ library
-class TomlParser : public PresetParser {
+class TomlDeserializer : public PresetDeserializer {
 public:
     void parse_file(const std::string& path) override;
     
@@ -21,4 +20,4 @@ private:
     std::unique_ptr<toml::table> m_table;
 };
 
-#endif // CONFIGS_LOADER_ENABLE_TOML
+#endif

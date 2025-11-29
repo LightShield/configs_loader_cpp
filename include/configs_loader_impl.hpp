@@ -109,13 +109,9 @@ std::optional<std::string> ConfigsLoader<ConfigsType>::extract_preset_path(int a
 
 template<typename ConfigsType>
 void ConfigsLoader<ConfigsType>::load_preset_file(const std::string& path) {
-    auto parser = create_preset_parser(path);
-    parser->parse_file(path);
-    
-    auto fields = configs.get_fields();
-    std::apply([&](auto&... field) {
-        ((load_field_from_parser(field, *parser)), ...);
-    }, fields);
+    auto deserializer = create_preset_deserializer(path);
+    deserializer->parse_file(path);
+    deserializer->load_into(configs);
 }
 
 template<typename ConfigsType>
@@ -270,46 +266,5 @@ bool ConfigsLoader<ConfigsType>::try_set_field_value(ConfigGroup<T>& group, cons
     auto fields = group.config.get_fields();
     return std::apply([&](auto&... field) {
         return (try_set_field_value(field, nested_flag, value) || ...);
-    }, fields);
-}
-
-template<typename ConfigsType>
-template<typename T>
-void ConfigsLoader<ConfigsType>::load_field_from_parser(Config<T>& field, const PresetParser& parser) {
-    if (field.flags.empty()) return;
-    
-    // Try all flags as keys (without dashes)
-    for (const auto& flag : field.flags) {
-        std::string key = flag;
-        if (key.starts_with("--")) {
-            key = key.substr(2);
-        } else if (key.starts_with("-")) {
-            key = key.substr(1);
-        }
-        
-        std::optional<T> value;
-        if constexpr (std::is_same_v<T, std::string>) {
-            value = parser.get_string(key);
-        } else if constexpr (std::is_same_v<T, int>) {
-            value = parser.get_int(key);
-        } else if constexpr (std::is_same_v<T, bool>) {
-            value = parser.get_bool(key);
-        } else if constexpr (std::is_same_v<T, double>) {
-            value = parser.get_double(key);
-        }
-        
-        if (value.has_value()) {
-            field.set_value(*value);
-            return; // Found value, stop trying other flags
-        }
-    }
-}
-
-template<typename ConfigsType>
-template<typename T>
-void ConfigsLoader<ConfigsType>::load_field_from_parser(ConfigGroup<T>& group, const PresetParser& parser) {
-    auto fields = group.config.get_fields();
-    std::apply([&](auto&... field) {
-        ((load_field_from_parser(field, parser)), ...);
     }, fields);
 }

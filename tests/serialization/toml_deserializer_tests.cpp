@@ -32,24 +32,24 @@ TEST(TomlLearningTest, MissingKeyReturnsNullopt) {
     EXPECT_FALSE(tbl["missing"].value<std::string>().has_value());
 }
 
-// Tests for our TomlParser wrapper
-TEST(TomlParserTest, ParseFileSucceeds) {
+// Tests for our TomlDeserializer wrapper
+TEST(TomlDeserializerTest, ParseFileSucceeds) {
     std::ofstream out("/tmp/config.toml");
     out << "file = \"data.txt\"\n";
     out << "log-level = 3\n";
     out << "verbose = true\n";
     out.close();
     
-    TomlParser parser;
+    TomlDeserializer parser;
     EXPECT_NO_THROW(parser.parse_file("/tmp/config.toml"));
 }
 
-TEST(TomlParserTest, GetStringWorks) {
+TEST(TomlDeserializerTest, GetStringWorks) {
     std::ofstream out("/tmp/string_test.toml");
     out << "name = \"hello\"\n";
     out.close();
     
-    TomlParser parser;
+    TomlDeserializer parser;
     parser.parse_file("/tmp/string_test.toml");
     
     auto val = parser.get_string("name");
@@ -57,12 +57,12 @@ TEST(TomlParserTest, GetStringWorks) {
     EXPECT_EQ(*val, "hello");
 }
 
-TEST(TomlParserTest, GetIntWorks) {
+TEST(TomlDeserializerTest, GetIntWorks) {
     std::ofstream out("/tmp/int_test.toml");
     out << "count = 123\n";
     out.close();
     
-    TomlParser parser;
+    TomlDeserializer parser;
     parser.parse_file("/tmp/int_test.toml");
     
     auto val = parser.get_int("count");
@@ -70,12 +70,12 @@ TEST(TomlParserTest, GetIntWorks) {
     EXPECT_EQ(*val, 123);
 }
 
-TEST(TomlParserTest, GetBoolWorks) {
+TEST(TomlDeserializerTest, GetBoolWorks) {
     std::ofstream out("/tmp/bool_test.toml");
     out << "enabled = false\n";
     out.close();
     
-    TomlParser parser;
+    TomlDeserializer parser;
     parser.parse_file("/tmp/bool_test.toml");
     
     auto val = parser.get_bool("enabled");
@@ -83,12 +83,12 @@ TEST(TomlParserTest, GetBoolWorks) {
     EXPECT_FALSE(*val);
 }
 
-TEST(TomlParserTest, GetDoubleWorks) {
+TEST(TomlDeserializerTest, GetDoubleWorks) {
     std::ofstream out("/tmp/double_test.toml");
     out << "ratio = 2.5\n";
     out.close();
     
-    TomlParser parser;
+    TomlDeserializer parser;
     parser.parse_file("/tmp/double_test.toml");
     
     auto val = parser.get_double("ratio");
@@ -96,29 +96,29 @@ TEST(TomlParserTest, GetDoubleWorks) {
     EXPECT_DOUBLE_EQ(*val, 2.5);
 }
 
-TEST(TomlParserTest, MissingKeyReturnsNullopt) {
+TEST(TomlDeserializerTest, MissingKeyReturnsNullopt) {
     std::ofstream out("/tmp/missing_test.toml");
     out << "name = \"test\"\n";
     out.close();
     
-    TomlParser parser;
+    TomlDeserializer parser;
     parser.parse_file("/tmp/missing_test.toml");
     
     EXPECT_FALSE(parser.get_string("missing").has_value());
     EXPECT_FALSE(parser.get_int("missing").has_value());
 }
 
-TEST(TomlParserTest, InvalidFileThrows) {
-    TomlParser parser;
+TEST(TomlDeserializerTest, InvalidFileThrows) {
+    TomlDeserializer parser;
     EXPECT_THROW(parser.parse_file("/nonexistent/file.toml"), std::runtime_error);
 }
 
-TEST(TomlParserTest, MalformedTomlThrows) {
+TEST(TomlDeserializerTest, MalformedTomlThrows) {
     std::ofstream out("/tmp/bad.toml");
     out << "this is not valid toml [[[[\n";
     out.close();
     
-    TomlParser parser;
+    TomlDeserializer parser;
     EXPECT_THROW(parser.parse_file("/tmp/bad.toml"), std::runtime_error);
 }
 

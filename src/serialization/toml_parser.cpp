@@ -2,7 +2,7 @@
 
 #ifdef CONFIGS_LOADER_ENABLE_TOML
 
-void TomlParser::parse_file(const std::string& path) {
+void TomlDeserializer::parse_file(const std::string& path) {
     try {
         m_table = std::make_unique<toml::table>(toml::parse_file(path));
     } catch (const toml::parse_error& err) {
@@ -10,7 +10,7 @@ void TomlParser::parse_file(const std::string& path) {
     }
 }
 
-std::optional<std::string> TomlParser::get_string(const std::string& key) const {
+std::optional<std::string> TomlDeserializer::get_string(const std::string& key) const {
     if (!m_table) return std::nullopt;
     auto node = (*m_table)[key];
     if (auto val = node.value<std::string>()) {
@@ -19,7 +19,7 @@ std::optional<std::string> TomlParser::get_string(const std::string& key) const 
     return std::nullopt;
 }
 
-std::optional<int> TomlParser::get_int(const std::string& key) const {
+std::optional<int> TomlDeserializer::get_int(const std::string& key) const {
     if (!m_table) return std::nullopt;
     auto node = (*m_table)[key];
     if (auto val = node.value<int64_t>()) {
@@ -28,7 +28,7 @@ std::optional<int> TomlParser::get_int(const std::string& key) const {
     return std::nullopt;
 }
 
-std::optional<bool> TomlParser::get_bool(const std::string& key) const {
+std::optional<bool> TomlDeserializer::get_bool(const std::string& key) const {
     if (!m_table) return std::nullopt;
     auto node = (*m_table)[key];
     if (auto val = node.value<bool>()) {
@@ -37,7 +37,7 @@ std::optional<bool> TomlParser::get_bool(const std::string& key) const {
     return std::nullopt;
 }
 
-std::optional<double> TomlParser::get_double(const std::string& key) const {
+std::optional<double> TomlDeserializer::get_double(const std::string& key) const {
     if (!m_table) return std::nullopt;
     auto node = (*m_table)[key];
     if (auto val = node.value<double>()) {
@@ -46,4 +46,4 @@ std::optional<double> TomlParser::get_double(const std::string& key) const {
     return std::nullopt;
 }
 
-#endif // CONFIGS_LOADER_ENABLE_TOML
+#endif

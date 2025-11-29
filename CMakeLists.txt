@@ -133,23 +133,23 @@ target_link_libraries(help_generator_tests
 
 target_compile_options(help_generator_tests PRIVATE ${WARNING_FLAGS})
 
-add_executable(toml_parser_tests
-    tests/toml_parser_tests.cpp
+add_executable(toml_deserializer_tests
+    tests/serialization/toml_deserializer_tests.cpp
 )
 
-target_link_libraries(toml_parser_tests
+target_link_libraries(toml_deserializer_tests
     PRIVATE
         configs_loader_cpp
         GTest::gtest_main
 )
 
-target_compile_options(toml_parser_tests PRIVATE ${WARNING_FLAGS})
+target_compile_options(toml_deserializer_tests PRIVATE ${WARNING_FLAGS})
 
 include(GoogleTest)
 gtest_discover_tests(config_tests)
 gtest_discover_tests(configs_loader_tests)
 gtest_discover_tests(help_generator_tests)
-gtest_discover_tests(toml_parser_tests)
+gtest_discover_tests(toml_deserializer_tests)
 endif()
 
 # Examples (optional)

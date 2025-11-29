@@ -1,23 +1,24 @@
 #pragma once
 
-#include <string>
+#include <memory>
 #include <optional>
 #include <stdexcept>
+#include <string>
 
-// Abstract interface for preset file parsers
-class PresetParser {
+class PresetDeserializer {
 public:
-    virtual ~PresetParser() = default;
+    virtual ~PresetDeserializer() = default;
     
-    // Load preset file and return key-value pairs
     virtual void parse_file(const std::string& path) = 0;
     
-    // Get value for a key
     virtual std::optional<std::string> get_string(const std::string& key) const = 0;
     virtual std::optional<int> get_int(const std::string& key) const = 0;
     virtual std::optional<bool> get_bool(const std::string& key) const = 0;
     virtual std::optional<double> get_double(const std::string& key) const = 0;
+    
+    template<typename ConfigsType> void load_into(ConfigsType& configs);
 };
 
-// Factory function to create parser based on file extension
-std::unique_ptr<PresetParser> create_preset_parser(const std::string& file_path);
+std::unique_ptr<PresetDeserializer> create_preset_deserializer(const std::string& file_path);
+
+#include "preset_deserializer_impl.hpp"

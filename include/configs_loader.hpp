@@ -1,15 +1,8 @@
 #pragma once
 
 #include "config.hpp"
+#include "serialization/serialization_format.hpp"
 #include <string>
-
-// Forward declarations
-class PresetParser;
-
-enum class SerializationFormat : uint8_t {
-    CLI,
-    TOML
-};
 
 // Current macro - requires listing all fields (C++20)
 #define REGISTER_CONFIG_FIELDS(...) \
@@ -77,8 +70,6 @@ private:
     template<typename T> void validate_field(const ConfigGroup<T>& group);
     template<typename T> void check_not_preset_flag(const Config<T>& field);
     template<typename T> void check_not_preset_flag(const ConfigGroup<T>& group);
-    template<typename T> void load_field_from_parser(Config<T>& field, const PresetParser& parser);
-    template<typename T> void load_field_from_parser(ConfigGroup<T>& group, const PresetParser& parser);
 };
 
 // Include implementation
