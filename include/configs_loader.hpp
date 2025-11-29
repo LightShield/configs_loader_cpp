@@ -60,16 +60,10 @@ private:
     std::optional<std::string> extract_preset_path(int argc, char* argv[]);
     void load_preset_file(const std::string& path);
     void parse_cli_arguments(int argc, char* argv[]);
-    void validate_required_fields();
-    void validate_no_preset_override();
     void try_set_config_value(const std::string& flag, const std::string& value);
     
     template<typename T> bool try_set_field_value(Config<T>& field, const std::string& flag, const std::string& value);
     template<typename T> bool try_set_field_value(ConfigGroup<T>& group, const std::string& flag, const std::string& value);
-    template<typename T> void validate_field(const Config<T>& field);
-    template<typename T> void validate_field(const ConfigGroup<T>& group);
-    template<typename T> void check_not_preset_flag(const Config<T>& field);
-    template<typename T> void check_not_preset_flag(const ConfigGroup<T>& group);
 };
 
 // Include implementation

@@ -15,6 +15,7 @@
 #include "serialization/cli_serializer.hpp"
 #include "serialization/preset_deserializer.hpp"
 #include "serialization/toml_serializer.hpp"
+#include "validation/config_validator.hpp"
 
 template<typename ConfigsType>
 struct ConfigsLoader<ConfigsType>::FieldInfo {
@@ -32,9 +33,12 @@ ConfigsLoader<ConfigsType>::ConfigsLoader(int argc, char* argv[]) {
 
 template<typename ConfigsType>
 void ConfigsLoader<ConfigsType>::init(int argc, char* argv[]) {
-    validate_no_preset_override();
+    ConfigValidator<ConfigsType> validator(configs);
+    validator.validate_reserved_flags();
+    if (validator.has_errors()) {
+        throw std::runtime_error(validator.get_error_report());
+    }
     
-    // Check for --help or -h flag (with optional filter)
     for (int i = 1; i < argc; ++i) {
         const std::string arg = argv[i];
         if (arg == "--help" || arg == "-h") {
@@ -57,7 +61,11 @@ void ConfigsLoader<ConfigsType>::init(int argc, char* argv[]) {
         parse_cli_arguments(argc, argv);
     }
     
-    validate_required_fields();
+    validator.validate_required_fields();
+    if (validator.has_errors()) {
+        throw std::runtime_error(validator.get_error_report());
+    }
+    
     m_initialized = true;
 }
 
@@ -181,58 +189,6 @@ void ConfigsLoader<ConfigsType>::try_set_config_value(const std::string& flag, c
     auto fields = configs.get_fields();
     std::apply([&](auto&... field) {
         (try_set_field_value(field, flag, value) || ...);
-    }, fields);
-}
-
-template<typename ConfigsType>
-void ConfigsLoader<ConfigsType>::validate_required_fields() {
-    auto fields = configs.get_fields();
-    std::apply([&](auto&... field) {
-        ((validate_field(field)), ...);
-    }, fields);
-}
-
-template<typename ConfigsType>
-template<typename T>
-void ConfigsLoader<ConfigsType>::validate_field(const Config<T>& field) {
-    if (field.is_required() && !field.is_set()) {
-        throw std::runtime_error("Required config field not set");
-    }
-}
-
-template<typename ConfigsType>
-template<typename T>
-void ConfigsLoader<ConfigsType>::validate_field(const ConfigGroup<T>& group) {
-    auto fields = group.config.get_fields();
-    std::apply([&](auto&... field) {
-        ((validate_field(field)), ...);
-    }, fields);
-}
-
-template<typename ConfigsType>
-void ConfigsLoader<ConfigsType>::validate_no_preset_override() {
-    auto fields = configs.get_fields();
-    std::apply([&](auto&... field) {
-        ((check_not_preset_flag(field)), ...);
-    }, fields);
-}
-
-template<typename ConfigsType>
-template<typename T>
-void ConfigsLoader<ConfigsType>::check_not_preset_flag(const Config<T>& field) {
-    for (const auto& flag : field.flags) {
-        if (flag == "--preset" || flag == "-p") {
-            throw std::runtime_error("Config fields cannot use reserved --preset or -p flags");
-        }
-    }
-}
-
-template<typename ConfigsType>
-template<typename T>
-void ConfigsLoader<ConfigsType>::check_not_preset_flag(const ConfigGroup<T>& group) {
-    auto fields = group.config.get_fields();
-    std::apply([&](auto&... field) {
-        ((check_not_preset_flag(field)), ...);
     }, fields);
 }
 

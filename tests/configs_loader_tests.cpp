@@ -170,6 +170,42 @@ TEST_F(ConfigsLoaderTest, IsInitializedAfterInit) {
     EXPECT_TRUE(loader.is_initialized());
 }
 
+TEST_F(ConfigsLoaderTest, MultipleRequiredFieldsReportedTogether) {
+    struct MultiRequiredConfigs {
+        Config<std::string> field1{
+            .default_value = "",
+            .flags = {"--field1"},
+            .required = true,
+            .description = "First required field"
+        };
+        Config<std::string> field2{
+            .default_value = "",
+            .flags = {"--field2"},
+            .required = true,
+            .description = "Second required field"
+        };
+        Config<std::string> field3{
+            .default_value = "",
+            .flags = {"--field3"},
+            .required = true,
+            .description = "Third required field"
+        };
+        REGISTER_CONFIG_FIELDS(field1, field2, field3)
+    };
+    
+    const char* argv[] = {"prog"};
+    try {
+        ConfigsLoader<MultiRequiredConfigs> loader(1, const_cast<char**>(argv));
+        FAIL() << "Expected std::runtime_error";
+    } catch (const std::runtime_error& e) {
+        std::string error_msg = e.what();
+        EXPECT_NE(error_msg.find("3 error(s)"), std::string::npos);
+        EXPECT_NE(error_msg.find("--field1"), std::string::npos);
+        EXPECT_NE(error_msg.find("--field2"), std::string::npos);
+        EXPECT_NE(error_msg.find("--field3"), std::string::npos);
+    }
+}
+
 TEST_F(ConfigsLoaderTest, DumpConfigsShowsAllValues) {
     ConfigsLoader<TestConfigs> loader;
     std::string dump = loader.dump_configs();
