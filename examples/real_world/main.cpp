@@ -14,12 +14,14 @@ int main(int argc, char* argv[]) {
     
     std::cout << "=== " << loader.configs.name.value << " ===\n\n";
     
-    // Use references to simplify access to nested configs
-    const auto& api_cfg = loader.configs.api_server.config;
+    // Pattern 1: Type alias for compile-time type (useful for function parameters)
+    using ApiServerConfig = decltype(loader.configs.api_server.config);
+    
+    // Pattern 2: Reference alias for runtime access (cleaner code)
     const auto& admin_cfg = loader.configs.admin_server.config;
     
     // Two servers, each with three caches
-    Server api_server(api_cfg);
+    Server api_server(loader.configs.api_server.config);
     std::cout << "API Server:\n";
     api_server.start();
     
@@ -31,11 +33,11 @@ int main(int argc, char* argv[]) {
     
     std::cout << "\n=== Config Hierarchy Demo ===\n";
     
-    // Using reference aliases for cleaner access
-    std::cout << "API server caches (3 instances with different ports):\n";
-    std::cout << "  session_cache: " << api_cfg.session_cache.config.port.value << "\n";
-    std::cout << "  data_cache: " << api_cfg.data_cache.config.port.value << "\n";
-    std::cout << "  query_cache: " << api_cfg.query_cache.config.port.value << "\n";
+    // Using reference alias for cleaner access
+    std::cout << "Admin server caches (using reference alias):\n";
+    std::cout << "  session_cache: " << admin_cfg.session_cache.config.port.value << "\n";
+    std::cout << "  data_cache: " << admin_cfg.data_cache.config.port.value << "\n";
+    std::cout << "  query_cache: " << admin_cfg.query_cache.config.port.value << "\n";
     
     // Full path access (also valid, but more verbose)
     std::cout << "\nDatabase pool config (4 levels deep - full path):\n";
