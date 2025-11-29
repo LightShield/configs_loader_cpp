@@ -2,13 +2,6 @@
 #include "server/server.hpp"
 #include <iostream>
 
-// Helper function using type alias for parameter (cleaner signature)
-using ServerConfigType = ServerConfig;
-void print_server_info(const ServerConfigType& cfg, const std::string& name) {
-    std::cout << name << " - Port: " << cfg.port.value 
-              << ", DB: " << cfg.database.config.host.value << "\n";
-}
-
 int main(int argc, char* argv[]) {
     ConfigsLoader<AppConfig> loader;
     
@@ -21,16 +14,10 @@ int main(int argc, char* argv[]) {
     
     std::cout << "=== " << loader.configs.name.value << " ===\n\n";
     
-    // Pattern 1: Reference alias for value access (most common)
-    const auto& api_cfg = loader.configs.api_server.config;
-    const auto& admin_cfg = loader.configs.admin_server.config;
+    // Pattern 1: Scoped aliases for cleaner access
+    const auto& api_cfg = loader.configs.api_server.config;  // Type deduced
+    const ServerConfig& admin_cfg = loader.configs.admin_server.config;  // Explicit type
     
-    // Use reference aliases - much cleaner than full paths
-    print_server_info(api_cfg, "API Server");
-    print_server_info(admin_cfg, "Admin Server");
-    std::cout << "\n";
-    
-    // Two servers, each with three caches
     Server api_server(api_cfg);
     std::cout << "API Server:\n";
     api_server.start();
@@ -41,16 +28,16 @@ int main(int argc, char* argv[]) {
     std::cout << "Admin Server:\n";
     admin_server.start();
     
-    std::cout << "\n=== Config Hierarchy Demo ===\n";
+    std::cout << "\n=== Config Access Patterns ===\n";
     
-    // Using reference alias for cleaner access
-    std::cout << "Admin server caches (using reference alias):\n";
+    // Pattern 1: Using scoped aliases (cleaner)
+    std::cout << "Admin server caches (using scoped alias):\n";
     std::cout << "  session_cache: " << admin_cfg.session_cache.config.port.value << "\n";
     std::cout << "  data_cache: " << admin_cfg.data_cache.config.port.value << "\n";
     std::cout << "  query_cache: " << admin_cfg.query_cache.config.port.value << "\n";
     
-    // Full path access (also valid, but more verbose)
-    std::cout << "\nDatabase pool config (4 levels deep - full path):\n";
+    // Pattern 2: Full global path (explicit, more verbose)
+    std::cout << "\nDatabase pool config (using full path):\n";
     std::cout << "  app.api_server.database.pool.min = " 
               << loader.configs.api_server.config.database.config.pool.config.min_connections.value << "\n";
     std::cout << "  app.api_server.database.pool.max = " 
