@@ -4,20 +4,9 @@
 #include "cache/cache_config.hpp"
 
 struct AppConfig {
-    // Two servers with different defaults using designated initializers (compile-time)
+    // Two servers with different default ports (compile-time via designated initializers)
     ConfigGroup<ServerConfig> api_server{
         .config = {
-            .database = {
-                .config = {
-                    .host = {.default_value = "api-db.local"},
-                    .pool = {
-                        .config = {
-                            .min_connections = {.default_value = 10},
-                            .max_connections = {.default_value = 50}
-                        }
-                    }
-                }
-            },
             .port = {.default_value = 8080}
         },
         .name_ = "api_server"
@@ -25,17 +14,6 @@ struct AppConfig {
     
     ConfigGroup<ServerConfig> admin_server{
         .config = {
-            .database = {
-                .config = {
-                    .host = {.default_value = "admin-db.local"},
-                    .pool = {
-                        .config = {
-                            .min_connections = {.default_value = 5},
-                            .max_connections = {.default_value = 20}
-                        }
-                    }
-                }
-            },
             .port = {.default_value = 9090}
         },
         .name_ = "admin_server"

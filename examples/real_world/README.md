@@ -8,26 +8,22 @@ This example showcases the library's core design principles:
 
 ### 1. Compile-Time First
 - **Type safety**: All config access is type-checked at compile time
-- **Direct memory access**: `config.api_server.port.value` resolves to fixed memory offset
+- **Direct memory access**: `config.api_server.config.port.value` resolves to fixed memory offset
 - **IDE support**: Full autocomplete and type information in IDEs
 - **Zero runtime overhead**: No virtual functions, no pointer indirection
+- **Designated initializers**: Different defaults set at compile time (C++20)
 
-### 2. Init-Time Flexibility
-- **Different defaults**: Constructor sets different defaults for multiple instances
-- **One-time cost**: Runs once at startup, not during config usage
-- **Future improvement**: C++26 reflection will enable compile-time default customization
-
-### 3. Runtime Efficiency
-- **Direct access**: All member access is compile-time resolved
-- **Thread safety**: Wrap config types with `std::atomic<T>` if needed
-- **No overhead**: Inheritance adds zero cost (no virtual functions)
-
-### 4. Developer Experience
+### 2. Developer Experience
 - **Hierarchical organization**: Configs mirror application architecture
 - **Context awareness**: Modules only know their own config, not hierarchy
 - **Automatic features**: Help generation, required field validation, type conversion
 - **Input validation**: Custom verifier functions per field
 - **Reusability**: Same config type used multiple times with different defaults
+
+### 3. Runtime Efficiency
+- **Direct access**: All member access is compile-time resolved
+- **Thread safety**: Wrap config types with `std::atomic<T>` if needed
+- **No overhead**: Composition adds minimal cost (one pointer per ConfigGroup)
 
 ## Structure
 
@@ -84,28 +80,26 @@ AppConfig
 ## Key Patterns
 
 ### Multiple Instances with Different Defaults
-Two servers with different default values (init-time customization):
+Two servers with different default ports (compile-time via designated initializers):
 ```cpp
 struct AppConfig {
-    ConfigGroup<ServerConfig> api_server{.name_ = "api_server"};
-    ConfigGroup<ServerConfig> admin_server{.name_ = "admin_server"};
+    ConfigGroup<ServerConfig> api_server{
+        .config = {
+            .port = {.default_value = 8080}  // Override just the port
+        },
+        .name_ = "api_server"
+    };
     
-    // Constructor sets different defaults for each instance
-    AppConfig() {
-        // API server: port 8080, 10-50 connections
-        api_server.port.default_value = 8080;
-        api_server.database.pool.min_connections.default_value = 10;
-        api_server.database.pool.max_connections.default_value = 50;
-        
-        // Admin server: port 9090, 5-20 connections
-        admin_server.port.default_value = 9090;
-        admin_server.database.pool.min_connections.default_value = 5;
-        admin_server.database.pool.max_connections.default_value = 20;
-    }
+    ConfigGroup<ServerConfig> admin_server{
+        .config = {
+            .port = {.default_value = 9090}  // Different port
+        },
+        .name_ = "admin_server"
+    };
 };
 
-// Constructor runs once at startup (init-time, not runtime)
-// All subsequent access is compile-time resolved direct memory access
+// Fully compile-time initialization, no constructor needed
+// Can override any nested field using designated initializers
 ```
 
 ### Sub-Module Config
