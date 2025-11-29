@@ -5,7 +5,8 @@
 
 class Server {
 public:
-    explicit Server(const ServerConfig& config);
+    // Server has its own database config, but shares cache config with other servers
+    Server(const ServerConfig& config, const CacheConfig& cache_config);
     void start();
 
 private:
