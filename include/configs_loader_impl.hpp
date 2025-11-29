@@ -5,7 +5,7 @@
 // Users should not include this file directly
 
 #include "parsers/preset_parser.hpp"
-#include "help/help_colors.hpp"
+#include "help/help_generator.hpp"
 #include <stdexcept>
 #include <fstream>
 #include <sstream>
@@ -88,10 +88,11 @@ std::string ConfigsLoader<ConfigsType>::dump_to_toml(bool only_changes) const {
     return dump.str();
 }
 
-// Help generation implementation
-#include "help/help_generator_impl.hpp"
-
-// Private method implementations
+template<typename ConfigsType>
+std::string ConfigsLoader<ConfigsType>::generate_help(const std::string& program_name, size_t max_width, const std::string& filter) const {
+    HelpGenerator<ConfigsType> generator(configs, help_config.use_colors, help_config.enable_interactive);
+    return generator.generate(program_name, max_width, filter);
+}
 
 template<typename ConfigsType>
 std::optional<std::string> ConfigsLoader<ConfigsType>::extract_preset_path(int argc, char* argv[]) {
