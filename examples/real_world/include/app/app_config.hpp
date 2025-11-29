@@ -1,7 +1,6 @@
 #pragma once
 #include "configs_loader.hpp"
 #include "server/server_config.hpp"
-#include "cache/cache_config.hpp"
 
 struct AppConfig {
     // Two servers with different default ports (compile-time via designated initializers)
@@ -19,13 +18,11 @@ struct AppConfig {
         .name_ = "admin_server"
     };
     
-    CONFIG_GROUP(CacheConfig, shared_cache);
-    
     Config<std::string> name{
         .default_value = "myapp",
         .flags = {"--name"},
         .description = "Application name"
     };
 
-    REGISTER_CONFIG_FIELDS(api_server, admin_server, shared_cache, name)
+    REGISTER_CONFIG_FIELDS(api_server, admin_server, name)
 };

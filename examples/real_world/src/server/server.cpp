@@ -1,16 +1,19 @@
 #include "server/server.hpp"
 #include <iostream>
 
-// Server has its own database, but shares cache with other servers
-Server::Server(const ServerConfig& config, const CacheConfig& cache_config) 
+Server::Server(const ServerConfig& config) 
     : config_(config)
-    , db_(config.database.config)      // Each server has its own database config
-    , cache_(cache_config)             // All servers share the same cache config
+    , db_(config.database.config)
+    , session_cache_(config.session_cache.config)
+    , data_cache_(config.data_cache.config)
+    , query_cache_(config.query_cache.config)
 {}
 
 void Server::start() {
     std::cout << "Starting server on port " << config_.port.value << "\n";
     db_.connect();
-    cache_.connect();
+    session_cache_.connect();
+    data_cache_.connect();
+    query_cache_.connect();
     std::cout << "Server ready!\n";
 }

@@ -5,12 +5,13 @@
 
 class Server {
 public:
-    // Server has its own database config, but shares cache config with other servers
-    Server(const ServerConfig& config, const CacheConfig& cache_config);
+    explicit Server(const ServerConfig& config);
     void start();
 
 private:
     const ServerConfig& config_;
     Database db_;
-    Cache cache_;
+    Cache session_cache_;
+    Cache data_cache_;
+    Cache query_cache_;
 };
