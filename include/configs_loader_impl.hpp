@@ -36,9 +36,8 @@ void ConfigsLoader<ConfigsType>::init(int argc, char* argv[]) {
     
     // Check for --help or -h flag (with optional filter)
     for (int i = 1; i < argc; ++i) {
-        std::string arg = argv[i];
+        const std::string arg = argv[i];
         if (arg == "--help" || arg == "-h") {
-            // Check if there's a filter argument after --help
             std::string filter;
             if (help_config.enable_interactive && i + 1 < argc && argv[i + 1][0] != '-') {
                 filter = argv[i + 1];
@@ -49,7 +48,7 @@ void ConfigsLoader<ConfigsType>::init(int argc, char* argv[]) {
     }
     
     if (argc > 1) {
-        std::optional<std::string> preset_path = extract_preset_path(argc, argv);
+        const std::optional<std::string> preset_path = extract_preset_path(argc, argv);
         
         if (preset_path.has_value()) {
             load_preset_file(preset_path.value());
@@ -91,14 +90,14 @@ std::string ConfigsLoader<ConfigsType>::generate_help(const std::string& program
 template<typename ConfigsType>
 std::optional<std::string> ConfigsLoader<ConfigsType>::extract_preset_path(int argc, char* argv[]) {
     for (int i = 1; i < argc - 1; ++i) {
-        std::string arg = argv[i];
+        const std::string arg = argv[i];
         if (arg == "--preset" || arg == "-p") {
             return std::string(argv[i + 1]);
         }
         
-        size_t equals_pos = arg.find('=');
+        const size_t equals_pos = arg.find('=');
         if (equals_pos != std::string::npos) {
-            std::string flag = arg.substr(0, equals_pos);
+            const std::string flag = arg.substr(0, equals_pos);
             if (flag == "--preset" || flag == "-p") {
                 return arg.substr(equals_pos + 1);
             }
@@ -240,7 +239,6 @@ void ConfigsLoader<ConfigsType>::check_not_preset_flag(const ConfigGroup<T>& gro
 template<typename ConfigsType>
 template<typename T>
 bool ConfigsLoader<ConfigsType>::try_set_field_value(ConfigGroup<T>& group, const std::string& flag, const std::string& value) {
-    // Extract flag prefix (-- or -)
     std::string flag_prefix;
     std::string flag_body;
     if (flag.starts_with("--")) {
@@ -253,15 +251,13 @@ bool ConfigsLoader<ConfigsType>::try_set_field_value(ConfigGroup<T>& group, cons
         flag_body = flag;
     }
     
-    // Check if flag body starts with this group's prefix
-    std::string prefix_with_dot = group.name_ + ".";
+    const std::string prefix_with_dot = group.name_ + ".";
     if (flag_body.find(prefix_with_dot) != 0) {
         return false;
     }
     
-    // Remove prefix and reconstruct flag with prefix
-    std::string nested_flag_body = flag_body.substr(prefix_with_dot.length());
-    std::string nested_flag = flag_prefix + nested_flag_body;
+    const std::string nested_flag_body = flag_body.substr(prefix_with_dot.length());
+    const std::string nested_flag = flag_prefix + nested_flag_body;
     
     auto fields = group.config.get_fields();
     return std::apply([&](auto&... field) {

@@ -7,10 +7,10 @@ template<typename ConfigsType>
 class ConfigSerializer {
 protected:
     const ConfigsType& m_configs;
-    bool m_only_changes;
+    const bool m_only_changes;
 
 public:
-    ConfigSerializer(const ConfigsType& configs, bool only_changes)
+    ConfigSerializer(const ConfigsType& configs, const bool only_changes)
         : m_configs(configs), m_only_changes(only_changes) {}
 
     virtual ~ConfigSerializer() = default;

@@ -48,7 +48,7 @@ public:
     [[nodiscard]] std::string generate_help(const std::string& program_name = "program", size_t max_width = 80, const std::string& filter = "") const;
 
     // Dump current configuration values
-    // format: Output format (CLI or TOML)
+    // format: Output format (see SerializationFormat for details)
     // only_changes: If true, only dump values that differ from defaults
     [[nodiscard]] std::string dump_configs(SerializationFormat format = SerializationFormat::CLI, bool only_changes = false) const;
 

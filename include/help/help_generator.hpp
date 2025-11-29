@@ -8,11 +8,11 @@
 template<typename ConfigsType>
 class HelpGenerator {
     const ConfigsType& m_configs;
-    bool m_use_colors;
-    bool m_enable_interactive;
+    const bool m_use_colors;
+    const bool m_enable_interactive;
 
 public:
-    HelpGenerator(const ConfigsType& configs, bool use_colors, bool enable_interactive)
+    HelpGenerator(const ConfigsType& configs, const bool use_colors, const bool enable_interactive)
         : m_configs(configs), m_use_colors(use_colors), m_enable_interactive(enable_interactive) {}
 
     std::string generate(const std::string& program_name, size_t max_width, const std::string& filter) const;

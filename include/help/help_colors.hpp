@@ -17,14 +17,13 @@ namespace ansi {
 }
 
 // Helper to conditionally apply colors
-inline std::string colorize(const std::string& text, const char* color, bool use_colors) {
+inline std::string colorize(const std::string& text, const char* const color, const bool use_colors) {
     if (!use_colors) return text;
     return std::string(color) + text + ansi::RESET;
 }
 
-// Helper to get type name as string
 template<typename T>
-inline std::string get_type_name() {
+constexpr const char* get_type_name() {
     if constexpr (std::is_same_v<T, std::string>) return "string";
     else if constexpr (std::is_same_v<T, int>) return "int";
     else if constexpr (std::is_same_v<T, bool>) return "bool";
