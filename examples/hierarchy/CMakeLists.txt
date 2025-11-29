@@ -1,0 +1,2 @@
+add_executable(hierarchy_example hierarchy_example.cpp)
+target_link_libraries(hierarchy_example PRIVATE configs_loader_cpp)

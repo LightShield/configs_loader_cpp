@@ -268,6 +268,15 @@ void ConfigsLoader<ConfigsType>::validate_field(const Config<T>& field) {
 }
 
 template<typename ConfigsType>
+template<typename T>
+void ConfigsLoader<ConfigsType>::validate_field(const ConfigGroup<T>& group) {
+    auto fields = group.get_fields();
+    std::apply([&](auto&... field) {
+        ((validate_field(field)), ...);
+    }, fields);
+}
+
+template<typename ConfigsType>
 void ConfigsLoader<ConfigsType>::validate_no_preset_override() {
     auto fields = configs.get_fields();
     std::apply([&](auto&... field) {
@@ -283,6 +292,47 @@ void ConfigsLoader<ConfigsType>::check_not_preset_flag(const Config<T>& field) {
             throw std::runtime_error("Config fields cannot use reserved --preset or -p flags");
         }
     }
+}
+
+template<typename ConfigsType>
+template<typename T>
+void ConfigsLoader<ConfigsType>::check_not_preset_flag(const ConfigGroup<T>& group) {
+    auto fields = group.get_fields();
+    std::apply([&](auto&... field) {
+        ((check_not_preset_flag(field)), ...);
+    }, fields);
+}
+
+template<typename ConfigsType>
+template<typename T>
+bool ConfigsLoader<ConfigsType>::try_set_field_value(ConfigGroup<T>& group, const std::string& flag, const std::string& value) {
+    // Extract flag prefix (-- or -)
+    std::string flag_prefix;
+    std::string flag_body;
+    if (flag.starts_with("--")) {
+        flag_prefix = "--";
+        flag_body = flag.substr(2);
+    } else if (flag.starts_with("-")) {
+        flag_prefix = "-";
+        flag_body = flag.substr(1);
+    } else {
+        flag_body = flag;
+    }
+    
+    // Check if flag body starts with this group's prefix
+    std::string prefix_with_dot = group.name_ + ".";
+    if (flag_body.find(prefix_with_dot) != 0) {
+        return false;
+    }
+    
+    // Remove prefix and reconstruct flag with prefix
+    std::string nested_flag_body = flag_body.substr(prefix_with_dot.length());
+    std::string nested_flag = flag_prefix + nested_flag_body;
+    
+    auto fields = group.get_fields();
+    return std::apply([&](auto&... field) {
+        return (try_set_field_value(field, nested_flag, value) || ...);
+    }, fields);
 }
 
 template<typename ConfigsType>
@@ -353,6 +403,104 @@ void ConfigsLoader<ConfigsType>::collect_field_info(const Config<T>& field,
     } else {
         optional_fields.push_back(info);
     }
+}
+
+// ConfigGroup overloads for help generation
+template<typename ConfigsType>
+template<typename T>
+void ConfigsLoader<ConfigsType>::append_usage_field(std::ostringstream& usage, const ConfigGroup<T>& group) const {
+    // Recursively append usage for nested fields - prefix will be handled in CLI parsing
+    auto fields = group.get_fields();
+    std::apply([&](auto&... field) {
+        ((append_usage_field(usage, field)), ...);
+    }, fields);
+}
+
+template<typename ConfigsType>
+template<typename T>
+void ConfigsLoader<ConfigsType>::collect_field_info(const ConfigGroup<T>& group,
+                       std::vector<FieldInfo>& required_fields,
+                       std::vector<FieldInfo>& optional_fields) const {
+    // Collect field info with prefix prepended to flags
+    auto fields = group.get_fields();
+    std::apply([&](auto&... field) {
+        ((collect_field_info_with_prefix(field, group.name_, required_fields, optional_fields)), ...);
+    }, fields);
+}
+
+// Helper to collect field info with prefix
+template<typename ConfigsType>
+template<typename T>
+void ConfigsLoader<ConfigsType>::collect_field_info_with_prefix(const Config<T>& field,
+                       const std::string& prefix,
+                       std::vector<FieldInfo>& required_fields,
+                       std::vector<FieldInfo>& optional_fields) const {
+    if (field.flags.empty()) return;
+    
+    FieldInfo info;
+    info.prefix = field.is_required() ? "[Required]" : "";
+    
+    // Prepend prefix to all flags
+    std::ostringstream flags_str;
+    for (size_t i = 0; i < field.flags.size(); ++i) {
+        std::string flag = field.flags[i];
+        // Insert prefix after -- or -
+        if (flag.starts_with("--")) {
+            flags_str << "--" << prefix << "." << flag.substr(2);
+        } else if (flag.starts_with("-")) {
+            flags_str << "-" << prefix << "." << flag.substr(1);
+        } else {
+            flags_str << prefix << "." << flag;
+        }
+        if (i < field.flags.size() - 1) flags_str << ", ";
+    }
+    info.flags = flags_str.str();
+    
+    info.type = "<";
+    if constexpr (std::is_same_v<T, std::string>) {
+        info.type += "string";
+    } else if constexpr (std::is_same_v<T, int>) {
+        info.type += "int";
+    } else if constexpr (std::is_same_v<T, bool>) {
+        info.type += "bool";
+    } else if constexpr (std::is_same_v<T, double>) {
+        info.type += "double";
+    } else {
+        info.type += "value";
+    }
+    info.type += ">";
+    
+    info.description = field.description.empty() ? "No description provided for this config" : field.description;
+    
+    std::ostringstream default_str;
+    if constexpr (std::is_same_v<T, std::string>) {
+        default_str << "\"" << field.default_value << "\"";
+    } else if constexpr (std::is_same_v<T, bool>) {
+        default_str << (field.default_value ? "true" : "false");
+    } else {
+        default_str << field.default_value;
+    }
+    info.default_val = default_str.str();
+    
+    if (field.is_required()) {
+        required_fields.push_back(info);
+    } else {
+        optional_fields.push_back(info);
+    }
+}
+
+template<typename ConfigsType>
+template<typename T>
+void ConfigsLoader<ConfigsType>::collect_field_info_with_prefix(const ConfigGroup<T>& group,
+                       const std::string& parent_prefix,
+                       std::vector<FieldInfo>& required_fields,
+                       std::vector<FieldInfo>& optional_fields) const {
+    // Accumulate prefix
+    std::string full_prefix = parent_prefix.empty() ? group.name_ : parent_prefix + "." + group.name_;
+    auto fields = group.get_fields();
+    std::apply([&](auto&... field) {
+        ((collect_field_info_with_prefix(field, full_prefix, required_fields, optional_fields)), ...);
+    }, fields);
 }
 
 template<typename ConfigsType>
@@ -476,4 +624,32 @@ void ConfigsLoader<ConfigsType>::load_field_from_parser(Config<T>& field, const 
             return; // Found value, stop trying other flags
         }
     }
+}
+
+// ConfigGroup overloads - recursively process nested configs with prefix
+template<typename ConfigsType>
+template<typename T>
+void ConfigsLoader<ConfigsType>::dump_field(std::ostringstream& out, const ConfigGroup<T>& group, bool only_changed) const {
+    auto fields = group.get_fields();
+    std::apply([&](auto&... field) {
+        ((dump_field(out, field, only_changed)), ...);
+    }, fields);
+}
+
+template<typename ConfigsType>
+template<typename T>
+void ConfigsLoader<ConfigsType>::dump_field_toml(std::ostringstream& out, const ConfigGroup<T>& group, bool only_changed) const {
+    auto fields = group.get_fields();
+    std::apply([&](auto&... field) {
+        ((dump_field_toml(out, field, only_changed)), ...);
+    }, fields);
+}
+
+template<typename ConfigsType>
+template<typename T>
+void ConfigsLoader<ConfigsType>::load_field_from_parser(ConfigGroup<T>& group, const PresetParser& parser) {
+    auto fields = group.get_fields();
+    std::apply([&](auto&... field) {
+        ((load_field_from_parser(field, parser)), ...);
+    }, fields);
 }

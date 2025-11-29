@@ -17,6 +17,8 @@ Header-only C++20 configuration loader library with clean API separation.
 - ✅ Two-phase initialization (construction never throws)
 - ✅ Reserved `--preset`/`-p` flags for future JSON preset support
 - ✅ Initialization safety checks
+- ✅ **Hierarchical configs** with `ConfigGroup` and automatic prefix handling
+- ✅ **TOML preset support** (optional, enabled via CMake flag)
 
 ## Library Structure
 
@@ -134,6 +136,51 @@ void some_function() {
 }
 ```
 
+## Hierarchical Configs
+
+Use `ConfigGroup<T>` to create nested configuration structures with automatic prefix handling:
+
+```cpp
+struct DatabaseConfig {
+    Config<std::string> host{.default_value = "localhost", .flags = {"--host"}};
+    Config<int> port{.default_value = 5432, .flags = {"--port"}};
+    REGISTER_CONFIG_FIELDS(host, port)
+};
+
+struct ServerConfig {
+    CONFIG_GROUP(DatabaseConfig, primary_db);  // Auto-name: "primary_db"
+    CONFIG_GROUP(DatabaseConfig, replica_db);  // Auto-name: "replica_db"
+    Config<int> timeout{.default_value = 30, .flags = {"--timeout"}};
+    REGISTER_CONFIG_FIELDS(primary_db, replica_db, timeout)
+};
+
+struct AppConfig {
+    CONFIG_GROUP(ServerConfig, backend);  // Auto-name: "backend"
+    Config<std::string> app_name{.default_value = "myapp", .flags = {"--name"}};
+    REGISTER_CONFIG_FIELDS(backend, app_name)
+};
+
+// Usage
+ConfigsLoader<AppConfig> loader;
+loader.init(argc, argv);
+
+// CLI: --backend.primary_db.host db1.example.com --backend.primary_db.port 3306
+
+// Direct access via inheritance - zero overhead
+std::cout << loader.configs.backend.primary_db.host.value;
+```
+
+**Key points:**
+- `CONFIG_GROUP(Type, name)` macro automatically uses variable name as group name
+- ConfigGroup inherits from the config type for direct member access (no `.config` needed)
+- Flags in nested configs don't include prefix - it's applied automatically during CLI parsing
+- Zero runtime overhead - inheritance adds no cost when no virtual functions are used
+- Group name stored as `name_` (trailing underscore) to avoid collisions with user fields
+- Prefixes accumulate for multi-level hierarchies (e.g., `backend.primary_db.host`)
+- Each config struct calls `REGISTER_CONFIG_FIELDS` for its own fields
+
+See `examples/hierarchy/` for a complete example.
+
 ## API Reference
 
 ### Config<T>
@@ -147,6 +194,17 @@ Template struct for defining configuration fields.
 - `std::function<bool(const T&)> verifier` - Custom validation function
 - `T value` - Current value (direct access, never throws)
 - `bool is_set()` - Whether value was explicitly set via CLI
+
+### ConfigGroup<T>
+
+Template struct for creating hierarchical config structures. Inherits from `T` for direct member access.
+
+**Members:**
+- `std::string name_` - Group name used as prefix for nested flags (trailing underscore avoids collisions)
+- All members of `T` (via inheritance)
+
+**Macro:**
+- `CONFIG_GROUP(Type, name)` - Creates a ConfigGroup with automatic name from variable name
 
 ### ConfigsLoader<ConfigsType>
 

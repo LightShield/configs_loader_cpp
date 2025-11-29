@@ -34,3 +34,12 @@ struct Config {
         m_is_set = 0u;
     }
 };
+
+template<typename T>
+struct ConfigGroup : T {
+    std::string name_;  // Trailing underscore avoids collision with user config fields
+};
+
+// Macro for automatic group name from variable name
+#define CONFIG_GROUP(Type, name) \
+    ConfigGroup<Type> name{.name_ = #name}

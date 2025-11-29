@@ -65,13 +65,23 @@ private:
     void wrap_text(std::ostringstream& out, const std::string& text, size_t indent_col, size_t max_width) const;
     
     template<typename T> bool try_set_field_value(Config<T>& field, const std::string& flag, const std::string& value);
+    template<typename T> bool try_set_field_value(ConfigGroup<T>& group, const std::string& flag, const std::string& value);
     template<typename T> void validate_field(const Config<T>& field);
+    template<typename T> void validate_field(const ConfigGroup<T>& group);
     template<typename T> void check_not_preset_flag(const Config<T>& field);
+    template<typename T> void check_not_preset_flag(const ConfigGroup<T>& group);
     template<typename T> void append_usage_field(std::ostringstream& usage, const Config<T>& field) const;
+    template<typename T> void append_usage_field(std::ostringstream& usage, const ConfigGroup<T>& group) const;
     template<typename T> void collect_field_info(const Config<T>& field, std::vector<FieldInfo>& required, std::vector<FieldInfo>& optional) const;
+    template<typename T> void collect_field_info(const ConfigGroup<T>& group, std::vector<FieldInfo>& required, std::vector<FieldInfo>& optional) const;
+    template<typename T> void collect_field_info_with_prefix(const Config<T>& field, const std::string& prefix, std::vector<FieldInfo>& required, std::vector<FieldInfo>& optional) const;
+    template<typename T> void collect_field_info_with_prefix(const ConfigGroup<T>& group, const std::string& parent_prefix, std::vector<FieldInfo>& required, std::vector<FieldInfo>& optional) const;
     template<typename T> void dump_field(std::ostringstream& out, const Config<T>& field, bool only_changed) const;
+    template<typename T> void dump_field(std::ostringstream& out, const ConfigGroup<T>& group, bool only_changed) const;
     template<typename T> void dump_field_toml(std::ostringstream& out, const Config<T>& field, bool only_changed) const;
+    template<typename T> void dump_field_toml(std::ostringstream& out, const ConfigGroup<T>& group, bool only_changed) const;
     template<typename T> void load_field_from_parser(Config<T>& field, const PresetParser& parser);
+    template<typename T> void load_field_from_parser(ConfigGroup<T>& group, const PresetParser& parser);
 };
 
 // Include implementation
