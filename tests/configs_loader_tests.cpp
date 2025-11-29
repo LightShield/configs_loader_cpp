@@ -182,26 +182,26 @@ TEST_F(ConfigsLoaderTest, DumpConfigsShowsAllValues) {
 TEST_F(ConfigsLoaderTest, DumpConfigsOnlyChangesShowsModified) {
     const char* argv[] = {"prog", "--count", "42"};
     ConfigsLoader<TestConfigs> loader(3, const_cast<char**>(argv));
-    std::string dump = loader.dump_configs(true);
+    std::string dump = loader.dump_configs(SerializationFormat::CLI, true);
     
     EXPECT_NE(dump.find("--count=42"), std::string::npos);
     EXPECT_EQ(dump.find("--file"), std::string::npos);
     EXPECT_EQ(dump.find("--verbose"), std::string::npos);
 }
 
-TEST_F(ConfigsLoaderTest, DumpToTomlShowsAllValues) {
+TEST_F(ConfigsLoaderTest, DumpConfigsTomlShowsAllValues) {
     ConfigsLoader<TestConfigs> loader;
-    std::string dump = loader.dump_to_toml();
+    std::string dump = loader.dump_configs(SerializationFormat::TOML);
     
     EXPECT_NE(dump.find("file = \"default.txt\""), std::string::npos);
     EXPECT_NE(dump.find("count = 10"), std::string::npos);
     EXPECT_NE(dump.find("verbose = false"), std::string::npos);
 }
 
-TEST_F(ConfigsLoaderTest, DumpToTomlOnlyChangesShowsModified) {
+TEST_F(ConfigsLoaderTest, DumpConfigsTomlOnlyChangesShowsModified) {
     const char* argv[] = {"prog", "--count", "42"};
     ConfigsLoader<TestConfigs> loader(3, const_cast<char**>(argv));
-    std::string dump = loader.dump_to_toml(true);
+    std::string dump = loader.dump_configs(SerializationFormat::TOML, true);
     
     EXPECT_NE(dump.find("count = 42"), std::string::npos);
     EXPECT_EQ(dump.find("file"), std::string::npos);

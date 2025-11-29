@@ -6,6 +6,11 @@
 // Forward declarations
 class PresetParser;
 
+enum class SerializationFormat {
+    CLI,   // --flag=value format
+    TOML   // key = value format
+};
+
 // Current macro - requires listing all fields (C++20)
 #define REGISTER_CONFIG_FIELDS(...) \
     auto get_fields() { \
@@ -50,12 +55,9 @@ public:
     [[nodiscard]] std::string generate_help(const std::string& program_name = "program", size_t max_width = 80, const std::string& filter = "") const;
 
     // Dump current configuration values
+    // format: Output format (CLI or TOML)
     // only_changes: If true, only dump values that differ from defaults
-    [[nodiscard]] std::string dump_configs(bool only_changes = false) const;
-    
-    // Dump configuration to TOML format
-    // only_changes: If true, only dump values that differ from defaults
-    [[nodiscard]] std::string dump_to_toml(bool only_changes = false) const;
+    [[nodiscard]] std::string dump_configs(SerializationFormat format = SerializationFormat::CLI, bool only_changes = false) const;
 
 private:
     bool m_initialized = false;

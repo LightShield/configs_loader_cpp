@@ -71,15 +71,18 @@ bool ConfigsLoader<ConfigsType>::is_initialized() const {
 }
 
 template<typename ConfigsType>
-std::string ConfigsLoader<ConfigsType>::dump_configs(bool only_changes) const {
-    CliSerializer<ConfigsType> serializer(configs, only_changes);
-    return serializer.serialize();
-}
-
-template<typename ConfigsType>
-std::string ConfigsLoader<ConfigsType>::dump_to_toml(bool only_changes) const {
-    TomlSerializer<ConfigsType> serializer(configs, only_changes);
-    return serializer.serialize();
+std::string ConfigsLoader<ConfigsType>::dump_configs(SerializationFormat format, bool only_changes) const {
+    switch (format) {
+        case SerializationFormat::CLI: {
+            CliSerializer<ConfigsType> serializer(configs, only_changes);
+            return serializer.serialize();
+        }
+        case SerializationFormat::TOML: {
+            TomlSerializer<ConfigsType> serializer(configs, only_changes);
+            return serializer.serialize();
+        }
+    }
+    return "";
 }
 
 template<typename ConfigsType>
