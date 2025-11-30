@@ -42,6 +42,8 @@ struct ConfigGroup {
     
     operator T&() { return config; }
     operator const T&() const { return config; }
+    
+    [[nodiscard]] const std::string& get_name() const { return name_; }
 };
 
 #define CONFIG_GROUP(Type, name) \

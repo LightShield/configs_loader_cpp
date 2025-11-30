@@ -231,6 +231,12 @@ TEST_F(ConfigsLoaderTest, ConfigGroupImplicitConversionWorks) {
     // Implicit conversion - no .config needed
     const NestedConfig& nested = loader.configs.group;
     EXPECT_EQ(nested.value.value, 42);
+    
+    // Access name via get_name()
+    EXPECT_EQ(loader.configs.group.get_name(), "group");
+    
+    // Direct access to name_ still works
+    EXPECT_EQ(loader.configs.group.name_, "group");
 }
 
 TEST_F(ConfigsLoaderTest, DumpConfigsShowsAllValues) {
