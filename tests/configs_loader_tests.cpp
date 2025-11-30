@@ -206,6 +206,33 @@ TEST_F(ConfigsLoaderTest, MultipleRequiredFieldsReportedTogether) {
     }
 }
 
+TEST_F(ConfigsLoaderTest, ConfigGroupImplicitConversionWorks) {
+    struct NestedConfig {
+        Config<int> value{
+            .default_value = 42,
+            .flags = {"--value"}
+        };
+        REGISTER_CONFIG_FIELDS(value)
+    };
+    
+    struct GroupedConfigs {
+        ConfigGroup<NestedConfig> group{
+            .config = {},
+            .name_ = "group"
+        };
+        REGISTER_CONFIG_FIELDS(group)
+    };
+    
+    ConfigsLoader<GroupedConfigs> loader;
+    
+    // Direct access with .config
+    EXPECT_EQ(loader.configs.group.config.value.value, 42);
+    
+    // Implicit conversion - no .config needed
+    const NestedConfig& nested = loader.configs.group;
+    EXPECT_EQ(nested.value.value, 42);
+}
+
 TEST_F(ConfigsLoaderTest, DumpConfigsShowsAllValues) {
     ConfigsLoader<TestConfigs> loader;
     std::string dump = loader.dump_configs();

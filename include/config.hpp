@@ -38,9 +38,11 @@ struct Config {
 template<typename T>
 struct ConfigGroup {
     T config;
-    std::string name_;  // Trailing underscore avoids collision with user config fields
+    std::string name_;
+    
+    operator T&() { return config; }
+    operator const T&() const { return config; }
 };
 
-// Macro for automatic group name from variable name
 #define CONFIG_GROUP(Type, name) \
     ConfigGroup<Type> name{.name_ = #name}
