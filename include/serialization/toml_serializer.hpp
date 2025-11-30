@@ -53,7 +53,7 @@ void TomlSerializer<ConfigsType>::serialize_field(std::ostringstream& out, const
 template<typename ConfigsType>
 template<typename T>
 void TomlSerializer<ConfigsType>::serialize_field(std::ostringstream& out, const ConfigGroup<T>& group) const {
-    auto fields = group.config.get_fields();
+    auto fields = group.get_fields();
     std::apply([&](auto&... field) {
         ((serialize_field(out, field)), ...);
     }, fields);

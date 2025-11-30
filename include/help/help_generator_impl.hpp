@@ -62,7 +62,7 @@ void HelpGenerator<ConfigsType>::append_usage_field(std::ostringstream& usage, c
 template<typename ConfigsType>
 template<typename T>
 void HelpGenerator<ConfigsType>::append_usage_field(std::ostringstream& usage, const ConfigGroup<T>& group) const {
-    auto fields = group.config.get_fields();
+    auto fields = group.get_fields();
     std::apply([&](auto&... field) {
         ((append_usage_field(usage, field)), ...);
     }, fields);
@@ -114,11 +114,11 @@ template<typename T>
 void HelpGenerator<ConfigsType>::print_field_hierarchical(std::ostringstream& out, const ConfigGroup<T>& group, size_t indent, size_t max_width, const std::string& prefix) const {
     const std::string indent_str(indent * 2, ' ');
     
-    out << "  " << indent_str << colorize(group.name_ + ":", ansi::GREEN, m_use_colors) << "\n";
+    out << "  " << indent_str << colorize(group.get_name() + ":", ansi::GREEN, m_use_colors) << "\n";
     
-    const std::string full_prefix = prefix.empty() ? group.name_ : prefix + "." + group.name_;
+    const std::string full_prefix = prefix.empty() ? group.get_name() : prefix + "." + group.get_name();
     
-    auto fields = group.config.get_fields();
+    auto fields = group.get_fields();
     std::apply([&](auto&... field) {
         ((print_field_hierarchical(out, field, indent + 1, max_width, full_prefix)), ...);
     }, fields);
@@ -167,8 +167,8 @@ void HelpGenerator<ConfigsType>::print_field_if_required(std::ostringstream& out
 template<typename ConfigsType>
 template<typename T>
 void HelpGenerator<ConfigsType>::print_field_if_required(std::ostringstream& out, const ConfigGroup<T>& group, const std::string& prefix) const {
-    const std::string full_prefix = prefix.empty() ? group.name_ : prefix + "." + group.name_;
-    auto fields = group.config.get_fields();
+    const std::string full_prefix = prefix.empty() ? group.get_name() : prefix + "." + group.get_name();
+    auto fields = group.get_fields();
     std::apply([&](auto&... field) {
         ((print_field_if_required(out, field, full_prefix)), ...);
     }, fields);
@@ -203,12 +203,12 @@ template<typename ConfigsType>
 template<typename T>
 void HelpGenerator<ConfigsType>::print_group_structure(std::ostringstream& out, const ConfigGroup<T>& group, size_t indent, const std::string& prefix) const {
     const std::string indent_str(indent * 2, ' ');
-    const std::string full_prefix = prefix.empty() ? group.name_ : prefix + "." + group.name_;
+    const std::string full_prefix = prefix.empty() ? group.get_name() : prefix + "." + group.get_name();
     
-    out << "  " << indent_str << colorize(group.name_, ansi::GREEN, m_use_colors) 
+    out << "  " << indent_str << colorize(group.get_name(), ansi::GREEN, m_use_colors) 
         << " " << colorize("(" + full_prefix + ")", ansi::GRAY, m_use_colors) << "\n";
     
-    auto fields = group.config.get_fields();
+    auto fields = group.get_fields();
     std::apply([&](auto&... field) {
         ((print_group_structure(out, field, indent + 1, full_prefix)), ...);
     }, fields);
@@ -236,15 +236,15 @@ bool HelpGenerator<ConfigsType>::print_field_if_matches(std::ostringstream&, con
 template<typename ConfigsType>
 template<typename T>
 bool HelpGenerator<ConfigsType>::print_field_if_matches(std::ostringstream& out, const ConfigGroup<T>& group, const std::string& filter, const std::string& prefix) const {
-    const std::string full_prefix = prefix.empty() ? group.name_ : prefix + "." + group.name_;
+    const std::string full_prefix = prefix.empty() ? group.get_name() : prefix + "." + group.get_name();
     
-    if (group.name_ == filter || full_prefix == filter) {
+    if (group.get_name() == filter || full_prefix == filter) {
         print_field_hierarchical(out, group, 0, 80, prefix);
         return true;
     }
     
     bool found = false;
-    auto fields = group.config.get_fields();
+    auto fields = group.get_fields();
     std::apply([&](auto&... field) {
         ((found = print_field_if_matches(out, field, filter, full_prefix) || found), ...);
     }, fields);
@@ -279,10 +279,10 @@ void HelpGenerator<ConfigsType>::collect_group_names_from_field(const Config<T>&
 template<typename ConfigsType>
 template<typename T>
 void HelpGenerator<ConfigsType>::collect_group_names_from_field(const ConfigGroup<T>& group, std::vector<std::string>& names, const std::string& prefix) const {
-    const std::string full_name = prefix.empty() ? group.name_ : prefix + "." + group.name_;
+    const std::string full_name = prefix.empty() ? group.get_name() : prefix + "." + group.get_name();
     names.push_back(full_name);
     
-    auto fields = group.config.get_fields();
+    auto fields = group.get_fields();
     std::apply([&](auto&... field) {
         ((collect_group_names_from_field(field, names, full_name)), ...);
     }, fields);

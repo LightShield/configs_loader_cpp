@@ -45,7 +45,7 @@ void load_field(PresetDeserializer& deserializer, Config<T>& field) {
 
 template<typename T>
 void load_field(PresetDeserializer& deserializer, ConfigGroup<T>& group) {
-    auto fields = group.config.get_fields();
+    auto fields = group.get_fields();
     std::apply([&](auto&... field) {
         ((load_field(deserializer, field)), ...);
     }, fields);

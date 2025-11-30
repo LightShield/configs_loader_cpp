@@ -207,7 +207,7 @@ bool ConfigsLoader<ConfigsType>::try_set_field_value(ConfigGroup<T>& group, cons
         flag_body = flag;
     }
     
-    const std::string prefix_with_dot = group.name_ + ".";
+    const std::string prefix_with_dot = group.get_name() + ".";
     if (flag_body.find(prefix_with_dot) != 0) {
         return false;
     }
@@ -215,7 +215,7 @@ bool ConfigsLoader<ConfigsType>::try_set_field_value(ConfigGroup<T>& group, cons
     const std::string nested_flag_body = flag_body.substr(prefix_with_dot.length());
     const std::string nested_flag = flag_prefix + nested_flag_body;
     
-    auto fields = group.config.get_fields();
+    auto fields = group.get_fields();
     return std::apply([&](auto&... field) {
         return (try_set_field_value(field, nested_flag, value) || ...);
     }, fields);

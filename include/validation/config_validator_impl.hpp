@@ -57,8 +57,8 @@ void ConfigValidator<ConfigsType>::validate_field(const Config<T>& field, const 
 template<typename ConfigsType>
 template<typename T>
 void ConfigValidator<ConfigsType>::validate_field(const ConfigGroup<T>& group, const std::string& prefix) {
-    const std::string full_prefix = prefix.empty() ? group.name_ : prefix + "." + group.name_;
-    auto fields = group.config.get_fields();
+    const std::string full_prefix = prefix.empty() ? group.get_name() : prefix + "." + group.get_name();
+    auto fields = group.get_fields();
     std::apply([&](auto&... field) {
         ((validate_field(field, full_prefix)), ...);
     }, fields);
@@ -81,7 +81,7 @@ void ConfigValidator<ConfigsType>::check_reserved_flags(const Config<T>& field) 
 template<typename ConfigsType>
 template<typename T>
 void ConfigValidator<ConfigsType>::check_reserved_flags(const ConfigGroup<T>& group) {
-    auto fields = group.config.get_fields();
+    auto fields = group.get_fields();
     std::apply([&](auto&... field) {
         ((check_reserved_flags(field)), ...);
     }, fields);

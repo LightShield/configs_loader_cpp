@@ -44,6 +44,9 @@ struct ConfigGroup {
     operator const T&() const { return config; }
     
     [[nodiscard]] const std::string& get_name() const { return name_; }
+    
+    auto get_fields() { return config.get_fields(); }
+    auto get_fields() const { return config.get_fields(); }
 };
 
 #define CONFIG_GROUP(Type, name) \
