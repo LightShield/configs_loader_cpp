@@ -10,6 +10,7 @@ struct HelpConfig {
     bool use_colors = true;
     bool enable_interactive = true;
     size_t max_width = 80;
+    bool show_current_values = true;
 };
 
 template<typename ConfigsType>
@@ -18,10 +19,12 @@ class HelpGenerator {
     const bool m_use_colors;
     const bool m_enable_interactive;
     const size_t m_max_width;
+    const bool m_show_current_values;
 
 public:
     HelpGenerator(const ConfigsType& configs, const HelpConfig& config)
-        : m_configs(configs), m_use_colors(config.use_colors), m_enable_interactive(config.enable_interactive), m_max_width(config.max_width) {}
+        : m_configs(configs), m_use_colors(config.use_colors), m_enable_interactive(config.enable_interactive), 
+          m_max_width(config.max_width), m_show_current_values(config.show_current_values) {}
 
     std::string generate(const std::string& program_name, const std::string& filter) const;
 

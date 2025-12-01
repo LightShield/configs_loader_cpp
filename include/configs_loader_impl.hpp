@@ -34,18 +34,18 @@ void ConfigsLoader<ConfigsType>::init(int argc, char* argv[]) {
     
     const ParsedArguments args = CliArgumentParser::parse(argc, argv);
     
-    if (args.has_help) {
-        const std::string filter = args.help_filter.value_or("");
-        std::cout << generate_help(argv[0], filter) << std::endl;
-        std::exit(0);
-    }
-    
     if (args.preset_path.has_value()) {
         load_preset_file(args.preset_path.value());
     }
     
     ConfigApplier<ConfigsType> applier(configs);
     applier.apply(args.flags);
+    
+    if (args.has_help) {
+        const std::string filter = args.help_filter.value_or("");
+        std::cout << generate_help(argv[0], filter) << std::endl;
+        std::exit(0);
+    }
     
     validator.validate_required_fields();
     if (validator.has_errors()) {

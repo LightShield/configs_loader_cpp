@@ -110,3 +110,29 @@ TEST_F(HelpGeneratorTest, ShowsDefaultDescriptionWhenMissing) {
     
     EXPECT_NE(help.find("No description provided for this config"), std::string::npos);
 }
+
+TEST_F(HelpGeneratorTest, ShowsCurrentValueWhenDifferentFromDefault) {
+    const char* argv[] = {"prog", "--count", "42"};
+    ConfigsLoader<TestConfigs> loader(3, const_cast<char**>(argv));
+    loader.help_config.use_colors = false;
+    loader.help_config.enable_interactive = false;
+    loader.help_config.show_current_values = true;
+    
+    std::string help = loader.generate_help();
+    
+    EXPECT_NE(help.find("current: 42"), std::string::npos);
+    EXPECT_NE(help.find("default: 10"), std::string::npos);
+}
+
+TEST_F(HelpGeneratorTest, DoesNotShowCurrentWhenSameAsDefault) {
+    ConfigsLoader<TestConfigs> loader;
+    loader.help_config.use_colors = false;
+    loader.help_config.enable_interactive = false;
+    loader.help_config.show_current_values = true;
+    
+    std::string help = loader.generate_help();
+    
+    EXPECT_EQ(help.find("current:"), std::string::npos);
+    EXPECT_NE(help.find("default: 10"), std::string::npos);
+}
+

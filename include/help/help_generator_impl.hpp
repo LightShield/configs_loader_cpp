@@ -98,12 +98,24 @@ void HelpGenerator<ConfigsType>::print_field_hierarchical(std::ostringstream& ou
     const std::string desc = field.description.empty() ? "No description provided for this config" : field.description;
     out << "  " << desc;
     
-    if constexpr (std::is_same_v<T, std::string>) {
-        out << " " << colorize("(default: \"" + field.default_value + "\")", ansi::GRAY, m_use_colors);
-    } else if constexpr (std::is_same_v<T, bool>) {
-        out << " " << colorize("(default: " + std::string(field.default_value ? "true" : "false") + ")", ansi::GRAY, m_use_colors);
+    if (m_show_current_values && field.is_set() && field.value != field.default_value) {
+        if constexpr (std::is_same_v<T, std::string>) {
+            out << " " << colorize("(current: \"" + field.value + "\", default: \"" + field.default_value + "\")", ansi::GRAY, m_use_colors);
+        } else if constexpr (std::is_same_v<T, bool>) {
+            out << " " << colorize("(current: " + std::string(field.value ? "true" : "false") + 
+                                   ", default: " + std::string(field.default_value ? "true" : "false") + ")", ansi::GRAY, m_use_colors);
+        } else {
+            out << " " << colorize("(current: " + std::to_string(field.value) + 
+                                   ", default: " + std::to_string(field.default_value) + ")", ansi::GRAY, m_use_colors);
+        }
     } else {
-        out << " " << colorize("(default: " + std::to_string(field.default_value) + ")", ansi::GRAY, m_use_colors);
+        if constexpr (std::is_same_v<T, std::string>) {
+            out << " " << colorize("(default: \"" + field.default_value + "\")", ansi::GRAY, m_use_colors);
+        } else if constexpr (std::is_same_v<T, bool>) {
+            out << " " << colorize("(default: " + std::string(field.default_value ? "true" : "false") + ")", ansi::GRAY, m_use_colors);
+        } else {
+            out << " " << colorize("(default: " + std::to_string(field.default_value) + ")", ansi::GRAY, m_use_colors);
+        }
     }
     
     out << "\n";
