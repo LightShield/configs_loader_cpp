@@ -1,25 +1,25 @@
 #pragma once
 
 template<typename ConfigsType>
-std::string HelpGenerator<ConfigsType>::generate(const std::string& program_name, const std::string& filter) const {
+std::string HelpGenerator<ConfigsType>::generate(const std::string& filter) const {
     if (!filter.empty()) {
         if (filter == "required") {
-            return generate_required(program_name);
+            return generate_required();
         } else if (filter == "filters" || filter == "help") {
-            return generate_filters(program_name);
+            return generate_filters();
         } else if (filter == "groups") {
-            return generate_groups(program_name);
+            return generate_groups();
         } else if (filter == "all") {
             // Fall through to show full help
         } else {
-            return generate_filtered(program_name, filter);
+            return generate_filtered(filter);
         }
     } else if (m_enable_interactive) {
-        return generate_navigation(program_name);
+        return generate_navigation();
     }
     
     std::ostringstream help;
-    help << colorize("Usage: ", ansi::BOLD, m_use_colors) << program_name << " [OPTIONS]";
+    help << colorize("Usage: ", ansi::BOLD, m_use_colors) << m_program_name << " [OPTIONS]";
     auto fields = m_configs.get_fields();
     std::apply([&](auto&... field) {
         ((append_usage_field(help, field)), ...);
@@ -137,10 +137,10 @@ void HelpGenerator<ConfigsType>::print_field_hierarchical(std::ostringstream& ou
 }
 
 template<typename ConfigsType>
-std::string HelpGenerator<ConfigsType>::generate_navigation(const std::string& program_name) const {
+std::string HelpGenerator<ConfigsType>::generate_navigation() const {
     std::ostringstream help;
     
-    help << colorize(program_name, ansi::BOLD, m_use_colors) << " has many configuration options.\n\n";
+    help << colorize(m_program_name, ansi::BOLD, m_use_colors) << " has many configuration options.\n\n";
     help << "Interactive help is enabled to help you navigate its usage.\n";
     help << "Run " << colorize("--help", ansi::CYAN, m_use_colors) << " with one of the following:\n\n";
     
@@ -151,10 +151,10 @@ std::string HelpGenerator<ConfigsType>::generate_navigation(const std::string& p
     help << "  " << colorize("<group>", ansi::CYAN, m_use_colors) << "   - Show only a specific configuration group\n";
     
     help << "\n" << colorize("Examples:", ansi::BOLD, m_use_colors) << "\n";
-    help << "  " << program_name << " --help " << colorize("all", ansi::CYAN, m_use_colors) << "\n";
-    help << "  " << program_name << " --help " << colorize("groups", ansi::CYAN, m_use_colors) << "\n";
-    help << "  " << program_name << " --help " << colorize("required", ansi::CYAN, m_use_colors) << "\n";
-    help << "  " << program_name << " --help " << colorize("filters", ansi::CYAN, m_use_colors) << "\n";
+    help << "  " << m_program_name << " --help " << colorize("all", ansi::CYAN, m_use_colors) << "\n";
+    help << "  " << m_program_name << " --help " << colorize("groups", ansi::CYAN, m_use_colors) << "\n";
+    help << "  " << m_program_name << " --help " << colorize("required", ansi::CYAN, m_use_colors) << "\n";
+    help << "  " << m_program_name << " --help " << colorize("filters", ansi::CYAN, m_use_colors) << "\n";
     
     return help.str();
 }
@@ -187,9 +187,9 @@ void HelpGenerator<ConfigsType>::print_field_if_required(std::ostringstream& out
 }
 
 template<typename ConfigsType>
-std::string HelpGenerator<ConfigsType>::generate_required(const std::string& program_name) const {
+std::string HelpGenerator<ConfigsType>::generate_required() const {
     std::ostringstream help;
-    help << colorize("Required Fields for ", ansi::BOLD, m_use_colors) << program_name << ":\n\n";
+    help << colorize("Required Fields for ", ansi::BOLD, m_use_colors) << m_program_name << ":\n\n";
     
     std::ostringstream fields_out;
     auto fields = m_configs.get_fields();
@@ -227,9 +227,9 @@ void HelpGenerator<ConfigsType>::print_group_structure(std::ostringstream& out, 
 }
 
 template<typename ConfigsType>
-std::string HelpGenerator<ConfigsType>::generate_groups(const std::string& program_name) const {
+std::string HelpGenerator<ConfigsType>::generate_groups() const {
     std::ostringstream help;
-    help << colorize("Configuration Groups for ", ansi::BOLD, m_use_colors) << program_name << ":\n\n";
+    help << colorize("Configuration Groups for ", ansi::BOLD, m_use_colors) << m_program_name << ":\n\n";
     
     auto fields = m_configs.get_fields();
     std::apply([&](auto&... field) {
@@ -265,7 +265,7 @@ bool HelpGenerator<ConfigsType>::print_field_if_matches(std::ostringstream& out,
 }
 
 template<typename ConfigsType>
-std::string HelpGenerator<ConfigsType>::generate_filtered(const std::string&, const std::string& group_filter) const {
+std::string HelpGenerator<ConfigsType>::generate_filtered(const std::string& group_filter) const {
     std::ostringstream help;
     help << colorize("Help for group '", ansi::BOLD, m_use_colors) << group_filter << "':\n\n";
     
@@ -309,7 +309,7 @@ void HelpGenerator<ConfigsType>::collect_group_names(std::vector<std::string>& n
 }
 
 template<typename ConfigsType>
-std::string HelpGenerator<ConfigsType>::generate_filters(const std::string&) const {
+std::string HelpGenerator<ConfigsType>::generate_filters() const {
     std::ostringstream help;
     help << colorize("Available Help Filters:", ansi::BOLD, m_use_colors) << "\n\n";
     help << colorize("  all", ansi::CYAN, m_use_colors) << "       - Show all configuration options\n";

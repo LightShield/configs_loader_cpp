@@ -37,7 +37,7 @@ public:
 
     // Generate help text
     // filter: Optional filter for interactive help (e.g., "required", "group_name")
-    [[nodiscard]] std::string generate_help(const std::string& program_name = "program", const std::string& filter = "") const;
+    [[nodiscard]] std::string generate_help(const std::string& filter = "") const;
 
     // Dump current configuration values
     // format: Output format (see SerializationFormat for details)

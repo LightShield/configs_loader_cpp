@@ -25,6 +25,10 @@ ConfigsLoader<ConfigsType>::ConfigsLoader(int argc, char* argv[]) {
 
 template<typename ConfigsType>
 void ConfigsLoader<ConfigsType>::init(int argc, char* argv[]) {
+    if (help_config.program_name == "program" && argc > 0) {
+        help_config.program_name = argv[0];
+    }
+    
     ConfigValidator<ConfigsType> validator(configs);
     validator.validate_reserved_flags();
     if (validator.has_errors()) {
@@ -44,7 +48,7 @@ void ConfigsLoader<ConfigsType>::init(int argc, char* argv[]) {
     applier.apply_from_cli(args.flags);
     
     if (args.has_help) {
-        std::cout << generate_help(argv[0], args.help_filter) << std::endl;
+        std::cout << generate_help(args.help_filter) << std::endl;
         std::exit(0);
     }
     
@@ -68,9 +72,9 @@ std::string ConfigsLoader<ConfigsType>::dump_configs(SerializationFormat format,
 }
 
 template<typename ConfigsType>
-std::string ConfigsLoader<ConfigsType>::generate_help(const std::string& program_name, const std::string& filter) const {
+std::string ConfigsLoader<ConfigsType>::generate_help(const std::string& filter) const {
     HelpGenerator<ConfigsType> generator(configs, help_config);
-    return generator.generate(program_name, filter);
+    return generator.generate(filter);
 }
 
 

@@ -32,7 +32,8 @@ protected:
 };
 
 TEST_F(HelpGeneratorTest, IncludesAllFields) {
-    std::string help = loader.generate_help("test_prog");
+    loader.help_config.program_name = "test_prog";
+    std::string help = loader.generate_help();
     
     EXPECT_NE(help.find("test_prog"), std::string::npos);
     EXPECT_NE(help.find("--file"), std::string::npos);

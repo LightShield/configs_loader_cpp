@@ -7,6 +7,7 @@
 #include <vector>
 
 struct HelpConfig {
+    std::string program_name = "program";
     bool use_colors = true;
     bool enable_interactive = true;
     size_t max_width = 80;
@@ -16,6 +17,7 @@ struct HelpConfig {
 template<typename ConfigsType>
 class HelpGenerator {
     const ConfigsType& m_configs;
+    const std::string& m_program_name;
     const bool m_use_colors;
     const bool m_enable_interactive;
     const size_t m_max_width;
@@ -23,17 +25,18 @@ class HelpGenerator {
 
 public:
     HelpGenerator(const ConfigsType& configs, const HelpConfig& config)
-        : m_configs(configs), m_use_colors(config.use_colors), m_enable_interactive(config.enable_interactive), 
-          m_max_width(config.max_width), m_show_current_values(config.show_current_values) {}
+        : m_configs(configs), m_program_name(config.program_name), m_use_colors(config.use_colors), 
+          m_enable_interactive(config.enable_interactive), m_max_width(config.max_width), 
+          m_show_current_values(config.show_current_values) {}
 
-    std::string generate(const std::string& program_name, const std::string& filter) const;
+    std::string generate(const std::string& filter) const;
 
 private:
-    std::string generate_navigation(const std::string& program_name) const;
-    std::string generate_groups(const std::string& program_name) const;
-    std::string generate_required(const std::string& program_name) const;
-    std::string generate_filtered(const std::string& program_name, const std::string& group_filter) const;
-    std::string generate_filters(const std::string& program_name) const;
+    std::string generate_navigation() const;
+    std::string generate_groups() const;
+    std::string generate_required() const;
+    std::string generate_filtered(const std::string& group_filter) const;
+    std::string generate_filters() const;
     
     void collect_group_names(std::vector<std::string>& names, const std::string& prefix = "") const;
     void wrap_text(std::ostringstream& out, const std::string& text, size_t indent_col, size_t max_width) const;
