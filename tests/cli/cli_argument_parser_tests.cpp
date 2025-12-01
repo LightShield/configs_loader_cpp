@@ -45,7 +45,7 @@ TEST_F(CliArgumentParserTest, DetectsHelpFlag) {
     const ParsedArguments args = CliArgumentParser::parse(2, const_cast<char**>(argv));
     
     EXPECT_TRUE(args.has_help);
-    EXPECT_FALSE(args.help_filter.has_value());
+    EXPECT_EQ(args.help_filter, "");
 }
 
 TEST_F(CliArgumentParserTest, DetectsHelpWithFilter) {
@@ -53,8 +53,7 @@ TEST_F(CliArgumentParserTest, DetectsHelpWithFilter) {
     const ParsedArguments args = CliArgumentParser::parse(3, const_cast<char**>(argv));
     
     EXPECT_TRUE(args.has_help);
-    ASSERT_TRUE(args.help_filter.has_value());
-    EXPECT_EQ(args.help_filter.value(), "required");
+    EXPECT_EQ(args.help_filter, "required");
 }
 
 TEST_F(CliArgumentParserTest, DetectsPresetPath) {

@@ -41,8 +41,7 @@ void ConfigsLoader<ConfigsType>::init(int argc, char* argv[]) {
     applier.apply(args.flags);
     
     if (args.has_help) {
-        const std::string filter = args.help_filter.value_or("");
-        std::cout << generate_help(argv[0], filter) << std::endl;
+        std::cout << generate_help(argv[0], args.help_filter) << std::endl;
         std::exit(0);
     }
     
