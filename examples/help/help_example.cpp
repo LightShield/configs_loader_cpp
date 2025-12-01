@@ -31,28 +31,28 @@ int main() {
     
     // Generate help with default width (80 chars)
     std::cout << "Default width (80 chars):\n";
-    loader.help_config.program_name = "myapp";
+    loader.help_format.program_name = "myapp";
     std::cout << loader.generate_help() << "\n";
     
     std::cout << "\n" << std::string(60, '=') << "\n\n";
     
     // Generate help with custom width (60 chars)
     std::cout << "Narrow width (60 chars):\n";
-    loader.help_config.max_width = 60;
+    loader.help_format.max_width = 60;
     std::cout << loader.generate_help() << "\n";
     
     std::cout << "\n" << std::string(60, '=') << "\n\n";
     
     // Generate help with wide width (120 chars)
     std::cout << "Wide width (120 chars):\n";
-    loader.help_config.max_width = 120;
+    loader.help_format.max_width = 120;
     std::cout << loader.generate_help() << "\n";
     
     std::cout << "\n" << std::string(60, '=') << "\n\n";
     
     // Generate help without colors
     std::cout << "Without colors:\n";
-    loader.help_config.use_colors = false;
+    loader.help_format.use_colors = false;
     std::cout << loader.generate_help() << "\n";
     
     return 0;

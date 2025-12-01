@@ -6,7 +6,7 @@
 #include <string>
 #include <vector>
 
-struct HelpConfig {
+struct HelpFormat {
     std::string program_name = "program";
     bool use_colors = true;
     bool enable_interactive = true;
@@ -24,10 +24,10 @@ class HelpGenerator {
     const bool m_show_current_values;
 
 public:
-    HelpGenerator(const ConfigsType& configs, const HelpConfig& config)
-        : m_configs(configs), m_program_name(config.program_name), m_use_colors(config.use_colors), 
-          m_enable_interactive(config.enable_interactive), m_max_width(config.max_width), 
-          m_show_current_values(config.show_current_values) {}
+    HelpGenerator(const ConfigsType& configs, const HelpFormat& format)
+        : m_configs(configs), m_program_name(format.program_name), m_use_colors(format.use_colors), 
+          m_enable_interactive(format.enable_interactive), m_max_width(format.max_width), 
+          m_show_current_values(format.show_current_values) {}
 
     std::string generate(const std::string& filter) const;
 

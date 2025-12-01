@@ -23,7 +23,7 @@ template<typename ConfigsType>
 class ConfigsLoader {
 public:
     ConfigsType configs;
-    HelpConfig help_config;
+    HelpFormat help_format;
 
     ConfigsLoader() = default;
     ConfigsLoader(int argc, char* argv[]);
@@ -37,7 +37,8 @@ public:
 
     // Generate help text
     // filter: Optional filter for interactive help (e.g., "required", "group_name")
-    [[nodiscard]] std::string generate_help(const std::string& filter = "") const;
+    // format: Optional custom format (defaults to help_format member)
+    [[nodiscard]] std::string generate_help(const std::string& filter = "", const HelpFormat* format = nullptr) const;
 
     // Dump current configuration values
     // format: Output format (see SerializationFormat for details)
