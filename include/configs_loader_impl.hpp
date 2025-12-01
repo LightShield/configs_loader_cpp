@@ -12,6 +12,7 @@
 #include <vector>
 
 #include "cli/cli_argument_parser.hpp"
+#include "cli/config_applier.hpp"
 #include "help/help_generator.hpp"
 #include "serialization/cli_serializer.hpp"
 #include "serialization/preset_deserializer.hpp"
@@ -31,28 +32,20 @@ void ConfigsLoader<ConfigsType>::init(int argc, char* argv[]) {
         throw std::runtime_error(validator.get_error_report());
     }
     
-    for (int i = 1; i < argc; ++i) {
-        const std::string arg = argv[i];
-        if (arg == "--help" || arg == "-h") {
-            std::string filter;
-            if (help_config.enable_interactive && i + 1 < argc && argv[i + 1][0] != '-') {
-                filter = argv[i + 1];
-            }
-            std::cout << generate_help(argv[0], 80, filter) << std::endl;
-            std::exit(0);
-        }
+    const ParsedArguments args = CliArgumentParser::parse(argc, argv);
+    
+    if (args.has_help) {
+        const std::string filter = args.help_filter.value_or("");
+        std::cout << generate_help(argv[0], 80, filter) << std::endl;
+        std::exit(0);
     }
     
-    if (argc > 1) {
-        CliArgumentParser<ConfigsType> parser(configs);
-        const std::optional<std::string> preset_path = parser.extract_preset_path(argc, argv);
-        
-        if (preset_path.has_value()) {
-            load_preset_file(preset_path.value());
-        }
-
-        parser.parse(argc, argv);
+    if (args.preset_path.has_value()) {
+        load_preset_file(args.preset_path.value());
     }
+    
+    ConfigApplier<ConfigsType> applier(configs);
+    applier.apply(args.flags);
     
     validator.validate_required_fields();
     if (validator.has_errors()) {
