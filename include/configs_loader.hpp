@@ -3,6 +3,8 @@
 #include "config.hpp"
 #include "help/help_generator.hpp"
 #include "serialization/serialization_format.hpp"
+#include <functional>
+#include <optional>
 #include <string>
 
 // Current macro - requires listing all fields (C++20)
@@ -38,7 +40,8 @@ public:
     // Generate help text
     // filter: Optional filter for interactive help (e.g., "required", "group_name")
     // format: Optional custom format (defaults to help_format member)
-    [[nodiscard]] std::string generate_help(const std::string& filter = "", const HelpFormat* format = nullptr) const;
+    [[nodiscard]] std::string generate_help(const std::string& filter = "", 
+                                            std::optional<std::reference_wrapper<const HelpFormat>> format = std::nullopt) const;
 
     // Dump current configuration values
     // format: Output format (see SerializationFormat for details)

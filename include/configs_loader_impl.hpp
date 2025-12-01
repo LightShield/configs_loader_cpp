@@ -72,8 +72,9 @@ std::string ConfigsLoader<ConfigsType>::dump_configs(SerializationFormat format,
 }
 
 template<typename ConfigsType>
-std::string ConfigsLoader<ConfigsType>::generate_help(const std::string& filter, const HelpFormat* format) const {
-    const HelpFormat& fmt = format ? *format : help_format;
+std::string ConfigsLoader<ConfigsType>::generate_help(const std::string& filter, 
+                                                      std::optional<std::reference_wrapper<const HelpFormat>> format) const {
+    const HelpFormat& fmt = format.has_value() ? format.value().get() : help_format;
     HelpGenerator<ConfigsType> generator(configs, fmt);
     return generator.generate(filter);
 }

@@ -146,7 +146,7 @@ TEST_F(HelpGeneratorTest, AcceptsCustomFormat) {
         .enable_interactive = false
     };
     
-    std::string help = loader.generate_help("", &custom_format);
+    std::string help = loader.generate_help("", std::cref(custom_format));
     
     EXPECT_NE(help.find("custom_prog"), std::string::npos);
     EXPECT_EQ(help.find("test_prog"), std::string::npos);
