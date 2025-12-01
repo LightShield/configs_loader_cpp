@@ -18,15 +18,6 @@
 #include "validation/config_validator.hpp"
 
 template<typename ConfigsType>
-struct ConfigsLoader<ConfigsType>::FieldInfo {
-    std::string prefix;
-    std::string flags;
-    std::string type;
-    std::string description;
-    std::string default_val;
-};
-
-template<typename ConfigsType>
 ConfigsLoader<ConfigsType>::ConfigsLoader(int argc, char* argv[]) {
     init(argc, argv);
 }

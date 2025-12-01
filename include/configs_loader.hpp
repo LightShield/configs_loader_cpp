@@ -51,8 +51,6 @@ public:
 private:
     bool m_initialized = false;
     
-    struct FieldInfo;
-    
     std::optional<std::string> extract_preset_path(int argc, char* argv[]);
     void load_preset_file(const std::string& path);
     void parse_cli_arguments(int argc, char* argv[]);
