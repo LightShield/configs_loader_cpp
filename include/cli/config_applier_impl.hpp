@@ -6,7 +6,7 @@
 #include <type_traits>
 
 template<typename ConfigsType>
-void ConfigApplier<ConfigsType>::apply_flags(const std::unordered_map<std::string, std::string>& flags) {
+void ConfigApplier<ConfigsType>::apply_from_cli(const std::unordered_map<std::string, std::string>& flags) {
     for (const auto& [flag, value] : flags) {
         auto fields = m_configs.get_fields();
         std::apply([&](auto&... field) {
@@ -16,7 +16,7 @@ void ConfigApplier<ConfigsType>::apply_flags(const std::unordered_map<std::strin
 }
 
 template<typename ConfigsType>
-void ConfigApplier<ConfigsType>::apply_deserializer(PresetDeserializer& deserializer) {
+void ConfigApplier<ConfigsType>::apply_from_preset(PresetDeserializer& deserializer) {
     auto fields = m_configs.get_fields();
     std::apply([&](auto&... field) {
         ((load_field(deserializer, field)), ...);

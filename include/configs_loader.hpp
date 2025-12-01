@@ -46,8 +46,6 @@ public:
 
 private:
     bool m_initialized = false;
-    
-    void load_preset_file(const std::string& path);
 };
 
 // Include implementation

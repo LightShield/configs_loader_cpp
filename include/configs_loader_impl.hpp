@@ -33,12 +33,15 @@ void ConfigsLoader<ConfigsType>::init(int argc, char* argv[]) {
     
     const ParsedArguments args = CliArgumentParser::parse(argc, argv);
     
+    ConfigApplier<ConfigsType> applier(configs);
+    
     if (args.preset_path.has_value()) {
-        load_preset_file(args.preset_path.value());
+        auto deserializer = create_preset_deserializer(args.preset_path.value());
+        deserializer->parse_file(args.preset_path.value());
+        applier.apply_from_preset(*deserializer);
     }
     
-    ConfigApplier<ConfigsType> applier(configs);
-    applier.apply_flags(args.flags);
+    applier.apply_from_cli(args.flags);
     
     if (args.has_help) {
         std::cout << generate_help(argv[0], args.help_filter) << std::endl;
@@ -71,11 +74,3 @@ std::string ConfigsLoader<ConfigsType>::generate_help(const std::string& program
 }
 
 
-template<typename ConfigsType>
-void ConfigsLoader<ConfigsType>::load_preset_file(const std::string& path) {
-    auto deserializer = create_preset_deserializer(path);
-    deserializer->parse_file(path);
-    
-    ConfigApplier<ConfigsType> applier(configs);
-    applier.apply_deserializer(*deserializer);
-}
