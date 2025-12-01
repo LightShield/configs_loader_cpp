@@ -51,13 +51,7 @@ public:
 private:
     bool m_initialized = false;
     
-    std::optional<std::string> extract_preset_path(int argc, char* argv[]);
     void load_preset_file(const std::string& path);
-    void parse_cli_arguments(int argc, char* argv[]);
-    void try_set_config_value(const std::string& flag, const std::string& value);
-    
-    template<typename T> bool try_set_field_value(Config<T>& field, const std::string& flag, const std::string& value);
-    template<typename T> bool try_set_field_value(ConfigGroup<T>& group, const std::string& flag, const std::string& value);
 };
 
 // Include implementation
