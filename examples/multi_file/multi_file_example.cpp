@@ -18,16 +18,17 @@ int main(int argc, char* argv[]) {
     std::cout << "=== Application Configuration ===\n";
     std::cout << "App: " << loader.configs.app_name.value << "\n";
     std::cout << "Environment: " << loader.configs.environment.value << "\n";
-    std::cout << "Server Port: " << loader.configs.server.config.port.value << "\n";
-    std::cout << "Server Timeout: " << loader.configs.server.config.timeout.value << "s\n\n";
     
-    // Initialize modules - each module only knows about its own config
-    // The modules are unaware of where their config comes from in the hierarchy
+    const ServerConfig& server = loader.configs.server;
+    std::cout << "Server Port: " << server.port.value << "\n";
+    std::cout << "Server Timeout: " << server.timeout.value << "s\n\n";
+    
     std::cout << "=== Module Initialization ===\n";
-    Database primary_db(loader.configs.server.config.primary_db.config);
-    Database replica_db(loader.configs.server.config.replica_db.config);
-    Cache cache(loader.configs.server.config.cache.config);
-    Logger logger(loader.configs.logging.config);
+    Database primary_db(server.primary_db);
+    Database replica_db(server.replica_db);
+    Cache cache(server.cache);
+    const LoggingConfig& logging = loader.configs.logging;
+    Logger logger(logging);
     
     // Use modules - they internally access their configs
     primary_db.connect();

@@ -35,18 +35,21 @@ int main(int argc, char* argv[]) {
     
     std::cout << "\n=== Config Access Patterns (Global Scope) ===\n";
     
-    // Scoped aliases (cleaner)
-    std::cout << "Admin server caches (using scoped alias):\n";
-    std::cout << "  session_cache: " << admin_cfg.session_cache.config.port.value << "\n";
-    std::cout << "  data_cache: " << admin_cfg.data_cache.config.port.value << "\n";
-    std::cout << "  query_cache: " << admin_cfg.query_cache.config.port.value << "\n";
+    std::cout << "Admin server caches (using implicit conversion):\n";
+    const ServerConfig& admin_server_cfg = loader.configs.admin_server;
+    const CacheConfig& session = admin_server_cfg.session_cache;
+    const CacheConfig& data = admin_server_cfg.data_cache;
+    const CacheConfig& query = admin_server_cfg.query_cache;
+    std::cout << "  session_cache: " << session.port.value << "\n";
+    std::cout << "  data_cache: " << data.port.value << "\n";
+    std::cout << "  query_cache: " << query.port.value << "\n";
     
-    // Pattern 2: Full global path (explicit, more verbose)
-    std::cout << "\nDatabase pool config (using full path):\n";
-    std::cout << "  app.api_server.database.pool.min = " 
-              << loader.configs.api_server.config.database.config.pool.config.min_connections.value << "\n";
-    std::cout << "  app.api_server.database.pool.max = " 
-              << loader.configs.api_server.config.database.config.pool.config.max_connections.value << "\n";
+    std::cout << "\nDatabase pool config (using references):\n";
+    const ServerConfig& api_server_cfg = loader.configs.api_server;
+    const DatabaseConfig& database = api_server_cfg.database;
+    const ConnectionPoolConfig& pool = database.pool;
+    std::cout << "  app.api_server.database.pool.min = " << pool.min_connections.value << "\n";
+    std::cout << "  app.api_server.database.pool.max = " << pool.max_connections.value << "\n";
     
     return 0;
 }
