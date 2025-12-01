@@ -9,12 +9,12 @@
 template<typename ConfigsType>
 class SerializerFactory {
 public:
-    static std::unique_ptr<ConfigSerializer<ConfigsType>> create(const ConfigsType& configs, const SerializationFormat format, const bool only_changes) {
+    static std::unique_ptr<ConfigSerializer<ConfigsType>> create(const SerializationFormat format) {
         switch (format) {
             case SerializationFormat::CLI:
-                return std::make_unique<CliSerializer<ConfigsType>>(configs, only_changes);
+                return std::make_unique<CliSerializer<ConfigsType>>();
             case SerializationFormat::TOML:
-                return std::make_unique<TomlSerializer<ConfigsType>>(configs, only_changes);
+                return std::make_unique<TomlSerializer<ConfigsType>>();
         }
         return nullptr;
     }

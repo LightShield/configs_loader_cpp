@@ -5,28 +5,29 @@
 template<typename ConfigsType>
 class CliSerializer : public ConfigSerializer<ConfigsType> {
 public:
-    using ConfigSerializer<ConfigsType>::ConfigSerializer;
+    std::string serialize(const ConfigsType& configs, bool only_changes) const override;
 
-    std::string serialize() const override {
-        std::ostringstream out;
-        auto fields = this->m_configs.get_fields();
-        std::apply([&](auto&... field) {
-            ((this->serialize_field(out, field)), ...);
-        }, fields);
-        return out.str();
-    }
-
-protected:
-    template<typename T> void serialize_field(std::ostringstream& out, const Config<T>& field) const;
-    template<typename T> void serialize_field(std::ostringstream& out, const ConfigGroup<T>& group) const;
+private:
+    template<typename T> void serialize_field(std::ostringstream& out, const Config<T>& field, bool only_changes) const;
+    template<typename T> void serialize_field(std::ostringstream& out, const ConfigGroup<T>& group, bool only_changes) const;
 };
 
 template<typename ConfigsType>
+std::string CliSerializer<ConfigsType>::serialize(const ConfigsType& configs, bool only_changes) const {
+    std::ostringstream out;
+    auto fields = configs.get_fields();
+    std::apply([&](auto&... field) {
+        ((serialize_field(out, field, only_changes)), ...);
+    }, fields);
+    return out.str();
+}
+
+template<typename ConfigsType>
 template<typename T>
-void CliSerializer<ConfigsType>::serialize_field(std::ostringstream& out, const Config<T>& field) const {
+void CliSerializer<ConfigsType>::serialize_field(std::ostringstream& out, const Config<T>& field, bool only_changes) const {
     if (field.flags.empty()) return;
     
-    if (this->m_only_changes && field.value == field.default_value) {
+    if (only_changes && field.value == field.default_value) {
         return;
     }
     
@@ -45,9 +46,9 @@ void CliSerializer<ConfigsType>::serialize_field(std::ostringstream& out, const 
 
 template<typename ConfigsType>
 template<typename T>
-void CliSerializer<ConfigsType>::serialize_field(std::ostringstream& out, const ConfigGroup<T>& group) const {
+void CliSerializer<ConfigsType>::serialize_field(std::ostringstream& out, const ConfigGroup<T>& group, bool only_changes) const {
     auto fields = group.get_fields();
     std::apply([&](auto&... field) {
-        ((serialize_field(out, field)), ...);
+        ((serialize_field(out, field, only_changes)), ...);
     }, fields);
 }

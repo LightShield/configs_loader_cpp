@@ -5,18 +5,11 @@
 
 template<typename ConfigsType>
 class ConfigSerializer {
-protected:
-    const ConfigsType& m_configs;
-    const bool m_only_changes;
-
 public:
-    ConfigSerializer(const ConfigsType& configs, const bool only_changes)
-        : m_configs(configs), m_only_changes(only_changes) {}
-
     virtual ~ConfigSerializer() = default;
-    virtual std::string serialize() const = 0;
+    virtual std::string serialize(const ConfigsType& configs, bool only_changes) const = 0;
 
 protected:
-    template<typename T> void serialize_field(std::ostringstream& out, const Config<T>& field) const;
-    template<typename T> void serialize_field(std::ostringstream& out, const ConfigGroup<T>& group) const;
+    template<typename T> void serialize_field(std::ostringstream& out, const Config<T>& field, bool only_changes) const;
+    template<typename T> void serialize_field(std::ostringstream& out, const ConfigGroup<T>& group, bool only_changes) const;
 };
