@@ -15,10 +15,6 @@ public:
     virtual std::optional<int> get_int(const std::string& key) const = 0;
     virtual std::optional<bool> get_bool(const std::string& key) const = 0;
     virtual std::optional<double> get_double(const std::string& key) const = 0;
-    
-    template<typename ConfigsType> void load_into(ConfigsType& configs);
 };
 
 std::unique_ptr<PresetDeserializer> create_preset_deserializer(const std::string& file_path);
-
-#include "preset_deserializer_impl.hpp"

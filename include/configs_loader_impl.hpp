@@ -38,7 +38,7 @@ void ConfigsLoader<ConfigsType>::init(int argc, char* argv[]) {
     }
     
     ConfigApplier<ConfigsType> applier(configs);
-    applier.apply(args.flags);
+    applier.apply_flags(args.flags);
     
     if (args.has_help) {
         std::cout << generate_help(argv[0], args.help_filter) << std::endl;
@@ -75,5 +75,7 @@ template<typename ConfigsType>
 void ConfigsLoader<ConfigsType>::load_preset_file(const std::string& path) {
     auto deserializer = create_preset_deserializer(path);
     deserializer->parse_file(path);
-    deserializer->load_into(configs);
+    
+    ConfigApplier<ConfigsType> applier(configs);
+    applier.apply_deserializer(*deserializer);
 }
