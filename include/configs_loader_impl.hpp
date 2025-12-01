@@ -14,9 +14,8 @@
 #include "cli/cli_argument_parser.hpp"
 #include "cli/config_applier.hpp"
 #include "help/help_generator.hpp"
-#include "serialization/cli_serializer.hpp"
 #include "serialization/preset_deserializer.hpp"
-#include "serialization/toml_serializer.hpp"
+#include "serialization/serializer_factory.hpp"
 #include "validation/config_validator.hpp"
 
 template<typename ConfigsType>
@@ -62,17 +61,7 @@ bool ConfigsLoader<ConfigsType>::is_initialized() const {
 
 template<typename ConfigsType>
 std::string ConfigsLoader<ConfigsType>::dump_configs(SerializationFormat format, bool only_changes) const {
-    switch (format) {
-        case SerializationFormat::CLI: {
-            CliSerializer<ConfigsType> serializer(configs, only_changes);
-            return serializer.serialize();
-        }
-        case SerializationFormat::TOML: {
-            TomlSerializer<ConfigsType> serializer(configs, only_changes);
-            return serializer.serialize();
-        }
-    }
-    return "";
+    return SerializerFactory<ConfigsType>::serialize(configs, format, only_changes);
 }
 
 template<typename ConfigsType>
