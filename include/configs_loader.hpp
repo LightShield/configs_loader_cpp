@@ -39,9 +39,8 @@ public:
     [[nodiscard]] bool is_initialized() const;
 
     // Generate help text
-    // max_width: Maximum line width for text wrapping (default: 80)
     // filter: Optional filter for interactive help (e.g., "required", "group_name")
-    [[nodiscard]] std::string generate_help(const std::string& program_name = "program", size_t max_width = 80, const std::string& filter = "") const;
+    [[nodiscard]] std::string generate_help(const std::string& program_name = "program", const std::string& filter = "") const;
 
     // Dump current configuration values
     // format: Output format (see SerializationFormat for details)

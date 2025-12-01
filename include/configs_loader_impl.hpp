@@ -36,7 +36,7 @@ void ConfigsLoader<ConfigsType>::init(int argc, char* argv[]) {
     
     if (args.has_help) {
         const std::string filter = args.help_filter.value_or("");
-        std::cout << generate_help(argv[0], 80, filter) << std::endl;
+        std::cout << generate_help(argv[0], filter) << std::endl;
         std::exit(0);
     }
     
@@ -76,9 +76,9 @@ std::string ConfigsLoader<ConfigsType>::dump_configs(SerializationFormat format,
 }
 
 template<typename ConfigsType>
-std::string ConfigsLoader<ConfigsType>::generate_help(const std::string& program_name, size_t max_width, const std::string& filter) const {
+std::string ConfigsLoader<ConfigsType>::generate_help(const std::string& program_name, const std::string& filter) const {
     HelpGenerator<ConfigsType> generator(configs, help_config);
-    return generator.generate(program_name, max_width, filter);
+    return generator.generate(program_name, filter);
 }
 
 

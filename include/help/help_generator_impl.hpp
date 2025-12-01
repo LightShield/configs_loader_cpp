@@ -1,7 +1,7 @@
 #pragma once
 
 template<typename ConfigsType>
-std::string HelpGenerator<ConfigsType>::generate(const std::string& program_name, size_t max_width, const std::string& filter) const {
+std::string HelpGenerator<ConfigsType>::generate(const std::string& program_name, const std::string& filter) const {
     if (!filter.empty()) {
         if (filter == "required") {
             return generate_required(program_name);
@@ -37,7 +37,7 @@ std::string HelpGenerator<ConfigsType>::generate(const std::string& program_name
          << "  Load configuration from JSON file (reserved)\n";
     
     std::apply([&](auto&... field) {
-        ((print_field_hierarchical(help, field, 0, max_width)), ...);
+        ((print_field_hierarchical(help, field, 0)), ...);
     }, fields);
     
     if (m_enable_interactive) {
@@ -70,7 +70,7 @@ void HelpGenerator<ConfigsType>::append_usage_field(std::ostringstream& usage, c
 
 template<typename ConfigsType>
 template<typename T>
-void HelpGenerator<ConfigsType>::print_field_hierarchical(std::ostringstream& out, const Config<T>& field, size_t indent, size_t, const std::string& prefix) const {
+void HelpGenerator<ConfigsType>::print_field_hierarchical(std::ostringstream& out, const Config<T>& field, size_t indent, const std::string& prefix) const {
     if (field.flags.empty()) return;
     
     const std::string indent_str(indent * 2, ' ');
@@ -111,7 +111,7 @@ void HelpGenerator<ConfigsType>::print_field_hierarchical(std::ostringstream& ou
 
 template<typename ConfigsType>
 template<typename T>
-void HelpGenerator<ConfigsType>::print_field_hierarchical(std::ostringstream& out, const ConfigGroup<T>& group, size_t indent, size_t max_width, const std::string& prefix) const {
+void HelpGenerator<ConfigsType>::print_field_hierarchical(std::ostringstream& out, const ConfigGroup<T>& group, size_t indent, const std::string& prefix) const {
     const std::string indent_str(indent * 2, ' ');
     
     out << "  " << indent_str << colorize(group.get_name() + ":", ansi::GREEN, m_use_colors) << "\n";
@@ -120,7 +120,7 @@ void HelpGenerator<ConfigsType>::print_field_hierarchical(std::ostringstream& ou
     
     auto fields = group.get_fields();
     std::apply([&](auto&... field) {
-        ((print_field_hierarchical(out, field, indent + 1, max_width, full_prefix)), ...);
+        ((print_field_hierarchical(out, field, indent + 1, full_prefix)), ...);
     }, fields);
 }
 
@@ -239,7 +239,7 @@ bool HelpGenerator<ConfigsType>::print_field_if_matches(std::ostringstream& out,
     const std::string full_prefix = prefix.empty() ? group.get_name() : prefix + "." + group.get_name();
     
     if (group.get_name() == filter || full_prefix == filter) {
-        print_field_hierarchical(out, group, 0, 80, prefix);
+        print_field_hierarchical(out, group, 0, prefix);
         return true;
     }
     

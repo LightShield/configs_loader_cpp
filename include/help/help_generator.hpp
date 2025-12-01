@@ -9,6 +9,7 @@
 struct HelpConfig {
     bool use_colors = true;
     bool enable_interactive = true;
+    size_t max_width = 80;
 };
 
 template<typename ConfigsType>
@@ -16,12 +17,13 @@ class HelpGenerator {
     const ConfigsType& m_configs;
     const bool m_use_colors;
     const bool m_enable_interactive;
+    const size_t m_max_width;
 
 public:
     HelpGenerator(const ConfigsType& configs, const HelpConfig& config)
-        : m_configs(configs), m_use_colors(config.use_colors), m_enable_interactive(config.enable_interactive) {}
+        : m_configs(configs), m_use_colors(config.use_colors), m_enable_interactive(config.enable_interactive), m_max_width(config.max_width) {}
 
-    std::string generate(const std::string& program_name, size_t max_width, const std::string& filter) const;
+    std::string generate(const std::string& program_name, const std::string& filter) const;
 
 private:
     std::string generate_navigation(const std::string& program_name) const;
@@ -35,8 +37,8 @@ private:
     
     template<typename T> void append_usage_field(std::ostringstream& usage, const Config<T>& field) const;
     template<typename T> void append_usage_field(std::ostringstream& usage, const ConfigGroup<T>& group) const;
-    template<typename T> void print_field_hierarchical(std::ostringstream& out, const Config<T>& field, size_t indent, size_t max_width, const std::string& prefix = "") const;
-    template<typename T> void print_field_hierarchical(std::ostringstream& out, const ConfigGroup<T>& group, size_t indent, size_t max_width, const std::string& prefix = "") const;
+    template<typename T> void print_field_hierarchical(std::ostringstream& out, const Config<T>& field, size_t indent, const std::string& prefix = "") const;
+    template<typename T> void print_field_hierarchical(std::ostringstream& out, const ConfigGroup<T>& group, size_t indent, const std::string& prefix = "") const;
     template<typename T> void print_field_if_required(std::ostringstream& out, const Config<T>& field, const std::string& prefix = "") const;
     template<typename T> void print_field_if_required(std::ostringstream& out, const ConfigGroup<T>& group, const std::string& prefix = "") const;
     template<typename T> void print_group_structure(std::ostringstream& out, const Config<T>& field, size_t indent, const std::string& prefix = "") const;

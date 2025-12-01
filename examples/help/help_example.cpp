@@ -37,13 +37,15 @@ int main() {
     
     // Generate help with custom width (60 chars)
     std::cout << "Narrow width (60 chars):\n";
-    std::cout << loader.generate_help("myapp", 60) << "\n";
+    loader.help_config.max_width = 60;
+    std::cout << loader.generate_help("myapp") << "\n";
     
     std::cout << "\n" << std::string(60, '=') << "\n\n";
     
     // Generate help with wide width (120 chars)
     std::cout << "Wide width (120 chars):\n";
-    std::cout << loader.generate_help("myapp", 120) << "\n";
+    loader.help_config.max_width = 120;
+    std::cout << loader.generate_help("myapp") << "\n";
     
     std::cout << "\n" << std::string(60, '=') << "\n\n";
     
