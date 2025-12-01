@@ -7,6 +7,7 @@ template<typename ConfigsType>
 void ConfigValidator<ConfigsType>::validate_reserved_flags() {
     m_errors.clear();
     
+    // TODO(C++26): Move to compile-time validation using reflection
     auto fields = m_configs.get_fields();
     std::apply([&](auto&... field) {
         ((check_reserved_flags(field)), ...);
@@ -67,6 +68,7 @@ void ConfigValidator<ConfigsType>::validate_field(const ConfigGroup<T>& group, c
 template<typename ConfigsType>
 template<typename T>
 void ConfigValidator<ConfigsType>::check_reserved_flags(const Config<T>& field) {
+    // TODO(C++26): This should be a static_assert with reflection
     for (const auto& flag : field.flags) {
         if (flag == "--preset" || flag == "-p") {
             m_errors.push_back({

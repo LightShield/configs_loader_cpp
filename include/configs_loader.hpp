@@ -19,9 +19,6 @@
 #define REGISTER_CONFIG_STRUCT(StructName) \
     static_assert(false, "REGISTER_CONFIG_STRUCT requires C++26 reflection - use REGISTER_CONFIG_FIELDS for now");
 
-// TODO(C++26): Move preset flag validation to compile-time using reflection
-// Currently checked at Init() time due to C++20 limitations
-
 template<typename ConfigsType>
 class ConfigsLoader {
 public:
