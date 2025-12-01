@@ -97,10 +97,10 @@ TEST_F(ConfigsLoaderTest, RequiredFieldThrowsWhenNotSet) {
         REGISTER_CONFIG_FIELDS(required_field)
     };
     
+    ConfigsLoader<RequiredConfigs> loader;
     const char* argv[] = {"prog"};
-    EXPECT_THROW({
-        ConfigsLoader<RequiredConfigs> loader(1, const_cast<char**>(argv));
-    }, std::runtime_error);
+    EXPECT_EQ(loader.init(1, const_cast<char**>(argv)), 1);
+    EXPECT_FALSE(loader.is_initialized());
 }
 
 TEST_F(ConfigsLoaderTest, RequiredFieldDoesNotThrowWhenSet) {
@@ -113,11 +113,11 @@ TEST_F(ConfigsLoaderTest, RequiredFieldDoesNotThrowWhenSet) {
         REGISTER_CONFIG_FIELDS(required_field)
     };
     
+    ConfigsLoader<RequiredConfigs> loader;
     const char* argv[] = {"prog", "--required", "value"};
-    EXPECT_NO_THROW({
-        ConfigsLoader<RequiredConfigs> loader(3, const_cast<char**>(argv));
-        EXPECT_EQ(loader.configs.required_field.value, "value");
-    });
+    EXPECT_EQ(loader.init(3, const_cast<char**>(argv)), 0);
+    EXPECT_TRUE(loader.is_initialized());
+    EXPECT_EQ(loader.configs.required_field.value, "value");
 }
 
 TEST_F(ConfigsLoaderTest, MixedFlagFormats) {
@@ -137,10 +137,10 @@ TEST_F(ConfigsLoaderTest, PresetFlagIsReserved) {
         REGISTER_CONFIG_FIELDS(field)
     };
     
+    ConfigsLoader<BadConfigs> loader;
     const char* argv[] = {"prog"};
-    EXPECT_THROW({
-        ConfigsLoader<BadConfigs> loader(1, const_cast<char**>(argv));
-    }, std::runtime_error);
+    EXPECT_EQ(loader.init(1, const_cast<char**>(argv)), 1);
+    EXPECT_FALSE(loader.is_initialized());
 }
 
 TEST_F(ConfigsLoaderTest, PresetShortFlagIsReserved) {
@@ -152,10 +152,10 @@ TEST_F(ConfigsLoaderTest, PresetShortFlagIsReserved) {
         REGISTER_CONFIG_FIELDS(field)
     };
     
+    ConfigsLoader<BadConfigs> loader;
     const char* argv[] = {"prog"};
-    EXPECT_THROW({
-        ConfigsLoader<BadConfigs> loader(1, const_cast<char**>(argv));
-    }, std::runtime_error);
+    EXPECT_EQ(loader.init(1, const_cast<char**>(argv)), 1);
+    EXPECT_FALSE(loader.is_initialized());
 }
 
 TEST_F(ConfigsLoaderTest, IsNotInitializedByDefault) {
@@ -166,7 +166,7 @@ TEST_F(ConfigsLoaderTest, IsNotInitializedByDefault) {
 TEST_F(ConfigsLoaderTest, IsInitializedAfterInit) {
     ConfigsLoader<TestConfigs> loader;
     const char* argv[] = {"prog"};
-    loader.init(1, const_cast<char**>(argv));
+    EXPECT_EQ(loader.init(1, const_cast<char**>(argv)), 0);
     EXPECT_TRUE(loader.is_initialized());
 }
 
@@ -193,17 +193,19 @@ TEST_F(ConfigsLoaderTest, MultipleRequiredFieldsReportedTogether) {
         REGISTER_CONFIG_FIELDS(field1, field2, field3)
     };
     
+    ConfigsLoader<MultiRequiredConfigs> loader;
     const char* argv[] = {"prog"};
-    try {
-        ConfigsLoader<MultiRequiredConfigs> loader(1, const_cast<char**>(argv));
-        FAIL() << "Expected std::runtime_error";
-    } catch (const std::runtime_error& e) {
-        std::string error_msg = e.what();
-        EXPECT_NE(error_msg.find("3 error(s)"), std::string::npos);
-        EXPECT_NE(error_msg.find("--field1"), std::string::npos);
-        EXPECT_NE(error_msg.find("--field2"), std::string::npos);
-        EXPECT_NE(error_msg.find("--field3"), std::string::npos);
-    }
+    
+    testing::internal::CaptureStderr();
+    const int result = loader.init(1, const_cast<char**>(argv));
+    const std::string error_output = testing::internal::GetCapturedStderr();
+    
+    EXPECT_EQ(result, 1);
+    EXPECT_FALSE(loader.is_initialized());
+    EXPECT_NE(error_output.find("3 error(s)"), std::string::npos);
+    EXPECT_NE(error_output.find("--field1"), std::string::npos);
+    EXPECT_NE(error_output.find("--field2"), std::string::npos);
+    EXPECT_NE(error_output.find("--field3"), std::string::npos);
 }
 
 TEST_F(ConfigsLoaderTest, ConfigGroupImplicitConversionWorks) {

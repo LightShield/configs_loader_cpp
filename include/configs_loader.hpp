@@ -31,8 +31,10 @@ public:
     ConfigsLoader(int argc, char* argv[]);
 
     // Initialize from command-line arguments
-    // Automatically handles --help/-h flags (prints help and exits)
-    void init(int argc, char* argv[]);
+    // Returns 0 on success, non-zero on error
+    // Prints error messages to stderr
+    // Automatically handles --help/-h flags (prints help and exits with 0)
+    int init(int argc, char* argv[]);
 
     // Check if init() has been called
     [[nodiscard]] bool is_initialized() const;

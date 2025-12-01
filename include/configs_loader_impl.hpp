@@ -20,11 +20,13 @@
 
 template<typename ConfigsType>
 ConfigsLoader<ConfigsType>::ConfigsLoader(int argc, char* argv[]) {
-    init(argc, argv);
+    if (init(argc, argv) != 0) {
+        std::exit(1);
+    }
 }
 
 template<typename ConfigsType>
-void ConfigsLoader<ConfigsType>::init(int argc, char* argv[]) {
+int ConfigsLoader<ConfigsType>::init(int argc, char* argv[]) {
     if (help_format.program_name == "program" && argc > 0) {
         help_format.program_name = argv[0];
     }
@@ -32,7 +34,8 @@ void ConfigsLoader<ConfigsType>::init(int argc, char* argv[]) {
     ConfigValidator<ConfigsType> validator(configs);
     validator.validate_reserved_flags();
     if (validator.has_errors()) {
-        throw std::runtime_error(validator.get_error_report());
+        std::cerr << validator.get_error_report();
+        return 1;
     }
     
     const ParsedArguments args = CliArgumentParser::parse(argc, argv);
@@ -54,10 +57,12 @@ void ConfigsLoader<ConfigsType>::init(int argc, char* argv[]) {
     
     validator.validate_required_fields();
     if (validator.has_errors()) {
-        throw std::runtime_error(validator.get_error_report());
+        std::cerr << validator.get_error_report();
+        return 1;
     }
     
     m_initialized = true;
+    return 0;
 }
 
 template<typename ConfigsType>
