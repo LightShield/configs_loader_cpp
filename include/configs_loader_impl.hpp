@@ -61,7 +61,8 @@ bool ConfigsLoader<ConfigsType>::is_initialized() const {
 
 template<typename ConfigsType>
 std::string ConfigsLoader<ConfigsType>::dump_configs(SerializationFormat format, bool only_changes) const {
-    return SerializerFactory<ConfigsType>::serialize(configs, format, only_changes);
+    auto serializer = SerializerFactory<ConfigsType>::create(configs, format, only_changes);
+    return serializer->serialize();
 }
 
 template<typename ConfigsType>

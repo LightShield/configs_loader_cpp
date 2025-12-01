@@ -1,24 +1,21 @@
 #pragma once
 
 #include "cli_serializer.hpp"
+#include "config_serializer.hpp"
 #include "serialization_format.hpp"
 #include "toml_serializer.hpp"
-#include <string>
+#include <memory>
 
 template<typename ConfigsType>
 class SerializerFactory {
 public:
-    static std::string serialize(const ConfigsType& configs, const SerializationFormat format, const bool only_changes) {
+    static std::unique_ptr<ConfigSerializer<ConfigsType>> create(const ConfigsType& configs, const SerializationFormat format, const bool only_changes) {
         switch (format) {
-            case SerializationFormat::CLI: {
-                CliSerializer<ConfigsType> serializer(configs, only_changes);
-                return serializer.serialize();
-            }
-            case SerializationFormat::TOML: {
-                TomlSerializer<ConfigsType> serializer(configs, only_changes);
-                return serializer.serialize();
-            }
+            case SerializationFormat::CLI:
+                return std::make_unique<CliSerializer<ConfigsType>>(configs, only_changes);
+            case SerializationFormat::TOML:
+                return std::make_unique<TomlSerializer<ConfigsType>>(configs, only_changes);
         }
-        return "";
+        return nullptr;
     }
 };
