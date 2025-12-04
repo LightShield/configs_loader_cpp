@@ -386,7 +386,7 @@ ctest  # Run 63 tests
 - CMake 3.14+
 - Optional: toml++ for TOML preset support
 
-## Future Enhancements
+## [[maybe_unused]] Future Enhancements
 
 **C++26 Reflection:**
 - Automatic field registration (no macros)
