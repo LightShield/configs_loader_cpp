@@ -187,19 +187,19 @@ Use preset files as base configuration, override with CLI arguments (CLI has pre
 ```toml
 # production.toml
 host = "prod.example.com"
-port = 5432
+port = 1234
 timeout = 60
 ```
 
 ```bash
 # Load preset, override port, check with help
-./myapp --preset production.toml --port 5433 --help all
+./myapp --preset production.toml --port 5555 --help all
 ```
 
 Output shows current values from both preset and CLI:
 ```
 --host    <string>  Server host (current: "prod.example.com", default: "localhost")
---port    <int>     Server port (current: 5433, default: 8080)
+--port    <int>     Server port (current: 5555, default: 8080)
 --timeout <int>     Request timeout (current: 60, default: 30)
 ```
 
