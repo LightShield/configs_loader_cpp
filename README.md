@@ -4,22 +4,22 @@ A modern, compile-time optimized configuration management library for C++20.
 
 ## TL;DR
 
-ConfigsLoader delivers **high-performance configuration management** through direct memory access and minimal runtime footprint, **exceptional developer experience** with type-safe hierarchical configs and compile-time validation, and **superior end-user experience** with auto-generated interactive help, input validation with clear error messages, and flexible configuration sources.
+ConfigsLoader delivers **high-performance configuration management**, while **putting an emphasis on developer experience**, and **end-user experience** 
 
 **Performance**: Direct memory access + minimal memory footprint after init  
-**Developer**: Type-safe structs, hierarchical configs, input validation per field  
+**Developer**: Type-safe structs, hierarchical configs, input validation & simple API  
 **End-User**: Interactive help, preset files, validation errors with descriptions
 
 ## Design Philosophy
 
-### Make the Common Case Fast
+### Make the Common Case go brrrr
 
-In my experience with configuration libraries, I haven't found one that provides the combination of features needed: high-performance for reading configs (the common case), ease of use for developers writing the code, and excellent auto-generated user experience.
+In my experience with configuration libraries, I haven't found one that provides the combination of features I wanted: high-performance for reading configs (the common case), ease of use for developers writing the code, and good **auto-generated** --help experience, similar to python's argparse (but with more features).
 
 **The common case**: Reading configuration values during program execution.
 
 ```cpp
-// Common case - single instruction: ldr w0, [x0, #96]
+// Translates to a single ASM instruction: ldr w0, [x0, #96]
 int timeout = loader.configs.server.timeout.value;
 ```
 
@@ -27,16 +27,7 @@ Configuration structure is known at compile time, yet most implementations I've 
 
 ### Focus on User Experience for Non-Critical Paths
 
-While optimizing the hot path, the library focuses on ease of use for non-performance-critical scenarios like initialization and human interaction.
-
-**Hot path optimization**: Reading configs, compile-time usage while writing code  
-**Ease of use focus**: Updating configs, human interaction
-
-These happen outside the critical path, so the focus is on usability.
-
-### Minimize Runtime Footprint
-
-Initialization components are created on-demand within function scope and destroyed at scope end, before the business logic program starts. Only config data persists during execution.
+While optimizing the hot path, the library focuses on ease of use for non-performance-critical scenarios like initialization, updating configs and user interaction.
 
 ## Features by User
 
@@ -44,12 +35,12 @@ Initialization components are created on-demand within function scope and destro
 
 **Direct Memory Access**
 
+Direct struct member access. The compiler optimizes this to a single load instruction with a known offset.
+
 ```cpp
 // Compiles to: ldr w0, [x0, #96]
 int value = loader.configs.server.port.value;
 ```
-
-Direct struct member access. The compiler optimizes this to a single load instruction with a known offset.
 
 **Minimal Runtime Footprint**
 
@@ -57,7 +48,23 @@ After initialization, only config structs and an initialization flag remain in m
 
 **Assembly-Verified Zero Cost**
 
-All convenience features compile to identical assembly as direct access.
+All convenience features compile to identical assembly as direct access:
+
+```cpp
+// Three ways to access nested config value:
+int v1 = loader.configs.group.config.value.value;           // Direct
+const NestedConfig& nested = loader.configs.group;          // Implicit conversion
+int v2 = nested.value.value;
+std::string name = loader.configs.group.get_name();         // Helper method
+
+// All compile to identical assembly:
+// ldr w0, [x0, #96]    // Load value
+// ret
+
+// get_name() compiles to:
+// add x0, x0, #8       // Offset to name_ member
+// ret
+```
 
 ### For Developers
 
