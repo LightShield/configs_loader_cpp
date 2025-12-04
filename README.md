@@ -299,13 +299,13 @@ graph TD
     A[ConfigsLoader<br/>Orchestrator - Stateless<br/>Creates helpers on-demand]
     A --> B[CLI Parser<br/>Static]
     A --> C[Help Generator<br/>On-demand]
-    A --> D[Serialization<br/>Factory + Strategy]
+    A --> D[Serialization<br/>Factory + Strategy Patterns for extendability]
     A --> E[Validation<br/>On-demand]
-    A --> F[Config Core<br/>Persistent Runtime]
+    A --> F[Config Data<br/>Persistent Runtime]
 ```
 
 **Initialization (Once)**: Parser, Validator, Applier created and destroyed  
-**Runtime (Always)**: Only Config structs + initialization flag remain  
+**Runtime (Always)**: Only Config structs (Config&lt;T&gt;, ConfigGroup&lt;T&gt;) + initialization flag remain  
 **On-Demand**: Help generator, serializers created when needed
 
 Serialization uses Factory pattern for creation and Strategy pattern for format extensibility.
