@@ -314,7 +314,9 @@ Initialization helpers are ephemeral to minimize memory footprint during busines
 
 ## Design Decisions
 
-### Why Not Singletons?
+### Why Require Manual init() and Not Use a Singleton?
+
+The manual initialization pattern has merit - it separates memory allocation from initialization, an approach discussed in books like "Beautiful C++: 30 Core Guidelines". However, the primary reason is performance.
 
 Singletons require checking `is_initialized()` before every API call - a cost paid on every access in the hot path:
 
