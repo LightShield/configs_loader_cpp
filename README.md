@@ -133,6 +133,34 @@ Config<int> port{
 };
 ```
 
+**Print Configuration**
+
+```cpp
+// Print only changes (for minimal presets)
+std::cout << loader.dump_configs(SerializationFormat::TOML, true);
+
+// Print all values
+std::cout << loader.dump_configs(SerializationFormat::TOML, false);
+```
+
+Via CLI:
+```bash
+./myapp --port 9090 --print-config > config.toml              # Only changes
+./myapp --port 9090 --print-config-verbose > full-config.toml # All values
+```
+
+**Custom Help Formatting**
+
+```cpp
+HelpFormat custom{
+    .program_name = "my-tool",
+    .use_colors = false,
+    .max_width = 100
+};
+
+std::string help = loader.generate_help("", std::cref(custom));
+```
+
 ### For End Users
 
 **Built-in Flags**
@@ -342,36 +370,6 @@ Struct-based design allows:
 ### Why No Inheritance for Config/ConfigGroup?
 
 Inheritance was my first solution because there's no vtable overhead when there's no virtual functionality in the hierarchy. However, C++ doesn't allow designated initializers on types with base classes. I prefer the better developer experience with partial initialization to only change default values of repeated config structs at the cost of lib-internal function overloading. 
-
-## Advanced Features
-
-### Print Configuration
-
-```cpp
-// Print only changes (for minimal presets)
-std::cout << loader.dump_configs(SerializationFormat::TOML, true);
-
-// Print all values
-std::cout << loader.dump_configs(SerializationFormat::TOML, false);
-```
-
-Via CLI:
-```bash
-./myapp --port 9090 --print-config > config.toml              # Only changes
-./myapp --port 9090 --print-config-verbose > full-config.toml # All values
-```
-
-### Custom Help Formatting
-
-```cpp
-HelpFormat custom{
-    .program_name = "my-tool",
-    .use_colors = false,
-    .max_width = 100
-};
-
-std::string help = loader.generate_help("", std::cref(custom));
-```
 
 ## Building
 
