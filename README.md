@@ -86,15 +86,25 @@ struct ServerConfig {
 };
 ```
 
-**Compile-Time Name Validation**
+**Compile-Time Name Validation (Shift-Left)**
+
+Most libraries I've encountered use string-based access:
 
 ```cpp
-// Typo caught at compile time:
-int port = loader.configs.server.prot.value;  // Compile error
-int port = loader.configs.server.port.value;  // Compiles
+// Runtime string-based (errors discovered at runtime):
+int port = config.get<int>("server.port");     // Typo? Runtime error
+int timeout = config.get<int>("server.timout"); // Typo! Fails at runtime
 ```
 
-IDE autocomplete works perfectly - the compiler knows the structure.
+This library uses struct-based access for compile-time validation:
+
+```cpp
+// Struct-based (errors caught at compile time):
+int port = loader.configs.server.port.value;    // Compiles
+int timeout = loader.configs.server.timout.value; // Compile error - typo caught!
+```
+
+**Shift-left approach**: Catch errors during compilation, not during execution. IDE autocomplete works perfectly - the compiler knows the structure.
 
 **Partial Initialization**
 
