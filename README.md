@@ -16,7 +16,7 @@ ConfigsLoader delivers **high-performance configuration management** through com
 
 **The common case**: Reading configuration values during program execution.
 
-Most config libraries optimize for parsing (happens once at startup) at the expense of reading (happens thousands of times during execution). We invert this priority:
+Most config libraries optimize for parsing (happens once at startup) at the expense of reading (happens thousands of times during execution). This inverts this priority:
 
 ```cpp
 // Hot path - zero overhead, direct memory access
@@ -27,7 +27,7 @@ int timeout = loader.configs.server.timeout.value;
 
 ### Utilize Compile-Time Knowledge
 
-Your configuration structure is known at compile time. We leverage this for:
+Your configuration structure is known at compile time. This leverages this for:
 
 - **Type safety**: Compiler catches typos and type mismatches
 - **Zero-cost abstractions**: All indirection optimized away
@@ -48,14 +48,15 @@ struct MyConfig {
 
 ### Runtime Flexibility When Needed
 
-While optimizing for compile-time knowledge, we support runtime updates:
+While optimizing for compile-time knowledge, the library supports runtime scenarios:
 
+- **Human interaction**: `--help` shows current state after loading configs
 - **Preset files**: Load configurations from external files
 - **CLI overrides**: Command-line arguments override presets
-- **Dynamic updates**: Configs can be modified at runtime (rare case)
-- **Serialization**: Dump current state to various formats
+- **Runtime updates**: Configs can be modified during execution (rare)
+- **Serialization**: Dump current state for debugging or persistence
 
-The key: **optimize for the common case (reading), support the rare case (updating)**.
+The key: **optimize for the common case (reading), support the rare case (updating and human interaction)**.
 
 ## Features by User
 
@@ -328,11 +329,11 @@ Each module is independently testable and has a single responsibility.
 
 ### Why Not Singletons?
 
-Singletons prevent multiple configurations, complicate testing, and create initialization order issues. We prefer: initialize once in main, pass by reference.
+Singletons prevent multiple configurations, complicate testing, and create initialization order issues. The design prefers: initialize once in main, pass by reference.
 
 ### Why Not Runtime Reflection?
 
-Runtime reflection requires hash maps, string lookups, and type erasure. We use compile-time structure for zero-cost abstractions.
+Runtime reflection requires hash maps, string lookups, and type erasure. The library uses compile-time structure for zero-cost abstractions.
 
 ### Why Struct-Based?
 
@@ -346,7 +347,7 @@ int port = loader.get<int>("server.port");
 
 ### Why No Inheritance for Config/ConfigGroup?
 
-C++ doesn't allow designated initializers on types with base classes. We choose clean initialization syntax over avoiding function overloads.
+C++ doesn't allow designated initializers on types with base classes. The design chooses clean initialization syntax over avoiding function overloads.
 
 ## Future (C++26 Reflection)
 
