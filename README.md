@@ -316,7 +316,7 @@ Initialization helpers are ephemeral to minimize memory footprint during busines
 
 ### Why Require Manual init() and Not Use a Singleton?
 
-The manual initialization pattern has merit - it separates memory allocation from initialization, an approach discussed in books like "Beautiful C++: 30 Core Guidelines". However, the primary reason is performance.
+The manual initialization pattern indeed isn't the common practice - it separates memory allocation from initialization. It's even discussed in books like "Beautiful C++: 30 Core Guidelines". However, the primary reason is performance.
 
 Singletons require checking `is_initialized()` before every API call - a cost paid on every access in the hot path:
 
@@ -332,7 +332,7 @@ Even with branch prediction, this is wasted work in the hot path. ConfigsLoader 
 
 ### Why Not Runtime Reflection?
 
-Runtime reflection requires hash maps, string lookups, and type erasure. This pays a cost in the hot path for knowledge already available at compile time - a poor data-oriented design approach.
+Runtime reflection requires hash maps, string lookups, and type erasure. This pays a cost in the hot path for knowledge already available at compile time - a missed opportunity data-oriented design wise.
 
 Struct-based design allows:
 - **Compile-time checking**: Typos caught by compiler, IDE autocomplete works
@@ -341,7 +341,7 @@ Struct-based design allows:
 
 ### Why No Inheritance for Config/ConfigGroup?
 
-C++ doesn't allow designated initializers on types with base classes. The design chooses clean initialization syntax over avoiding function overloads. Additionally, vtable overhead is unnecessary for compile-time known structures.
+Inheritance was my first solution because there's no vtable overhead when there's no virtual functionality in the hierarchy. However, C++ doesn't allow designated initializers on types with base classes. I prefer the better developer experience with partial initialization to only change default values of repeated config structs at the cost of lib-internal function overloading. 
 
 ## Advanced Features
 
