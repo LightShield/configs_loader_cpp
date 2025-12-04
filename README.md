@@ -86,7 +86,7 @@ struct ServerConfig {
 };
 ```
 
-**Compile-Time Name Validation (Shift-Left)**
+**Compile-Time Name Validation**
 
 Most libraries I've encountered use string-based access:
 
@@ -102,11 +102,11 @@ This library uses struct-based access for compile-time validation:
 int timeout = loader.configs.server.timout.value; // Compile error
 ```
 
-**Shift-left approach**: Catch errors during compilation, not during execution. IDE autocomplete works perfectly.
+Shift-left approach: catch errors during compilation, not during execution. IDE autocomplete works perfectly.
 
 **Partial Initialization**
 
-Override only what differs from defaults:
+Override only what differs from defaults (requires C++20 designated initializers):
 
 ```cpp
 ConfigGroup<ServerConfig> api_server{
@@ -116,6 +116,8 @@ ConfigGroup<ServerConfig> api_server{
     .name_ = "api_server"
 };
 ```
+
+Note: This feature requires C++20. Without partial initialization, the library could support earlier C++ standards.
 
 **Input Validation Per Field**
 
