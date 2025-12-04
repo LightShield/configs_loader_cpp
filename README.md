@@ -183,16 +183,32 @@ Use preset files as base config, override with CLI (CLI has precedence):
 ./myapp --preset production.toml --port 9090 --verbose true
 ```
 
-**Save Current Configuration**
+**Print Current Configuration**
 
-Dump current config to a preset file for later reuse:
+Print current config to stdout (useful for creating preset files):
 
 ```bash
-# After loading and validating, save current state
-./myapp --preset base.toml --port 9090 --save-config current.toml
+# Print current config after loading and validation
+./myapp --preset base.toml --port 9090 --print-config > current.toml
+
+# Print only changes from defaults
+./myapp --preset base.toml --port 9090 --verbose true --print-config > changes.toml
 ```
 
-Creates a valid preset file with all current values that can be loaded as-is.
+**Preset Building Loop**
+
+Iteratively build and refine preset files:
+
+```bash
+# 1. Start with defaults
+./myapp --print-config > base.toml
+
+# 2. Load base, override, save new preset
+./myapp --preset base.toml --port 9090 --timeout 60 --print-config > prod.toml
+
+# 3. Use production preset
+./myapp --preset prod.toml
+```
 
 **Comprehensive Error Messages**
 
@@ -328,19 +344,22 @@ C++ doesn't allow designated initializers on types with base classes. The design
 
 ## Advanced Features
 
-### Save Configuration to File
+### Print Configuration
 
 ```cpp
-// Save current config after validation
-loader.save_config("current.toml", SerializationFormat::TOML);
+// Print current config to stdout
+loader.print_config();  // TOML format by default
 
-// Save only changes from defaults
-loader.save_config("changes.toml", SerializationFormat::TOML, true);
+// Print in CLI format
+loader.print_config(SerializationFormat::CLI);
+
+// Print only changes
+loader.print_config(SerializationFormat::TOML, true);
 ```
 
-Or via CLI:
+Pipe to file for preset creation:
 ```bash
-./myapp --preset base.toml --port 9090 --save-config current.toml
+./myapp --port 9090 --print-config > my-preset.toml
 ```
 
 ### Custom Help Formatting

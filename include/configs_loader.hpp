@@ -50,11 +50,10 @@ public:
     // only_changes: If true, only dump values that differ from defaults
     [[nodiscard]] std::string dump_configs(SerializationFormat format = SerializationFormat::CLI, bool only_changes = false) const;
     
-    // Save current configuration to file
-    // path: File path to save to
-    // format: Output format (CLI or TOML)
-    // only_changes: If true, only save values that differ from defaults
-    void save_config(const std::string& path, SerializationFormat format = SerializationFormat::TOML, bool only_changes = false) const;
+    // Print current configuration to stdout
+    // format: Output format (defaults to TOML)
+    // only_changes: If true, only print values that differ from defaults
+    void print_config(SerializationFormat format = SerializationFormat::TOML, bool only_changes = false) const;
 
 private:
     bool m_initialized = false;

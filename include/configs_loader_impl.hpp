@@ -73,9 +73,8 @@ int ConfigsLoader<ConfigsType>::init(int argc, char* argv[]) {
         return 1;
     }
     
-    if (args.save_config_path.has_value()) {
-        save_config(args.save_config_path.value());
-        std::cout << "Configuration saved to: " << args.save_config_path.value() << std::endl;
+    if (args.print_config) {
+        print_config();
         std::exit(0);
     }
     
@@ -95,12 +94,8 @@ std::string ConfigsLoader<ConfigsType>::dump_configs(SerializationFormat format,
 }
 
 template<typename ConfigsType>
-void ConfigsLoader<ConfigsType>::save_config(const std::string& path, SerializationFormat format, bool only_changes) const {
-    std::ofstream file(path);
-    if (!file) {
-        throw std::runtime_error("Failed to open file for writing: " + path);
-    }
-    file << dump_configs(format, only_changes);
+void ConfigsLoader<ConfigsType>::print_config(SerializationFormat format, bool only_changes) const {
+    std::cout << dump_configs(format, only_changes);
 }
 
 template<typename ConfigsType>
