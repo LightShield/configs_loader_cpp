@@ -386,10 +386,21 @@ ctest  # Run 63 tests
 - CMake 3.14+
 - Optional: toml++ for TOML preset support
 
-## Future (C++26 Reflection)
+## Future Enhancements
 
+**C++26 Reflection:**
 - Automatic field registration (no macros)
 - Compile-time flag conflict detection
+
+**Additional Formats:**
+- JSON preset support
+- YAML preset support
+- Multiple preset file support (layered configs)
+
+**Runtime Updates:**
+- Signal listener for config reload (SIGHUP)
+- Pub/sub for config change notifications
+- Useful when holding config by value instead of reference
 
 ## License
 
