@@ -1,144 +1,65 @@
-# configs_loader_cpp
+# ConfigsLoader C++
 
-Header-only C++20 configuration loader library with clean API separation.
+A modern, compile-time optimized configuration management library for C++20.
 
-## Features
+## Design Philosophy
 
-- ✅ Header-only library (no linking required)
-- ✅ Clean public API (`configs_loader.hpp`) with implementation details hidden
-- ✅ Automatic `--help`/`-h` handling (prints help and exits)
-- ✅ Clean designated initializer syntax (C++20)
-- ✅ CLI argument parsing (multiple formats: `--key value`, `-k value`, `--key=value`)
-- ✅ Column-aligned help output with text wrapping
-- ✅ Config dumping (all values or only changes from defaults)
-- ✅ Required field validation
-- ✅ Type conversion (string, int, bool, double)
-- ✅ Custom verifier functions
-- ✅ Two-phase initialization (construction never throws)
-- ✅ Reserved `--preset`/`-p` flags for future JSON preset support
-- ✅ Initialization safety checks
-- ✅ **Hierarchical configs** with `ConfigGroup` and automatic prefix handling
-- ✅ **TOML preset support** (optional, enabled via CMake flag)
+### Make the Common Case Fast
 
-## Library Structure
+**The common case**: Reading configuration values during runtime.
 
-The library is split into two headers for clean API separation:
-
-- **`configs_loader.hpp`** - Public API (include this in your code)
-  - Clean interface showing only public methods
-  - Well-documented API surface
-  - Hides implementation details
-
-- **`configs_loader_impl.hpp`** - Implementation details (automatically included)
-  - Template implementations
-  - Helper functions
-  - Internal utilities
-  - Users should not include this directly
-
-This separation keeps the public API clean and easy to understand while maintaining the header-only design.
-
-## Installation
-
-Header-only library - just copy `include/` directory to your project.
-
-Or use CMake:
-
-```bash
-# As subdirectory
-add_subdirectory(configs_loader_cpp)
-target_link_libraries(your_target PRIVATE configs_loader_cpp)
-
-# Or install headers
-cmake -B build
-cmake --install build --prefix /usr/local
-```
-
-## Quick Start
+Most config libraries optimize for parsing (happens once) at the expense of reading (happens thousands of times). We flip this:
 
 ```cpp
-#include "configs_loader.hpp"
+// Common case - zero overhead
+int timeout = loader.configs.server.timeout.value;  // Direct member access, no lookups
+```
 
-struct MyConfigs {
-    Config<std::string> filename{
-        .default_value = "input.txt",
-        .flags = {"--file", "-f"},
+**No hash maps. No string lookups. No virtual dispatch.** Just direct struct member access.
+
+### Utilize Domain Knowledge at Compile Time
+
+We know your configuration structure at compile time. Why wait until runtime?
+
+```cpp
+struct MyConfig {
+    Config<int> port{
+        .default_value = 8080,
+        .flags = {"--port", "-p"},
         .required = true,
-        .description = "Input file to process"
+        .description = "Server port",
+        .verifier = [](int p) { return p > 0 && p < 65536; }
     };
-    
-    Config<int> log_level{
-        .default_value = 2,
-        .flags = {"--log-level", "-l"},
-        .description = "Logging verbosity level (0-5)"
-    };
-
-    REGISTER_CONFIG_FIELDS(filename, log_level)
+    REGISTER_CONFIG_FIELDS(port)
 };
-
-int main(int argc, char* argv[]) {
-    ConfigsLoader<MyConfigs> loader;
-    
-    try {
-        loader.Init(argc, argv);
-    } catch (const std::exception& e) {
-        std::cerr << "Configuration error: " << e.what() << "\n";
-        return 1;
-    }
-    
-    // Usage never throws
-    std::cout << loader.configs.filename.value << "\n";
-    std::cout << loader.configs.log_level.value << "\n";
-    
-    return 0;
-}
 ```
 
-## Global Config Pattern
+**At compile time, we know:**
+- Field names and types
+- Default values
+- Validation rules
+- Help text
+- Flag mappings
 
-For accessing configs across multiple files without passing them around:
+**At runtime, we just:**
+- Parse arguments (once)
+- Validate (once)
+- Read values (fast, direct access)
 
-**global_configs.hpp:**
+### Zero Abstraction Cost
+
 ```cpp
-#pragma once
-#include "configs_loader.hpp"
-
-struct AppConfigs {
-    Config<std::string> filename{...};
-    Config<int> log_level{...};
-    REGISTER_CONFIG_FIELDS(filename, log_level)
-};
-
-extern ConfigsLoader<AppConfigs> g_config_loader;
-
-inline AppConfigs& GetConfigs() {
-    return g_config_loader.configs;
-}
+// These compile to identical assembly:
+int direct = my_struct.port;
+int via_config = loader.configs.port.value;
+const ServerConfig& server = loader.configs.server;  // Implicit conversion
 ```
 
-**main.cpp:**
-```cpp
-#include "global_configs.hpp"
+Verified via assembly inspection - all abstractions optimize away completely.
 
-ConfigsLoader<AppConfigs> g_config_loader;  // Define once
+## Key Features
 
-int main(int argc, char* argv[]) {
-    g_config_loader.Init(argc, argv);
-    // Use GetConfigs() anywhere
-}
-```
-
-**other_file.cpp:**
-```cpp
-#include "global_configs.hpp"
-
-void some_function() {
-    auto filename = GetConfigs().filename.value;  // Access from anywhere
-}
-```
-
-## Hierarchical Configs
-
-Use `ConfigGroup<T>` to create nested configuration structures with automatic prefix handling:
+### 1. Hierarchical Configurations
 
 ```cpp
 struct DatabaseConfig {
@@ -148,113 +69,272 @@ struct DatabaseConfig {
 };
 
 struct ServerConfig {
-    CONFIG_GROUP(DatabaseConfig, primary_db);
-    CONFIG_GROUP(DatabaseConfig, replica_db);
-    Config<int> timeout{.default_value = 30, .flags = {"--timeout"}};
-    REGISTER_CONFIG_FIELDS(primary_db, replica_db, timeout)
+    ConfigGroup<DatabaseConfig> primary_db{.name_ = "primary_db"};
+    ConfigGroup<DatabaseConfig> replica_db{.name_ = "replica_db"};
+    REGISTER_CONFIG_FIELDS(primary_db, replica_db)
+};
+
+// Access: loader.configs.primary_db.host.value
+// CLI: --primary_db.host localhost
+```
+
+### 2. Partial Initialization
+
+Override only what you need:
+
+```cpp
+struct AppConfig {
+    ConfigGroup<ServerConfig> api_server{
+        .config = {
+            .port = {.default_value = 8080}  // Override just port
+        },
+        .name_ = "api_server"
+    };
+    ConfigGroup<ServerConfig> admin_server{
+        .config = {
+            .port = {.default_value = 9090}  // Different port
+        },
+        .name_ = "admin_server"
+    };
+    REGISTER_CONFIG_FIELDS(api_server, admin_server)
+};
+```
+
+### 3. Built-in Validation
+
+```cpp
+Config<int> port{
+    .default_value = 8080,
+    .flags = {"--port"},
+    .required = true,
+    .verifier = [](int p) { return p > 0 && p < 65536; }
+};
+```
+
+Validation happens automatically. All errors collected and reported together:
+
+```
+Configuration validation failed with 3 error(s):
+
+  • Required field '--host' is not set (flag: --host)
+  • Required field '--port' is not set (flag: --port)
+  • Required field '--database' is not set (flag: --database)
+```
+
+### 4. Automatic Help Generation
+
+```cpp
+ConfigsLoader<MyConfig> loader(argc, argv);
+// --help automatically handled, shows:
+// - All fields with descriptions
+// - Default values
+// - Current values (if different from default)
+// - Required fields marked
+// - Interactive filtering (--help required, --help <group>)
+```
+
+### 5. Multiple Serialization Formats
+
+```cpp
+// Dump current config
+std::string cli_format = loader.dump_configs(SerializationFormat::CLI);
+std::string toml_format = loader.dump_configs(SerializationFormat::TOML);
+
+// Dump only changes
+std::string changes = loader.dump_configs(SerializationFormat::TOML, true);
+```
+
+### 6. Preset Files
+
+```cpp
+// Load from TOML preset, override with CLI
+./myapp --preset production.toml --port 9090
+```
+
+CLI arguments override preset values.
+
+## Performance Characteristics
+
+### Compile Time
+- Type checking
+- Default value validation
+- Flag conflict detection (C++26)
+
+### Init Time (Once)
+- Parse CLI arguments: O(n) where n = argc
+- Validate: O(fields)
+- Apply values: O(fields)
+
+### Runtime (Hot Path)
+- Read value: **O(1)** - direct member access
+- No allocations
+- No lookups
+- No virtual dispatch
+
+## Usage
+
+### Basic Example
+
+```cpp
+#include "configs_loader.hpp"
+
+struct AppConfig {
+    Config<std::string> input{
+        .default_value = "input.txt",
+        .flags = {"--input", "-i"},
+        .required = true,
+        .description = "Input file"
+    };
+    Config<bool> verbose{
+        .default_value = false,
+        .flags = {"--verbose", "-v"},
+        .description = "Verbose output"
+    };
+    REGISTER_CONFIG_FIELDS(input, verbose)
+};
+
+int main(int argc, char* argv[]) {
+    ConfigsLoader<AppConfig> loader;
+    if (loader.init(argc, argv) != 0) {
+        return 1;  // Errors printed to stderr
+    }
+    
+    // Fast access - direct member access
+    std::string input = loader.configs.input.value;
+    bool verbose = loader.configs.verbose.value;
+    
+    // ... use configs
+    return 0;
+}
+```
+
+### Hierarchical Example
+
+```cpp
+struct PoolConfig {
+    Config<int> min_connections{.default_value = 5, .flags = {"--min"}};
+    Config<int> max_connections{.default_value = 20, .flags = {"--max"}};
+    REGISTER_CONFIG_FIELDS(min_connections, max_connections)
+};
+
+struct DatabaseConfig {
+    ConfigGroup<PoolConfig> pool{.name_ = "pool"};
+    Config<std::string> host{.default_value = "localhost", .flags = {"--host"}};
+    REGISTER_CONFIG_FIELDS(pool, host)
 };
 
 struct AppConfig {
-    CONFIG_GROUP(ServerConfig, backend);
-    Config<std::string> app_name{.default_value = "myapp", .flags = {"--name"}};
-    REGISTER_CONFIG_FIELDS(backend, app_name)
+    ConfigGroup<DatabaseConfig> database{.name_ = "database"};
+    REGISTER_CONFIG_FIELDS(database)
 };
 
-// Usage
-ConfigsLoader<AppConfig> loader;
-loader.init(argc, argv);
+// CLI: --database.pool.min 10 --database.pool.max 50
+// Access: loader.configs.database.pool.min_connections.value
 
-// CLI: --backend.primary_db.host db1.example.com --backend.primary_db.port 3306
-
-// Access via .config member
-std::cout << loader.configs.backend.config.primary_db.config.host.value;
-
-// Or use scoped alias for cleaner access
-const auto& backend = loader.configs.backend.config;
-std::cout << backend.primary_db.config.host.value;
+// Or use implicit conversion for cleaner code:
+const DatabaseConfig& db = loader.configs.database;
+const PoolConfig& pool = db.pool;
+int min = pool.min_connections.value;
 ```
 
-**Key points:**
-- `CONFIG_GROUP(Type, name)` macro automatically uses variable name as group name
-- ConfigGroup uses composition with a `.config` member to enable designated initializers
-- Access nested configs via `.config` or use scoped aliases for cleaner syntax
-- Flags in nested configs don't include prefix - it's applied automatically during CLI parsing
-- Minimal overhead - one pointer per ConfigGroup for name storage
-- Group name stored as `name_` (trailing underscore) to avoid collisions with user fields
-- Prefixes accumulate for multi-level hierarchies (e.g., `backend.primary_db.host`)
-- Each config struct calls `REGISTER_CONFIG_FIELDS` for its own fields
+## Design Decisions
 
-See `examples/hierarchy/`, `examples/multi_file/`, and `examples/real_world/` for complete examples.
+### Why Not Singletons?
 
-## API Reference
+Singletons prevent:
+- Multiple configurations in one program
+- Testing with different configs
+- Thread-safe initialization
 
-### Config<T>
+Our approach: Initialize once in main, pass by reference.
 
-Template struct for defining configuration fields.
+### Why Not Runtime Reflection?
 
-**Members:**
-- `T default_value` - Default value for the config
-- `std::vector<std::string> flags` - CLI flags (e.g., `{"--file", "-f"}`)
-- `bool required` - Whether field must be explicitly set
-- `std::function<bool(const T&)> verifier` - Custom validation function
-- `T value` - Current value (direct access, never throws)
-- `bool is_set()` - Whether value was explicitly set via CLI
+Runtime reflection (like JSON libraries) requires:
+- Hash map lookups for every access
+- String comparisons
+- Type erasure and casting
+- Runtime overhead
 
-### ConfigGroup<T>
+We use compile-time structure for zero-cost abstractions.
 
-Template struct for creating hierarchical config structures using composition.
+### Why Struct-Based?
 
-**Members:**
-- `T config` - The nested config instance (access via `.config`)
-- `std::string name_` - Group name used as prefix for nested flags (trailing underscore avoids collisions)
+```cpp
+// Type-safe, IDE-friendly, compile-time checked
+int port = loader.configs.server.port.value;
 
-**Macro:**
-- `CONFIG_GROUP(Type, name)` - Creates a ConfigGroup with automatic name from variable name
-
-**Access Pattern:**
-- Direct: `loader.configs.group_name.config.field.value`
-- Scoped alias: `const auto& cfg = loader.configs.group_name.config;` then `cfg.field.value`
-
-### ConfigsLoader<ConfigsType>
-
-Template class for loading and managing configurations.
-
-**Methods:**
-- `ConfigsLoader()` - Default constructor (never throws)
-- `ConfigsLoader(int argc, char* argv[])` - Convenience constructor (calls Init)
-- `void Init(int argc, char* argv[])` - Initialize from CLI args (can throw)
-
-**Exceptions:**
-- `std::runtime_error` - Required field not set, invalid preset flags, or parse errors
-
-## Building Tests and Examples
-
-By default, only the library headers are available. Tests and examples are disabled for library usage.
-
-**Build with tests:**
-```bash
-cmake -B build -DBUILD_TESTS=ON
-cmake --build build
-ctest --test-dir build
+// vs string-based (runtime errors, no autocomplete)
+int port = loader.get<int>("server.port");
 ```
 
-**Build with examples:**
-```bash
-cmake -B build -DBUILD_EXAMPLES=ON
-cmake --build build
-./build/examples/basic_example --help
+### Why Not Inheritance for Config/ConfigGroup?
+
+C++ doesn't allow designated initializers on types with base classes. We choose clean initialization syntax over avoiding function overloads:
+
+```cpp
+// This beautiful syntax requires aggregates (no inheritance)
+ConfigGroup<ServerConfig> api{
+    .config = {
+        .port = {.default_value = 8080}
+    },
+    .name_ = "api"
+};
 ```
 
-**Build both:**
-```bash
-cmake -B build -DBUILD_TESTS=ON -DBUILD_EXAMPLES=ON
-cmake --build build
+## Module Organization
+
+```
+include/
+├── cli/                    # CLI argument parsing
+│   ├── cli_argument_parser.hpp
+│   └── config_applier.hpp
+├── help/                   # Help generation
+│   ├── help_generator.hpp
+│   └── help_colors.hpp
+├── serialization/          # Serialize/deserialize
+│   ├── cli_serializer.hpp
+│   ├── toml_serializer.hpp
+│   └── preset_deserializer.hpp
+├── validation/             # Configuration validation
+│   └── config_validator.hpp
+├── config.hpp              # Core Config/ConfigGroup types
+└── configs_loader.hpp      # Main orchestrator
 ```
 
-See [examples/README.md](examples/README.md) and [tests/README.md](tests/README.md) for details.
+Each module has a single, clear responsibility.
 
 ## Future (C++26)
 
-- `REGISTER_CONFIG_STRUCT(StructName)` - Auto-detect fields via reflection
-- Compile-time preset flag validation
-- Constexpr flag containers
+With reflection, we can move to compile time:
+- Flag conflict detection (currently runtime)
+- Automatic field registration (no REGISTER_CONFIG_FIELDS macro)
+- Compile-time help generation
+
+```cpp
+// Future C++26:
+struct MyConfig {
+    Config<int> port{.default_value = 8080};
+    Config<std::string> host{.default_value = "localhost"};
+    // No REGISTER_CONFIG_FIELDS needed!
+};
+```
+
+## Building
+
+```bash
+mkdir build && cd build
+cmake .. -DENABLE_TOML_PRESETS=ON
+cmake --build .
+ctest
+```
+
+## Requirements
+
+- C++20 or later
+- CMake 3.14+
+- Optional: toml++ for TOML preset support
+
+## License
+
+See LICENSE file.
