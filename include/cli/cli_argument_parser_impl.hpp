@@ -32,6 +32,11 @@ inline ParsedArguments CliArgumentParser::parse(int argc, char* argv[]) {
             continue;
         }
 
+        if (arg == "--print-config-verbose") {
+            result.print_config_verbose = true;
+            continue;
+        }
+
         std::string value;
         bool has_value = false;
 

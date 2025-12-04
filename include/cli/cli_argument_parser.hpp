@@ -10,6 +10,7 @@ struct ParsedArguments {
     std::string help_filter;
     bool has_help = false;
     bool print_config = false;
+    bool print_config_verbose = false;
 };
 
 class CliArgumentParser {

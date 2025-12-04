@@ -73,8 +73,9 @@ int ConfigsLoader<ConfigsType>::init(int argc, char* argv[]) {
         return 1;
     }
     
-    if (args.print_config) {
-        std::cout << dump_configs(SerializationFormat::TOML, true);
+    if (args.print_config || args.print_config_verbose) {
+        const bool only_changes = args.print_config;
+        std::cout << dump_configs(SerializationFormat::TOML, only_changes);
         std::exit(0);
     }
     
