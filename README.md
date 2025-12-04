@@ -294,22 +294,14 @@ int main(int argc, char* argv[]) {
 
 ## Module Architecture
 
-```
-┌──────────────────────────────────────────────────────────┐
-│                   ConfigsLoader                          │
-│              (Orchestrator - Stateless)                  │
-│     Creates helpers on-demand, discards after init()     │
-└────────────┬─────────────────────────────────────────────┘
-             │
-    ┌────────┼────────┬──────────┬──────────┐
-    │        │        │          │          │
-┌───▼────┐ ┌─▼───┐ ┌──▼──────┐ ┌─▼────────┐ ┌─▼──────┐
-│  CLI   │ │Help │ │ Serial- │ │Validation│ │ Config │
-│ Parser │ │ Gen │ │ ization │ │          │ │ (Core) │
-│        │ │     │ │         │ │          │ │        │
-│ Static │ │ On- │ │ Factory │ │On-demand │ │Persist │
-│        │ │demand│ │+Strategy│ │          │ │(Runtime│
-└────────┘ └─────┘ └─────────┘ └──────────┘ └────────┘
+```mermaid
+graph TD
+    A[ConfigsLoader<br/>Orchestrator - Stateless<br/>Creates helpers on-demand]
+    A --> B[CLI Parser<br/>Static]
+    A --> C[Help Generator<br/>On-demand]
+    A --> D[Serialization<br/>Factory + Strategy]
+    A --> E[Validation<br/>On-demand]
+    A --> F[Config Core<br/>Persistent Runtime]
 ```
 
 **Initialization (Once)**: Parser, Validator, Applier created and destroyed  
