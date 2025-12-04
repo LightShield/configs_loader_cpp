@@ -344,20 +344,17 @@ C++ doesn't allow designated initializers on types with base classes. The design
 
 ## Advanced Features
 
-### Print Configuration
+### Print Configuration to Stdout
 
 ```cpp
-// Print current config to stdout
-loader.print_config();  // TOML format by default
+// Print all current values
+std::cout << loader.dump_configs(SerializationFormat::TOML);
 
-// Print in CLI format
-loader.print_config(SerializationFormat::CLI);
-
-// Print only changes
-loader.print_config(SerializationFormat::TOML, true);
+// Print only changes from defaults (useful for preset creation)
+std::cout << loader.dump_configs(SerializationFormat::TOML, true);
 ```
 
-Pipe to file for preset creation:
+Via CLI (prints only changes):
 ```bash
 ./myapp --port 9090 --print-config > my-preset.toml
 ```

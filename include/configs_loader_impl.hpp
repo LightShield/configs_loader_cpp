@@ -74,7 +74,7 @@ int ConfigsLoader<ConfigsType>::init(int argc, char* argv[]) {
     }
     
     if (args.print_config) {
-        print_config();
+        std::cout << dump_configs(SerializationFormat::TOML, true);
         std::exit(0);
     }
     
@@ -91,11 +91,6 @@ template<typename ConfigsType>
 std::string ConfigsLoader<ConfigsType>::dump_configs(SerializationFormat format, bool only_changes) const {
     auto serializer = SerializerFactory<ConfigsType>::create(format);
     return serializer->serialize(configs, only_changes);
-}
-
-template<typename ConfigsType>
-void ConfigsLoader<ConfigsType>::print_config(SerializationFormat format, bool only_changes) const {
-    std::cout << dump_configs(format, only_changes);
 }
 
 template<typename ConfigsType>
