@@ -135,20 +135,15 @@ Config<int> port{
 
 ### For End Users
 
-**All Errors Reported Together**
+**Built-in Flags**
 
-Solves the frustrating flow of "fix 1 issue, rerun, next error, rerun, next error...". All validation and application errors collected and shown at once:
+The library provides several reserved flags:
 
-```
-Configuration validation failed with 2 error(s):
+- `--help, -h` - Show help message (exits after displaying)
+- `--preset, -p <file>` - Load configuration from preset file
+- `--print-config` - Print current config to stdout (only changes from defaults)
+- `--print-config-verbose` - Print current config to stdout (all values)
 
-  • Required field '--host' is not set [Server hostname]
-  • Required field '--port' is not set [Server listening port]
-
-Configuration application failed with 1 error(s):
-
-  • Validation failed for field '--timeout' [Request timeout]: value = -5
-```
 
 **Interactive Help System**
 
@@ -197,18 +192,33 @@ timeout = 60
 ```
 
 ```bash
-# Load preset, override port
-./myapp --preset production.toml --port 5433
+# Load preset, override port, check with help
+./myapp --preset production.toml --port 5433 --help all
 ```
 
-**Built-in Flags**
+Output shows current values from both preset and CLI:
+```
+--host    <string>  Server host (current: "prod.example.com", default: "localhost")
+--port    <int>     Server port (current: 5433, default: 8080)
+--timeout <int>     Request timeout (current: 60, default: 30)
+```
 
-The library provides several reserved flags:
 
-- `--help, -h` - Show help message (exits after displaying)
-- `--preset, -p <file>` - Load configuration from preset file
-- `--print-config` - Print current config to stdout (only changes from defaults)
-- `--print-config-verbose` - Print current config to stdout (all values)
+**All Errors Reported Together**
+
+Solves the frustrating flow of "fix 1 issue, rerun, next error, rerun, next error...". All validation and application errors collected and shown at once:
+
+```
+Configuration validation failed with 2 error(s):
+
+  • Required field '--host' is not set [Server hostname]
+  • Required field '--port' is not set [Server listening port]
+
+Configuration application failed with 1 error(s):
+
+  • Validation failed for field '--timeout' [Request timeout]: value = -5
+```
+
 
 **Preset Building Loop**
 
