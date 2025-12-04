@@ -16,7 +16,7 @@ ConfigsLoader delivers **high-performance configuration management** through com
 
 **The common case**: Reading configuration values during program execution.
 
-Most config libraries optimize for parsing (happens once at startup) at the expense of reading (happens thousands of times during execution). This inverts this priority:
+Existing configuration libraries didn't provide the combination of features needed: high-performance for the common case, ease of use for developers, and excellent auto-generated user experience. This library addresses all three.
 
 ```cpp
 // Hot path - zero overhead, direct memory access
@@ -27,12 +27,14 @@ int timeout = loader.configs.server.timeout.value;
 
 ### Utilize Compile-Time Knowledge
 
-Your configuration structure is known at compile time. This leverages this for:
+The program's configuration structure is known at compile time. This knowledge enables:
 
 - **Type safety**: Compiler catches typos and type mismatches
 - **Zero-cost abstractions**: All indirection optimized away
 - **Automatic help generation**: Structure known, help auto-generated
-- **Validation**: Default values and constraints checked at compile time where possible
+- **Direct memory layout**: Configs are just structs, compiler optimizes access
+
+By leveraging what's already known at compile time, the library achieves high performance without sacrificing developer or user experience.
 
 ```cpp
 struct MyConfig {
@@ -53,10 +55,28 @@ While optimizing for compile-time knowledge, the library supports runtime scenar
 - **Human interaction**: `--help` shows current state after loading configs
 - **Preset files**: Load configurations from external files
 - **CLI overrides**: Command-line arguments override presets
-- **Runtime updates**: Configs can be modified during execution (rare)
+- **Runtime updates**: Configs can be modified during execution (supports atomic updates if needed)
 - **Serialization**: Dump current state for debugging or persistence
 
 The key: **optimize for the common case (reading), support the rare case (updating and human interaction)**.
+
+### Ephemeral Initialization Objects
+
+Initialization components are created on-demand and discarded after use:
+
+```cpp
+// In init():
+ConfigValidator validator(configs);      // Created
+validator.validate_reserved_flags();     // Used
+// validator destroyed - memory freed
+
+CliArgumentParser::parse(argc, argv);    // Static, no state
+ConfigApplier applier(configs);          // Created
+applier.apply_from_cli(flags);           // Used
+// applier destroyed - memory freed
+```
+
+**Why**: Minimize memory footprint during program execution. Initialization happens once; the program runs for hours/days. Optimize for the running state, not the initialization state.
 
 ## Features by User
 
@@ -321,7 +341,8 @@ Config<std::string> url{
 ```
 ┌─────────────────────────────────────────────────────────┐
 │                   ConfigsLoader                         │
-│                   (Orchestrator)                        │
+│              (Orchestrator - Stateless)                 │
+│  Creates helpers on-demand, discards after init()       │
 └────────────┬────────────────────────────────────────────┘
              │
     ┌────────┼────────┬──────────┬─────────────┐
@@ -329,10 +350,17 @@ Config<std::string> url{
 ┌───▼───┐ ┌─▼──┐ ┌───▼────┐ ┌───▼──────┐ ┌───▼────────┐
 │  CLI  │ │Help│ │Serial- │ │Validation│ │   Config   │
 │Parser │ │Gen │ │ization │ │          │ │ (Core)     │
+│       │ │    │ │        │ │          │ │            │
+│Static │ │On- │ │Factory │ │On-demand │ │Persistent  │
+│       │ │demand│ │Pattern │ │          │ │(Runtime)   │
 └───────┘ └────┘ └────────┘ └──────────┘ └────────────┘
 ```
 
-Each module is independently testable and has a single responsibility.
+**Initialization (Once)**: Parser, Validator, Applier created and destroyed  
+**Runtime (Always)**: Only Config structs remain in memory  
+**On-Demand**: Help generator, serializers created when needed
+
+Each module is independently testable and has a single responsibility. Initialization helpers are ephemeral - created, used, and destroyed to minimize runtime memory footprint.
 
 ## Design Decisions
 
@@ -353,6 +381,26 @@ int port = loader.configs.server.port.value;
 // vs runtime string-based (errors at runtime, no autocomplete)
 int port = loader.get<int>("server.port");
 ```
+
+### Why Ephemeral Initialization Objects?
+
+Initialization happens once. The program runs for hours or days. Optimize for the running state:
+
+```cpp
+// Init (once, ~1ms):
+ConfigValidator validator(configs);  // Created, used, destroyed
+CliArgumentParser::parse(...);       // Static method, no state
+ConfigApplier applier(configs);      // Created, used, destroyed
+HelpGenerator generator(...);        // Created only if --help used
+
+// Runtime (hours/days):
+loader.configs  // Only config structs remain (~few KB)
+```
+
+**Benefits**:
+- Minimal memory footprint during execution
+- Stateless design (no lingering parser/validator state)
+- Clear separation: initialization vs execution
 
 ### Why No Inheritance for Config/ConfigGroup?
 
