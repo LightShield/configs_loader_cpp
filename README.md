@@ -295,21 +295,21 @@ int main(int argc, char* argv[]) {
 ## Module Architecture
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│                   ConfigsLoader                         │
-│              (Orchestrator - Stateless)                 │
-│  Creates helpers on-demand, discards after init()       │
-└────────────┬────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────┐
+│                   ConfigsLoader                          │
+│              (Orchestrator - Stateless)                  │
+│     Creates helpers on-demand, discards after init()     │
+└────────────┬─────────────────────────────────────────────┘
              │
-    ┌────────┼────────┬──────────┬─────────────┐
-    │        │        │          │             │
-┌───▼───┐ ┌─▼──┐ ┌───▼────┐ ┌───▼──────┐ ┌───▼────────┐
-│  CLI  │ │Help│ │Serial- │ │Validation│ │   Config   │
-│Parser │ │Gen │ │ization │ │          │ │ (Core)     │
-│       │ │    │ │        │ │          │ │            │
-│Static │ │On- │ │Factory │ │On-demand │ │Persistent  │
-│       │ │demand│ │+Strategy│ │         │ │(Runtime)   │
-└───────┘ └────┘ └────────┘ └──────────┘ └────────────┘
+    ┌────────┼────────┬──────────┬──────────┐
+    │        │        │          │          │
+┌───▼────┐ ┌─▼───┐ ┌──▼──────┐ ┌─▼────────┐ ┌─▼──────┐
+│  CLI   │ │Help │ │ Serial- │ │Validation│ │ Config │
+│ Parser │ │ Gen │ │ ization │ │          │ │ (Core) │
+│        │ │     │ │         │ │          │ │        │
+│ Static │ │ On- │ │ Factory │ │On-demand │ │Persist │
+│        │ │demand│ │+Strategy│ │          │ │(Runtime│
+└────────┘ └─────┘ └─────────┘ └──────────┘ └────────┘
 ```
 
 **Initialization (Once)**: Parser, Validator, Applier created and destroyed  
