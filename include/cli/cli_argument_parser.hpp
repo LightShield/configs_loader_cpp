@@ -7,6 +7,7 @@
 struct ParsedArguments {
     std::unordered_map<std::string, std::string> flags;
     std::optional<std::string> preset_path;
+    std::optional<std::string> save_config_path;
     std::string help_filter;
     bool has_help = false;
 };

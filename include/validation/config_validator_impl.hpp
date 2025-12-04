@@ -49,7 +49,7 @@ void ConfigValidator<ConfigsType>::validate_field(const Config<T>& field, const 
     if (field.is_required() && !field.is_set()) {
         std::string msg = "Required field '" + flag + "' is not set";
         if (!field.description.empty()) {
-            msg += " (" + field.description + ")";
+            msg += " [" + field.description + "]";
         }
         
         m_errors.push_back({
@@ -62,7 +62,7 @@ void ConfigValidator<ConfigsType>::validate_field(const Config<T>& field, const 
     if (field.is_set() && !field.verifier(field.value)) {
         std::string msg = "Validation failed for field '" + flag + "'";
         if (!field.description.empty()) {
-            msg += " (" + field.description + ")";
+            msg += " [" + field.description + "]";
         }
         
         if constexpr (std::is_same_v<T, std::string>) {

@@ -4,111 +4,79 @@ A modern, compile-time optimized configuration management library for C++20.
 
 ## TL;DR
 
-ConfigsLoader delivers **high-performance configuration management** through compile-time optimization, while providing **exceptional developer experience** with type-safe hierarchical configs and automatic validation, and **superior end-user experience** with auto-generated interactive help and flexible input methods.
+ConfigsLoader delivers **high-performance configuration management** through direct memory access and minimal runtime footprint, **exceptional developer experience** with type-safe hierarchical configs and compile-time validation, and **superior end-user experience** with auto-generated interactive help, input validation with clear error messages, and flexible configuration sources.
 
-**Performance**: Direct memory access (no hash maps, no lookups, no virtual dispatch)  
-**Developer**: Type-safe structs, compile-time validation, hierarchical configs with partial initialization  
-**End-User**: Interactive help with current values, preset files, comprehensive error messages
+**Performance**: Direct memory access + minimal memory footprint after init  
+**Developer**: Type-safe structs, hierarchical configs, input validation per field  
+**End-User**: Interactive help, preset files, validation errors with descriptions
 
 ## Design Philosophy
 
-### Make the Common Case Fast
+### Optimize for the Hot Path
 
-**The common case**: Reading configuration values during program execution.
+In my experience with configuration libraries, I haven't found one that provides the combination of features needed: high-performance for reading configs (the hot path), ease of use for developers writing the code, and excellent auto-generated user experience.
 
-Existing configuration libraries didn't provide the combination of features needed: high-performance for the common case, ease of use for developers, and excellent auto-generated user experience. This library addresses all three.
+**The hot path**: Reading configuration values during program execution.
 
 ```cpp
-// Hot path - zero overhead, direct memory access
+// Hot path - single instruction: ldr w0, [x0, #96]
 int timeout = loader.configs.server.timeout.value;
 ```
 
-**No hash maps. No string lookups. No pointer indirection.** Just direct struct member access that compiles to a single `ldr` instruction.
+Configuration structure is known at compile time, yet most implementations I've encountered use runtime lookups - searching for config names in maps or similar structures. This library utilizes compile-time knowledge for direct memory access.
 
-### Utilize Compile-Time Knowledge
+### Focus on User Experience for Non-Critical Paths
 
-The program's configuration structure is known at compile time. This knowledge enables:
+While optimizing the hot path (reading configs, compile-time usage while writing code), the library focuses on ease of use for non-performance-critical scenarios like initialization and human interaction:
 
-- **Type safety**: Compiler catches typos and type mismatches
-- **Zero-cost abstractions**: All indirection optimized away
-- **Automatic help generation**: Structure known, help auto-generated
-- **Direct memory layout**: Configs are just structs, compiler optimizes access
+- **Init time**: Parse, validate, apply (happens once, ~1ms)
+- **Human interaction**: `--help`, error messages, config exploration
+- **Updates**: Runtime config modifications (rare, outside hot path)
 
-By leveraging what's already known at compile time, the library achieves high performance without sacrificing developer or user experience.
-
-```cpp
-struct MyConfig {
-    Config<int> port{
-        .default_value = 8080,           // Compile-time constant
-        .flags = {"--port", "-p"},       // Compile-time array
-        .required = true,                // Compile-time flag
-        .verifier = [](int p) { return p > 0 && p < 65536; }  // Inline lambda
-    };
-    REGISTER_CONFIG_FIELDS(port)  // Compile-time registration
-};
-```
-
-### Runtime Flexibility When Needed
-
-While optimizing for compile-time knowledge, the library supports runtime scenarios:
-
-- **Human interaction**: `--help` shows current state after loading configs
-- **Preset files**: Load configurations from external files
-- **CLI overrides**: Command-line arguments override presets
-- **Runtime updates**: Configs can be modified during execution (supports atomic updates if needed)
-- **Serialization**: Dump current state for debugging or persistence
-
-The key: **optimize for the common case (reading), support the rare case (updating and human interaction)**.
+These happen outside the critical path, so the focus is on usability, not performance.
 
 ### Ephemeral Initialization Objects
 
-Initialization components are created on-demand and discarded after use:
+Initialization components are created on-demand within function scope and destroyed before the "real program" starts:
 
 ```cpp
 // In init():
-ConfigValidator validator(configs);      // Created
-validator.validate_reserved_flags();     // Used
-// validator destroyed - memory freed
+{
+    ConfigValidator validator(configs);      // Created
+    validator.validate_reserved_flags();     // Used
+}   // Destroyed - memory freed before program runs
 
-CliArgumentParser::parse(argc, argv);    // Static, no state
-ConfigApplier applier(configs);          // Created
-applier.apply_from_cli(flags);           // Used
-// applier destroyed - memory freed
+CliArgumentParser::parse(argc, argv);        // Static, no state
+{
+    ConfigApplier applier(configs);          // Created
+    applier.apply_from_cli(flags);           // Used
+}   // Destroyed - memory freed before program runs
 ```
 
-**Why**: Minimize memory footprint during program execution. Initialization happens once; the program runs for hours/days. Optimize for the running state, not the initialization state.
+**Why**: Minimize the real program's memory footprint. Initialization is ephemeral; execution is persistent. Optimize for the running state.
 
 ## Features by User
 
 ### For Performance-Critical Applications
 
-**Direct Memory Access - No Indirection**
+**Direct Memory Access**
 
 ```cpp
 // Compiles to: ldr w0, [x0, #96]
 int value = loader.configs.server.port.value;
 ```
 
-No hash maps, no string comparisons, no virtual dispatch, no pointer chasing. Just direct struct member access.
+Direct struct member access. The compiler optimizes this to a single load instruction with a known offset.
+
+**Minimal Runtime Footprint**
+
+- **During init**: Parser, validator, applier (~1-2KB total)
+- **After init**: Only config structs remain (~few KB)
+- **During execution**: Zero allocation, zero lookup overhead
 
 **Assembly-Verified Zero Cost**
 
-All convenience features (implicit conversion, helper methods) compile to identical assembly as direct access:
-
-```cpp
-// All three compile to identical assembly:
-int v1 = loader.configs.group.config.value.value;
-const NestedConfig& nested = loader.configs.group;  // Implicit conversion
-int v2 = nested.value.value;
-int v3 = loader.configs.group.get_name().empty() ? 0 : 1;  // get_name() inlined
-```
-
-**Compile-Time Optimization**
-
-- Constexpr default values
-- Inline validation lambdas
-- Template-based dispatch (no virtual calls)
-- Zero-size abstractions
+All convenience features compile to identical assembly as direct access. Verified via assembly inspection.
 
 ### For Developers
 
@@ -136,54 +104,48 @@ int port = loader.configs.server.prot.value;  // ❌ Compile error
 int port = loader.configs.server.port.value;  // ✅ Compiles
 ```
 
-IDE autocomplete works perfectly - your editor knows the structure.
+IDE autocomplete works perfectly - the compiler knows the structure.
 
 **Partial Initialization**
 
 Override only what differs from defaults:
 
 ```cpp
-struct AppConfig {
-    ConfigGroup<ServerConfig> api_server{
-        .config = {
-            .primary_db = {
-                .config = {
-                    .port = {.default_value = 5433}  // Override just this
-                }
-            }
-        },
-        .name_ = "api_server"
-    };
-    REGISTER_CONFIG_FIELDS(api_server)
+ConfigGroup<ServerConfig> api_server{
+    .config = {
+        .port = {.default_value = 8080}  // Override just port
+    },
+    .name_ = "api_server"
 };
 ```
 
-**Built-in Input Validation**
+**Input Validation Per Field**
+
+Validation runs during value updates (primarily during init). Failed validations are reported to the user with config descriptions:
 
 ```cpp
 Config<int> port{
     .default_value = 8080,
+    .flags = {"--port"},
+    .description = "Server listening port",
     .required = true,
     .verifier = [](int p) { return p > 0 && p < 65536; }
 };
-
-Config<std::string> email{
-    .default_value = "",
-    .verifier = [](const std::string& e) { return e.find('@') != std::string::npos; }
-};
 ```
 
-Validation runs automatically during init. All errors collected and reported together.
+**All Errors Reported Together**
 
-**Implicit Conversion for Cleaner Code**
+Solves the frustrating flow of "fix 1 issue → rerun → next error → rerun → next error...". All validation errors collected and shown at once:
 
-```cpp
-// Verbose:
-configure_database(loader.configs.server.config.database.config);
+```
+Configuration validation failed with 2 error(s):
 
-// Clean:
-const ServerConfig& server = loader.configs.server;
-configure_database(server.database);  // Implicit conversion!
+  • Required field '--host' is not set [Server hostname]
+  • Required field '--port' is not set [Server listening port]
+
+Configuration application failed with 1 error(s):
+
+  • Validation failed for field '--timeout' [Request timeout]: value = -5
 ```
 
 ### For End Users
@@ -191,72 +153,71 @@ configure_database(server.database);  // Implicit conversion!
 **Interactive Help System**
 
 ```bash
-# Basic help
-./myapp --help
-
-# Filtered help
-./myapp --help required      # Show only required fields
-./myapp --help database      # Show only database group
-./myapp --help groups        # Show group structure
-./myapp --help all           # Show everything
+./myapp --help              # Navigation help
+./myapp --help all          # All options (grep-friendly)
+./myapp --help required     # Only required fields
+./myapp --help database     # Only database group
+./myapp --help groups       # Group structure
 ```
 
 **Current Values in Help**
 
+After loading preset and CLI args, `--help` shows current state:
+
 ```bash
-# Load preset and see what's actually configured
 ./myapp --preset prod.toml --port 9090 --help all
 ```
 
-Output shows:
+Output:
 ```
 --port  <int>  Server port (current: 9090, default: 8080)
 --host  <string>  Server host (default: "localhost")
 ```
 
+**Preset Files as Base Configuration**
+
+Use preset files as base config, override with CLI (CLI has precedence):
+
+```bash
+# Load base config, override specific values
+./myapp --preset production.toml --port 9090 --verbose true
+```
+
+**Save Current Configuration**
+
+Dump current config to a preset file for later reuse:
+
+```bash
+# After loading and validating, save current state
+./myapp --preset base.toml --port 9090 --save-config current.toml
+```
+
+Creates a valid preset file with all current values that can be loaded as-is.
+
 **Comprehensive Error Messages**
 
-All errors reported together with descriptions and values:
+All errors reported together with config descriptions (in brackets):
 
 ```
-Configuration validation failed with 3 error(s):
+Configuration validation failed with 2 error(s):
 
-  • Required field '--database.host' is not set (Server hostname)
-  • Required field '--database.port' is not set (Server port)
-  • Required field '--api-key' is not set (API authentication key)
-```
+  • Required field '--database.host' is not set [Database server hostname]
+  • Required field '--api-key' is not set [API authentication key]
 
-Validation failures show the invalid value:
-
-```
 Configuration application failed with 2 error(s):
 
-  • Validation failed for flag '--port' (Server port): value = 99999
-  • Validation failed for flag '--email' (Contact email): value = invalid
+  • Validation failed for field '--port' [Server port]: value = 99999
+  • Validation failed for field '--email' [Contact email]: value = invalid
 ```
+
+Eliminates the frustrating "fix one, rerun, fix next, rerun..." cycle.
 
 **Flexible Input Methods**
 
 ```bash
-# Preset file with CLI overrides
 ./myapp --preset production.toml --port 9090
-
-# Pure CLI
 ./myapp --host localhost --port 8080 --verbose true
-
-# Mixed formats
 ./myapp --host=localhost -p 8080 --verbose true
-```
-
-**Multiple Output Formats**
-
-```cpp
-// Dump current configuration
-std::cout << loader.dump_configs(SerializationFormat::CLI);
-std::cout << loader.dump_configs(SerializationFormat::TOML);
-
-// Dump only changes from defaults
-std::cout << loader.dump_configs(SerializationFormat::TOML, true);
 ```
 
 ## Quick Start
@@ -268,7 +229,8 @@ struct MyConfig {
     Config<std::string> input{
         .default_value = "input.txt",
         .flags = {"--input", "-i"},
-        .required = true
+        .required = true,
+        .description = "Input file path"
     };
     REGISTER_CONFIG_FIELDS(input)
 };
@@ -276,7 +238,7 @@ struct MyConfig {
 int main(int argc, char* argv[]) {
     ConfigsLoader<MyConfig> loader;
     if (loader.init(argc, argv) != 0) {
-        return 1;
+        return 1;  // Errors printed to stderr
     }
     
     std::string input = loader.configs.input.value;
@@ -285,51 +247,11 @@ int main(int argc, char* argv[]) {
 }
 ```
 
-## Advanced Features
-
-### Preset Files
-
-```toml
-# production.toml
-host = "prod.example.com"
-port = 5432
-timeout = 60
-```
-
-```bash
-./myapp --preset production.toml --port 5433  # Override port
-```
-
-### Custom Help Formatting
-
-```cpp
-HelpFormat custom{
-    .program_name = "my-tool",
-    .use_colors = false,
-    .max_width = 100,
-    .show_current_values = true
-};
-
-std::string help = loader.generate_help("", std::cref(custom));
-```
-
-### Validation with Custom Logic
-
-```cpp
-Config<std::string> url{
-    .default_value = "",
-    .required = true,
-    .verifier = [](const std::string& u) {
-        return u.starts_with("http://") || u.starts_with("https://");
-    }
-};
-```
-
 ## Performance Characteristics
 
 | Operation | Complexity | Notes |
 |-----------|-----------|-------|
-| Read config value | O(1) | Direct memory access |
+| Read config value | O(1) | Direct memory access, single instruction |
 | Init (parse + validate) | O(n + f) | n=argc, f=fields (once at startup) |
 | Help generation | O(f) | f=fields (only when --help used) |
 | Serialization | O(f) | f=fields (only when explicitly called) |
@@ -352,65 +274,100 @@ Config<std::string> url{
 │Parser │ │Gen │ │ization │ │          │ │ (Core)     │
 │       │ │    │ │        │ │          │ │            │
 │Static │ │On- │ │Factory │ │On-demand │ │Persistent  │
-│       │ │demand│ │Pattern │ │          │ │(Runtime)   │
+│       │ │demand│ │+Strategy│ │         │ │(Runtime)   │
 └───────┘ └────┘ └────────┘ └──────────┘ └────────────┘
 ```
 
 **Initialization (Once)**: Parser, Validator, Applier created and destroyed  
-**Runtime (Always)**: Only Config structs remain in memory  
+**Runtime (Always)**: Only Config structs + `m_initialized` flag remain  
 **On-Demand**: Help generator, serializers created when needed
 
-Each module is independently testable and has a single responsibility. Initialization helpers are ephemeral - created, used, and destroyed to minimize runtime memory footprint.
+Serialization uses Factory pattern for creation and Strategy pattern for format extensibility.
+
+Each module is independently testable. Initialization helpers are ephemeral to minimize the real program's memory footprint.
 
 ## Design Decisions
 
 ### Why Not Singletons?
 
-Singletons prevent multiple configurations, complicate testing, and create initialization order issues. The design prefers: initialize once in main, pass by reference.
+Singletons require checking `is_initialized()` before every API call - a cost paid on every access in the hot path:
+
+```cpp
+// Singleton pattern:
+Config& Config::instance() {
+    if (!initialized) { initialize(); }  // Branch on every call
+    return config;
+}
+```
+
+Even with branch prediction, this is wasted work. Instead, ConfigsLoader is statically initialized with the default constructor (compiler has an address), then user-initialized with `init(argc, argv)`. If not initialized, it runs with default values.
 
 ### Why Not Runtime Reflection?
 
-Runtime reflection requires hash maps, string lookups, and type erasure. The library uses compile-time structure for zero-cost abstractions.
+Runtime reflection requires hash maps, string lookups, and type erasure. This library uses compile-time structure for zero-cost abstractions.
 
 ### Why Struct-Based?
 
+Allows the compiler to optimize memory accesses:
+
 ```cpp
-// Compile-time checked, IDE autocomplete, type-safe
+// Compile-time checked, IDE autocomplete, direct memory access
 int port = loader.configs.server.port.value;
 
-// vs runtime string-based (errors at runtime, no autocomplete)
+// vs runtime string-based (hash map lookup, no compile-time checks)
 int port = loader.get<int>("server.port");
 ```
 
 ### Why Ephemeral Initialization Objects?
 
-Initialization happens once. The program runs for hours or days. Optimize for the running state:
-
-```cpp
-// Init (once, ~1ms):
-ConfigValidator validator(configs);  // Created, used, destroyed
-CliArgumentParser::parse(...);       // Static method, no state
-ConfigApplier applier(configs);      // Created, used, destroyed
-HelpGenerator generator(...);        // Created only if --help used
-
-// Runtime (hours/days):
-loader.configs  // Only config structs remain (~few KB)
-```
-
-**Benefits**:
-- Minimal memory footprint during execution
-- Stateless design (no lingering parser/validator state)
-- Clear separation: initialization vs execution
+Optimized for the actual program's running state. Initialization happens once (~1ms), program runs for hours/days. Keep only what's needed during execution.
 
 ### Why No Inheritance for Config/ConfigGroup?
 
-C++ doesn't allow designated initializers on types with base classes. The design chooses clean initialization syntax over avoiding function overloads.
+C++ doesn't allow designated initializers on types with base classes. The design chooses clean initialization syntax over avoiding function overloads. Additionally, vtable overhead is unnecessary for compile-time known structures - no need to pay for runtime polymorphism.
 
-## Future (C++26 Reflection)
+## Advanced Features
 
-- Automatic field registration (no macros)
-- Compile-time flag conflict detection
-- Compile-time help generation
+### Save Configuration to File
+
+```cpp
+// Save current config after validation
+loader.save_config("current.toml", SerializationFormat::TOML);
+
+// Save only changes from defaults
+loader.save_config("changes.toml", SerializationFormat::TOML, true);
+```
+
+Or via CLI:
+```bash
+./myapp --preset base.toml --port 9090 --save-config current.toml
+```
+
+### Custom Help Formatting
+
+```cpp
+HelpFormat custom{
+    .program_name = "my-tool",
+    .use_colors = false,
+    .max_width = 100,
+    .show_current_values = true
+};
+
+std::string help = loader.generate_help("", std::cref(custom));
+```
+
+### Validation with Custom Logic
+
+```cpp
+Config<std::string> url{
+    .default_value = "",
+    .description = "API endpoint URL",
+    .required = true,
+    .verifier = [](const std::string& u) {
+        return u.starts_with("http://") || u.starts_with("https://");
+    }
+};
+```
 
 ## Building
 
@@ -418,7 +375,7 @@ C++ doesn't allow designated initializers on types with base classes. The design
 mkdir build && cd build
 cmake .. -DENABLE_TOML_PRESETS=ON
 cmake --build .
-ctest  # Run 62 tests
+ctest  # Run 63 tests
 ```
 
 ## Requirements
@@ -426,6 +383,12 @@ ctest  # Run 62 tests
 - C++20 or later
 - CMake 3.14+
 - Optional: toml++ for TOML preset support
+
+## Future (C++26 Reflection)
+
+- Automatic field registration (no macros)
+- Compile-time flag conflict detection
+- Compile-time help generation
 
 ## License
 

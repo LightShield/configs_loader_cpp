@@ -27,6 +27,14 @@ inline ParsedArguments CliArgumentParser::parse(int argc, char* argv[]) {
             continue;
         }
 
+        if (arg == "--save-config") {
+            if (i + 1 < argc) {
+                result.save_config_path = argv[i + 1];
+                ++i;
+            }
+            continue;
+        }
+
         std::string value;
         bool has_value = false;
 
