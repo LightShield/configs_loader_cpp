@@ -106,7 +106,7 @@ Shift-left approach: catch errors during compilation, not during execution. IDE 
 
 **Partial Initialization**
 
-Override only what differs from defaults (requires C++20 designated initializers):
+Override only what differs from defaults:
 
 ```cpp
 ConfigGroup<ServerConfig> api_server{
@@ -117,7 +117,7 @@ ConfigGroup<ServerConfig> api_server{
 };
 ```
 
-Note: This feature requires C++20. Without partial initialization, the library could support earlier C++ standards.
+Note: This feature requires C++20 (designated initializers). Without partial initialization, the library could support earlier C++ standards.
 
 **Input Validation Per Field**
 
@@ -133,6 +133,8 @@ Config<int> port{
 };
 ```
 
+### For End Users
+
 **All Errors Reported Together**
 
 Solves the frustrating flow of "fix 1 issue, rerun, next error, rerun, next error...". All validation and application errors collected and shown at once:
@@ -147,8 +149,6 @@ Configuration application failed with 1 error(s):
 
   • Validation failed for field '--timeout' [Request timeout]: value = -5
 ```
-
-### For End Users
 
 **Interactive Help System**
 
