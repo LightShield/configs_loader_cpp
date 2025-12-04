@@ -84,7 +84,14 @@ bool ConfigApplier<ConfigsType>::try_set_field(Config<T>& field, const std::stri
         return false;
     }
 
-    return field.set_value(converted_value);
+    if (!field.set_value(converted_value)) {
+        m_errors.push_back({
+            .flag = flag,
+            .value = value,
+            .description = field.description
+        });
+    }
+    return true;
 }
 
 template<typename ConfigsType>

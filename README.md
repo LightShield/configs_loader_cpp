@@ -196,15 +196,24 @@ Output shows:
 
 **Comprehensive Error Messages**
 
+All errors reported together with descriptions and values:
+
 ```
 Configuration validation failed with 3 error(s):
 
-  • Required field '--database.host' is not set (flag: --database.host)
-  • Required field '--database.port' is not set (flag: --database.port)
-  • Required field '--api-key' is not set (flag: --api-key)
+  • Required field '--database.host' is not set (Server hostname)
+  • Required field '--database.port' is not set (Server port)
+  • Required field '--api-key' is not set (API authentication key)
 ```
 
-All errors reported at once, with clear instructions.
+Validation failures show the invalid value:
+
+```
+Configuration application failed with 2 error(s):
+
+  • Validation failed for flag '--port' (Server port): value = 99999
+  • Validation failed for flag '--email' (Contact email): value = invalid
+```
 
 **Flexible Input Methods**
 

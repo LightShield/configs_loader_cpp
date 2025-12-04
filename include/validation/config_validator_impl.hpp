@@ -43,14 +43,40 @@ std::string ConfigValidator<ConfigsType>::get_error_report() const {
 template<typename ConfigsType>
 template<typename T>
 void ConfigValidator<ConfigsType>::validate_field(const Config<T>& field, const std::string& prefix) {
+    const std::string flag = field.flags.empty() ? "unknown" : 
+        (prefix.empty() ? field.flags[0] : "--" + prefix + "." + field.flags[0].substr(2));
+    
     if (field.is_required() && !field.is_set()) {
-        const std::string flag = field.flags.empty() ? "unknown" : 
-            (prefix.empty() ? field.flags[0] : "--" + prefix + "." + field.flags[0].substr(2));
+        std::string msg = "Required field '" + flag + "' is not set";
+        if (!field.description.empty()) {
+            msg += " (" + field.description + ")";
+        }
         
         m_errors.push_back({
             .field_name = prefix.empty() ? "field" : prefix,
             .flag = flag,
-            .error_message = "Required field '" + flag + "' is not set"
+            .error_message = msg
+        });
+    }
+    
+    if (field.is_set() && !field.verifier(field.value)) {
+        std::string msg = "Validation failed for field '" + flag + "'";
+        if (!field.description.empty()) {
+            msg += " (" + field.description + ")";
+        }
+        
+        if constexpr (std::is_same_v<T, std::string>) {
+            msg += ": value = \"" + field.value + "\"";
+        } else if constexpr (std::is_same_v<T, bool>) {
+            msg += ": value = " + std::string(field.value ? "true" : "false");
+        } else {
+            msg += ": value = " + std::to_string(field.value);
+        }
+        
+        m_errors.push_back({
+            .field_name = prefix.empty() ? "field" : prefix,
+            .flag = flag,
+            .error_message = msg
         });
     }
 }

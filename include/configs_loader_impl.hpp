@@ -50,6 +50,18 @@ int ConfigsLoader<ConfigsType>::init(int argc, char* argv[]) {
     
     applier.apply_from_cli(args.flags);
     
+    if (applier.has_errors()) {
+        std::cerr << "Configuration application failed with " << applier.get_errors().size() << " error(s):\n\n";
+        for (const auto& error : applier.get_errors()) {
+            std::cerr << "  • Validation failed for flag '" << error.flag << "'";
+            if (!error.description.empty()) {
+                std::cerr << " (" << error.description << ")";
+            }
+            std::cerr << ": value = " << error.value << "\n";
+        }
+        return 1;
+    }
+    
     if (args.has_help) {
         std::cout << generate_help(args.help_filter) << std::endl;
         std::exit(0);

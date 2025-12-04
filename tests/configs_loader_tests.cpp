@@ -208,6 +208,41 @@ TEST_F(ConfigsLoaderTest, MultipleRequiredFieldsReportedTogether) {
     EXPECT_NE(error_output.find("--field3"), std::string::npos);
 }
 
+TEST_F(ConfigsLoaderTest, VerifierFailuresReported) {
+    struct ValidatedConfigs {
+        Config<int> port{
+            .default_value = 8080,
+            .flags = {"--port"},
+            .description = "Server port",
+            .verifier = [](int p) { return p > 0 && p < 65536; }
+        };
+        Config<std::string> email{
+            .default_value = "",
+            .flags = {"--email"},
+            .description = "Contact email",
+            .verifier = [](const std::string& e) { return e.find('@') != std::string::npos; }
+        };
+        REGISTER_CONFIG_FIELDS(port, email)
+    };
+    
+    ConfigsLoader<ValidatedConfigs> loader;
+    const char* argv[] = {"prog", "--port", "99999", "--email", "invalid"};
+    
+    testing::internal::CaptureStderr();
+    const int result = loader.init(5, const_cast<char**>(argv));
+    const std::string error_output = testing::internal::GetCapturedStderr();
+    
+    EXPECT_EQ(result, 1);
+    EXPECT_FALSE(loader.is_initialized());
+    EXPECT_NE(error_output.find("2 error(s)"), std::string::npos);
+    EXPECT_NE(error_output.find("--port"), std::string::npos);
+    EXPECT_NE(error_output.find("Server port"), std::string::npos);
+    EXPECT_NE(error_output.find("99999"), std::string::npos);
+    EXPECT_NE(error_output.find("--email"), std::string::npos);
+    EXPECT_NE(error_output.find("Contact email"), std::string::npos);
+    EXPECT_NE(error_output.find("invalid"), std::string::npos);
+}
+
 TEST_F(ConfigsLoaderTest, ConfigGroupImplicitConversionWorks) {
     struct NestedConfig {
         Config<int> value{
