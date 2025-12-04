@@ -201,6 +201,15 @@ timeout = 60
 ./myapp --preset production.toml --port 5433
 ```
 
+**Built-in Flags**
+
+The library provides several reserved flags:
+
+- `--help, -h` - Show help message (exits after displaying)
+- `--preset, -p <file>` - Load configuration from preset file
+- `--print-config` - Print current config to stdout (only changes from defaults)
+- `--print-config-verbose` - Print current config to stdout (all values)
+
 **Preset Building Loop**
 
 Iteratively build and refine preset files:
