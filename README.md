@@ -238,12 +238,22 @@ Iteratively build and refine preset files:
 ./myapp --preset prod.toml --print-config-verbose > full-config.toml
 ```
 
-**Flexible Input Methods**
+**Flexible CLI Syntax**
+
+Multiple syntax styles supported:
 
 ```bash
+# Space-separated
 ./myapp --host localhost --port 8080
-./myapp --host=localhost -p 8080
-./myapp -h localhost --port 8080 --verbose true
+
+# Equals syntax
+./myapp --host=localhost --port=8080
+
+# Short flags
+./myapp -h localhost -p 8080
+
+# Mixed
+./myapp --host=localhost -p 8080 --verbose true
 ```
 
 ## Quick Start
