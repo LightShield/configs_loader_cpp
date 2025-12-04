@@ -55,15 +55,17 @@ All convenience features compile to identical assembly as direct access:
 int v1 = loader.configs.group.config.value.value;           // Direct
 const NestedConfig& nested = loader.configs.group;          // Implicit conversion
 int v2 = nested.value.value;
-std::string name = loader.configs.group.get_name();         // Helper method
 
-// All compile to identical assembly:
-// ldr w0, [x0, #96]    // Load value
-// ret
+// Both compile to identical assembly:
+ldr w0, [x0, #96]
+ret
 
-// get_name() compiles to:
-// add x0, x0, #8       // Offset to name_ member
-// ret
+// Helper method also optimizes away:
+std::string name = loader.configs.group.get_name();
+
+// Compiles to:
+add x0, x0, #104
+ret
 ```
 
 ### For Developers
