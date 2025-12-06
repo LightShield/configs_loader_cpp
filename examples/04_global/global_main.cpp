@@ -1,6 +1,8 @@
 #include "global_configs.hpp"
 #include <iostream>
 
+using namespace lightshield::config;
+
 // Define the global config loader
 ConfigsLoader<AppConfigs> g_config_loader;
 

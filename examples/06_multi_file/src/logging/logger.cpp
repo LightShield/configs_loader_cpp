@@ -2,6 +2,8 @@
 #include <iostream>
 #include <ctime>
 
+using namespace lightshield::config;
+
 Logger::Logger(const LoggingConfig& config) : config_(config) {}
 
 void Logger::log(int level, const std::string& message) {

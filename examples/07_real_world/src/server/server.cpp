@@ -1,6 +1,8 @@
 #include "server/server.hpp"
 #include <iostream>
 
+using namespace lightshield::config;
+
 Server::Server(const ServerConfig& config) 
     : port_(config.port.value)  // Reference to value
     , db_(config.database.config)

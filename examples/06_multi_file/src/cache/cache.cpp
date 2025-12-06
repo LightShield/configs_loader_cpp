@@ -1,6 +1,8 @@
 #include "cache.hpp"
 #include <iostream>
 
+using namespace lightshield::config;
+
 Cache::Cache(const CacheConfig& config) : config_(config) {}
 
 void Cache::connect() {

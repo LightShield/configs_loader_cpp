@@ -1,6 +1,8 @@
 #include "database.hpp"
 #include <iostream>
 
+using namespace lightshield::config;
+
 Database::Database(const DatabaseConfig& config) : config_(config) {}
 
 void Database::connect() {
