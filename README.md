@@ -56,7 +56,7 @@ ctest  # Run 63 tests
 - Optional: toml++ for TOML preset support
 
 
-## Design Philosophy 
+## Design Philosophy & Implementation Approach 
 The philosophy can be summed up in one sentence - `Data-Oriented Design` for performance in the hot path, `Object-Oriented Programming` for extensibility & maintainability in other cases.
 
 ### Make the Common Case Go Brrrr
