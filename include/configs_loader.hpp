@@ -7,6 +7,8 @@
 #include <optional>
 #include <string>
 
+namespace lightshield::config {
+
 // Current macro - requires listing all fields (C++20)
 #define REGISTER_CONFIG_FIELDS(...) \
     auto get_fields() { \
@@ -53,6 +55,8 @@ public:
 private:
     bool m_initialized = false;
 };
+
+}  // namespace lightshield::config
 
 // Include implementation
 #include "configs_loader_impl.hpp"

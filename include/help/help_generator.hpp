@@ -6,6 +6,8 @@
 #include <string>
 #include <vector>
 
+namespace lightshield::config {
+
 struct HelpFormat {
     std::string program_name = "program";
     bool use_colors = true;
@@ -54,5 +56,7 @@ private:
     template<typename T> void collect_group_names_from_field(const Config<T>& field, std::vector<std::string>& names, const std::string& prefix) const;
     template<typename T> void collect_group_names_from_field(const ConfigGroup<T>& group, std::vector<std::string>& names, const std::string& prefix) const;
 };
+
+}  // namespace lightshield::config
 
 #include "help_generator_impl.hpp"

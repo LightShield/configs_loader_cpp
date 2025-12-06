@@ -1,5 +1,7 @@
 #pragma once
 
+namespace lightshield::config {
+
 template<typename ConfigsType>
 std::string HelpGenerator<ConfigsType>::generate(const std::string& filter) const {
     if (!filter.empty()) {
@@ -328,3 +330,5 @@ std::string HelpGenerator<ConfigsType>::generate_filters() const {
     
     return help.str();
 }
+
+}  // namespace lightshield::config

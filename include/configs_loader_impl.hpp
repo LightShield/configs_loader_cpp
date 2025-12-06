@@ -18,6 +18,8 @@
 #include "serialization/serializer_factory.hpp"
 #include "validation/config_validator.hpp"
 
+namespace lightshield::config {
+
 template<typename ConfigsType>
 ConfigsLoader<ConfigsType>::ConfigsLoader(int argc, char* argv[]) {
     if (init(argc, argv) != 0) {
@@ -103,3 +105,5 @@ std::string ConfigsLoader<ConfigsType>::generate_help(const std::string& filter,
 }
 
 
+
+}  // namespace lightshield::config

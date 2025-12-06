@@ -5,6 +5,9 @@
 #include <stdexcept>
 #include <string>
 
+namespace lightshield::config {
+
+
 class PresetDeserializer {
 public:
     virtual ~PresetDeserializer() = default;
@@ -18,3 +21,5 @@ public:
 };
 
 std::unique_ptr<PresetDeserializer> create_preset_deserializer(const std::string& file_path);
+
+}  // namespace lightshield::config

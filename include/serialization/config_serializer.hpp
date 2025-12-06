@@ -3,6 +3,9 @@
 #include <string>
 #include <sstream>
 
+namespace lightshield::config {
+
+
 template<typename ConfigsType>
 class ConfigSerializer {
 public:
@@ -13,3 +16,5 @@ protected:
     template<typename T> void serialize_field(std::ostringstream& out, const Config<T>& field, bool only_changes) const;
     template<typename T> void serialize_field(std::ostringstream& out, const ConfigGroup<T>& group, bool only_changes) const;
 };
+
+}  // namespace lightshield::config

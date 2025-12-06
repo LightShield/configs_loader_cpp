@@ -2,6 +2,9 @@
 
 #include "config_serializer.hpp"
 
+namespace lightshield::config {
+
+
 template<typename ConfigsType>
 class TomlSerializer : public ConfigSerializer<ConfigsType> {
 public:
@@ -59,3 +62,5 @@ void TomlSerializer<ConfigsType>::serialize_field(std::ostringstream& out, const
         ((serialize_field(out, field, only_changes)), ...);
     }, fields);
 }
+
+}  // namespace lightshield::config

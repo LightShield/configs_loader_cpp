@@ -4,6 +4,9 @@
 #include <string>
 #include <unordered_map>
 
+namespace lightshield::config {
+
+
 struct ParsedArguments {
     std::unordered_map<std::string, std::string> flags;
     std::optional<std::string> preset_path;
@@ -17,5 +20,7 @@ class CliArgumentParser {
 public:
     static ParsedArguments parse(int argc, char* argv[]);
 };
+
+}  // namespace lightshield::config
 
 #include "cli_argument_parser_impl.hpp"

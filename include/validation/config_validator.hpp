@@ -3,6 +3,9 @@
 #include <string>
 #include <vector>
 
+namespace lightshield::config {
+
+
 struct ValidationError {
     std::string field_name;
     std::string flag;
@@ -28,5 +31,7 @@ private:
     template<typename T> void check_reserved_flags(const Config<T>& field);
     template<typename T> void check_reserved_flags(const ConfigGroup<T>& group);
 };
+
+}  // namespace lightshield::config
 
 #include "config_validator_impl.hpp"

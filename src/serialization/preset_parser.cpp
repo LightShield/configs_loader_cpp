@@ -2,6 +2,8 @@
 #include "serialization/toml_deserializer.hpp"
 #include <filesystem>
 
+namespace lightshield::config {
+
 std::unique_ptr<PresetDeserializer> create_preset_deserializer(const std::string& file_path) {
     std::filesystem::path path(file_path);
     std::string ext = path.extension().string();
@@ -16,3 +18,5 @@ std::unique_ptr<PresetDeserializer> create_preset_deserializer(const std::string
     
     throw std::runtime_error("Unsupported preset file format: " + ext);
 }
+
+}  // namespace lightshield::config

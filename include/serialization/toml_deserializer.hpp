@@ -7,6 +7,8 @@
 #include <toml++/toml.h>
 #include <memory>
 
+namespace lightshield::config {
+
 class TomlDeserializer : public PresetDeserializer {
 public:
     void parse_file(const std::string& path) override;
@@ -19,5 +21,7 @@ public:
 private:
     std::unique_ptr<toml::table> m_table;
 };
+
+}  // namespace lightshield::config
 
 #endif

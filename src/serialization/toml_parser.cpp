@@ -2,6 +2,8 @@
 
 #ifdef CONFIGS_LOADER_ENABLE_TOML
 
+namespace lightshield::config {
+
 void TomlDeserializer::parse_file(const std::string& path) {
     try {
         m_table = std::make_unique<toml::table>(toml::parse_file(path));
@@ -45,5 +47,7 @@ std::optional<double> TomlDeserializer::get_double(const std::string& key) const
     }
     return std::nullopt;
 }
+
+}  // namespace lightshield::config
 
 #endif

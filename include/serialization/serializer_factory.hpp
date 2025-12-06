@@ -6,6 +6,9 @@
 #include "toml_serializer.hpp"
 #include <memory>
 
+namespace lightshield::config {
+
+
 template<typename ConfigsType>
 class SerializerFactory {
 public:
@@ -19,3 +22,5 @@ public:
         return nullptr;
     }
 };
+
+}  // namespace lightshield::config

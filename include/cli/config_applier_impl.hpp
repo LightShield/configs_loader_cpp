@@ -5,6 +5,8 @@
 #include <algorithm>
 #include <type_traits>
 
+namespace lightshield::config {
+
 template<typename ConfigsType>
 void ConfigApplier<ConfigsType>::apply_from_cli(const std::unordered_map<std::string, std::string>& flags) {
     for (const auto& [flag, value] : flags) {
@@ -122,3 +124,5 @@ bool ConfigApplier<ConfigsType>::try_set_field(ConfigGroup<T>& group, const std:
         return (try_set_field(field, nested_flag, value) || ...);
     }, fields);
 }
+
+}  // namespace lightshield::config

@@ -3,6 +3,8 @@
 #include "config.hpp"
 #include <sstream>
 
+namespace lightshield::config {
+
 template<typename ConfigsType>
 void ConfigValidator<ConfigsType>::validate_reserved_flags() {
     m_errors.clear();
@@ -114,3 +116,5 @@ void ConfigValidator<ConfigsType>::check_reserved_flags(const ConfigGroup<T>& gr
         ((check_reserved_flags(field)), ...);
     }, fields);
 }
+
+}  // namespace lightshield::config

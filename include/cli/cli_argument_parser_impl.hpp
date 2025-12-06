@@ -1,5 +1,7 @@
 #pragma once
 
+namespace lightshield::config {
+
 inline ParsedArguments CliArgumentParser::parse(int argc, char* argv[]) {
     ParsedArguments result;
     
@@ -63,3 +65,5 @@ inline ParsedArguments CliArgumentParser::parse(int argc, char* argv[]) {
     
     return result;
 }
+
+}  // namespace lightshield::config

@@ -1,6 +1,8 @@
 #include "configs_loader.hpp"
 #include <iostream>
 
+using namespace lightshield::config;
+
 struct MyConfigs {
     Config<std::string> filename{
         .default_value = "input.txt",

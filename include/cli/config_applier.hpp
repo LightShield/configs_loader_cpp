@@ -4,6 +4,9 @@
 #include <unordered_map>
 #include <vector>
 
+namespace lightshield::config {
+
+
 // Forward declaration
 class PresetDeserializer;
 
@@ -33,5 +36,7 @@ private:
     template<typename T> void load_field(PresetDeserializer& deserializer, Config<T>& field);
     template<typename T> void load_field(PresetDeserializer& deserializer, ConfigGroup<T>& group);
 };
+
+}  // namespace lightshield::config
 
 #include "config_applier_impl.hpp"

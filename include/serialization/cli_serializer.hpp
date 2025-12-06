@@ -2,6 +2,9 @@
 
 #include "config_serializer.hpp"
 
+namespace lightshield::config {
+
+
 template<typename ConfigsType>
 class CliSerializer : public ConfigSerializer<ConfigsType> {
 public:
@@ -52,3 +55,5 @@ void CliSerializer<ConfigsType>::serialize_field(std::ostringstream& out, const 
         ((serialize_field(out, field, only_changes)), ...);
     }, fields);
 }
+
+}  // namespace lightshield::config
