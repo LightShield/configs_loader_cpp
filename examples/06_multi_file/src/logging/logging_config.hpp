@@ -1,6 +1,8 @@
 #pragma once
 #include "configs_loader.hpp"
 
+using namespace lightshield::config;
+
 struct LoggingConfig {
     Config<int> level{
         .default_value = 2,

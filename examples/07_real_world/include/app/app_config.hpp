@@ -2,6 +2,8 @@
 #include "configs_loader.hpp"
 #include "server/server_config.hpp"
 
+using namespace lightshield::config;
+
 struct AppConfig {
     // Two servers with different default ports (compile-time via designated initializers)
     ConfigGroup<ServerConfig> api_server{

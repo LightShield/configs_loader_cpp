@@ -2,6 +2,8 @@
 #include "logging_config.hpp"
 #include <string>
 
+using namespace lightshield::config;
+
 // Logger module - only knows about LoggingConfig, not where it comes from
 class Logger {
 public:

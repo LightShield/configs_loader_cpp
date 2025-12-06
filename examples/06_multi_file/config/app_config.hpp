@@ -3,6 +3,8 @@
 #include "../src/server/server_config.hpp"
 #include "../src/logging/logging_config.hpp"
 
+using namespace lightshield::config;
+
 struct AppConfig {
     CONFIG_GROUP(ServerConfig, server);
     CONFIG_GROUP(LoggingConfig, logging);

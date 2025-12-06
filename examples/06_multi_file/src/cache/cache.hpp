@@ -2,6 +2,8 @@
 #include "cache_config.hpp"
 #include <string>
 
+using namespace lightshield::config;
+
 // Cache module - only knows about CacheConfig, not where it comes from
 class Cache {
 public:

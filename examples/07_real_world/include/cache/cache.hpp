@@ -2,6 +2,8 @@
 #include "cache_config.hpp"
 #include <string>
 
+using namespace lightshield::config;
+
 // Pattern 2: Copy values during construction (snapshot, won't see config changes)
 class Cache {
 public:

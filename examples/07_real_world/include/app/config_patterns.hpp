@@ -2,6 +2,8 @@
 #include "cache/cache_config.hpp"
 #include <string>
 
+using namespace lightshield::config;
+
 // Pattern 1: Hold config reference (most flexible)
 class CachePattern1 {
 public:

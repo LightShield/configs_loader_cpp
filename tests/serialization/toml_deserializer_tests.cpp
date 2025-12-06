@@ -2,6 +2,8 @@
 #include <gtest/gtest.h>
 #include <fstream>
 
+using namespace lightshield::config;
+
 #ifdef CONFIGS_LOADER_ENABLE_TOML
 
 // Learning tests for toml++ library

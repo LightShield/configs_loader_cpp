@@ -3,6 +3,8 @@
 #include "configs_loader.hpp"
 #include <stdexcept>
 
+using namespace lightshield::config;
+
 // Define your config structure
 struct AppConfigs {
     Config<std::string> filename{

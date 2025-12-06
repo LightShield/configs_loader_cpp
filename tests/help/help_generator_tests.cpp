@@ -1,6 +1,8 @@
 #include "configs_loader.hpp"
 #include <gtest/gtest.h>
 
+using namespace lightshield::config;
+
 class HelpGeneratorTest : public ::testing::Test {
 protected:
     struct TestConfigs {

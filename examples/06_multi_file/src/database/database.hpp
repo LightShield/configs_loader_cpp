@@ -2,6 +2,8 @@
 #include "database_config.hpp"
 #include <string>
 
+using namespace lightshield::config;
+
 // Database module - only knows about DatabaseConfig, not where it comes from
 class Database {
 public:

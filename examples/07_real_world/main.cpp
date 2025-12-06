@@ -2,6 +2,8 @@
 #include "server/server.hpp"
 #include <iostream>
 
+using namespace lightshield::config;
+
 int main(int argc, char* argv[]) {
     ConfigsLoader<AppConfig> loader;
     

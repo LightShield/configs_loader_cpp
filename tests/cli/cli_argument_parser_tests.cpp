@@ -1,6 +1,8 @@
 #include "cli/cli_argument_parser.hpp"
 #include <gtest/gtest.h>
 
+using namespace lightshield::config;
+
 class CliArgumentParserTest : public ::testing::Test {};
 
 TEST_F(CliArgumentParserTest, ParsesLongFlagWithSpace) {

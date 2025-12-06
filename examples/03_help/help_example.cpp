@@ -1,6 +1,8 @@
 #include "configs_loader.hpp"
 #include <iostream>
 
+using namespace lightshield::config;
+
 struct AppConfigs {
     Config<std::string> database{
         .default_value = "localhost:5432",

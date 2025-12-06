@@ -3,6 +3,8 @@
 #include "../database/database_config.hpp"
 #include "../cache/cache_config.hpp"
 
+using namespace lightshield::config;
+
 struct ServerConfig {
     CONFIG_GROUP(DatabaseConfig, primary_db);
     CONFIG_GROUP(DatabaseConfig, replica_db);

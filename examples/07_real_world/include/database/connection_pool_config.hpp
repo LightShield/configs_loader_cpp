@@ -1,6 +1,8 @@
 #pragma once
 #include "configs_loader.hpp"
 
+using namespace lightshield::config;
+
 struct ConnectionPoolConfig {
     Config<int> min_connections{
         .default_value = 5,

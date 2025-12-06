@@ -3,6 +3,8 @@
 #include "database/database.hpp"
 #include "cache/cache.hpp"
 
+using namespace lightshield::config;
+
 // Pattern 3: Hold references to individual config values (reactive to changes)
 class Server {
 public:

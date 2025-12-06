@@ -1,6 +1,8 @@
 #include "config.hpp"
 #include <gtest/gtest.h>
 
+using namespace lightshield::config;
+
 TEST(ConfigTest, DefaultValueIsSet) {
     Config<int> field{.default_value = 42};
     EXPECT_EQ(field.value, 42);

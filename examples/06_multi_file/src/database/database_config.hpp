@@ -1,6 +1,8 @@
 #pragma once
 #include "configs_loader.hpp"
 
+using namespace lightshield::config;
+
 struct DatabaseConfig {
     Config<std::string> host{
         .default_value = "localhost",
