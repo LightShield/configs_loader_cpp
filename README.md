@@ -10,6 +10,52 @@ ConfigsLoader delivers **high-performance configuration management**, while **pu
 **Developer**: Type-safe structs, hierarchical configs, input validation & simple API  
 **End-User**: Interactive help, preset files, validation errors with descriptions
 
+
+## Quick Start
+
+```cpp
+#include "configs_loader.hpp"
+
+struct MyConfig {
+    Config<std::string> input{
+        .default_value = "input.txt",
+        .flags = {"--input", "-i"},
+        .required = true,
+        .description = "Input file path"
+    };
+    REGISTER_CONFIG_FIELDS(input)
+};
+
+int main(int argc, char* argv[]) {
+    ConfigsLoader<MyConfig> loader;
+    if (loader.init(argc, argv) != 0) {
+        return 1;
+    }
+    
+    std::string input = loader.configs.input.value;
+    // ... business logic
+    return 0;
+}
+```
+
+
+## Building
+
+```bash
+mkdir build && cd build
+cmake .. -DENABLE_TOML_PRESETS=ON
+cmake --build .
+ctest  # Run 63 tests
+```
+
+
+## Requirements
+
+- C++20 or later
+- CMake 3.14+
+- Optional: toml++ for TOML preset support
+
+
 ## Design Philosophy 
 The philosophy can be summed up in one sentence - `Data-Oriented Design` for performance in the hot path, `Object-Oriented Programming` for extensibility & maintainability in other cases.
 
@@ -31,6 +77,7 @@ Instead, this library utilizes compile-time knowledge for performance boosts via
 ### Focus on User Experience for Non-Critical Paths
 
 While optimizing the hot path, the library focuses on ease of use for non-performance-critical scenarios like initialization, updating configs and user interaction. This is mainly expressed in the API and internal design for all features other than configuration reads (configuration updates, input validation, help generation, etc.).
+
 
 ## Features by User
 
@@ -287,32 +334,6 @@ Multiple syntax styles supported:
 ./myapp --host=localhost --port 8080 --verbose true
 ```
 
-## Quick Start
-
-```cpp
-#include "configs_loader.hpp"
-
-struct MyConfig {
-    Config<std::string> input{
-        .default_value = "input.txt",
-        .flags = {"--input", "-i"},
-        .required = true,
-        .description = "Input file path"
-    };
-    REGISTER_CONFIG_FIELDS(input)
-};
-
-int main(int argc, char* argv[]) {
-    ConfigsLoader<MyConfig> loader;
-    if (loader.init(argc, argv) != 0) {
-        return 1;
-    }
-    
-    std::string input = loader.configs.input.value;
-    // ... business logic
-    return 0;
-}
-```
 
 ## Performance Characteristics
 
@@ -322,6 +343,7 @@ int main(int argc, char* argv[]) {
 | Init (parse + validate) | O(n + f) | n=argc, f=fields (once at startup) |
 | Help generation | O(f) | f=fields (only when requested) |
 | Serialization | O(f) | f=fields (only when requested) |
+
 
 ## Module Architecture
 
@@ -342,6 +364,7 @@ graph TD
 Serialization uses Factory pattern for creation and Strategy pattern for format extensibility.
 
 Initialization helpers are ephemeral to minimize memory footprint during business logic execution.
+
 
 ## Design Decisions
 
@@ -379,20 +402,6 @@ Struct-based design allows:
 
 Inheritance was my first solution because there's no vtable overhead when there's no virtual functionality in the hierarchy. However, C++ doesn't allow designated initializers on types with base classes. I prefer the better developer experience with partial initialization to only change default values of repeated config structs at the cost of lib-internal function overloading. 
 
-## Building
-
-```bash
-mkdir build && cd build
-cmake .. -DENABLE_TOML_PRESETS=ON
-cmake --build .
-ctest  # Run 63 tests
-```
-
-## Requirements
-
-- C++20 or later
-- CMake 3.14+
-- Optional: toml++ for TOML preset support
 
 ## [[maybe_unused]] Future Enhancements
 
