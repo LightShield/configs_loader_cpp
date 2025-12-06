@@ -10,11 +10,12 @@ ConfigsLoader delivers **high-performance configuration management**, while **pu
 **Developer**: Type-safe structs, hierarchical configs, input validation & simple API  
 **End-User**: Interactive help, preset files, validation errors with descriptions
 
-## Design Philosophy
+## Design Philosophy 
+The philosophy can be summed up in one sentence - `Data-Oriented Design` for performance in the hot path, `Object-Oriented Programming` for extensibility & maintainability in other cases.
 
-### Make the Common Case go brrrr
+### Make the Common Case Go Brrrr
 
-In my experience with configuration libraries, I haven't found one that provides the combination of features I wanted: high-performance for reading configs (the common case), ease of use for developers writing the code, and good **auto-generated** --help experience, similar to python's argparse (but with more features).
+In my personal experience with configuration libraries, I haven't found one that provides the combination of features I wanted: high-performance for reading configs (the common case), ease of use for developers writing the code, and good **auto-generated** --help experience, similar to python's argparse (but with more features).
 
 **The common case**: Reading configuration values during program execution.
 
@@ -23,11 +24,13 @@ In my experience with configuration libraries, I haven't found one that provides
 int timeout = loader.configs.server.timeout.value;
 ```
 
-Configuration structure is known at compile time, yet most implementations I've encountered use runtime lookups - searching for config names in maps or similar structures. This pays a cost in the hot path for knowledge already available at compile time. This library utilizes compile-time knowledge for direct memory access.
+Configuration structure is known at compile time, yet most implementations I've encountered use runtime lookups - searching for config names in maps or similar structures. This pays a cost in the hot path for knowledge already available at compile time. 
+
+Instead, this library utilizes compile-time knowledge for performance boosts via direct memory access.
 
 ### Focus on User Experience for Non-Critical Paths
 
-While optimizing the hot path, the library focuses on ease of use for non-performance-critical scenarios like initialization, updating configs and user interaction.
+While optimizing the hot path, the library focuses on ease of use for non-performance-critical scenarios like initialization, updating configs and user interaction. This is mainly expressed in the API and internal design for all features other than configuration reads (configuration updates, input validation, help generation, etc.).
 
 ## Features by User
 
@@ -42,7 +45,7 @@ Direct struct member access. The compiler optimizes this to a single load instru
 int value = loader.configs.server.port.value;
 ```
 
-**Minimal Runtime Footprint**
+**Minimal Runtime Memory Footprint**
 
 After initialization, only config structs and an initialization flag remain in memory. All parsing, validation, and application logic is destroyed before the business logic program runs.
 
@@ -354,6 +357,7 @@ Config& Config::instance() {
     if (!initialized) { initialize(); }  // Branch on every call
     return config;
 }
+```
 
 
 This is a cost paid on every access to the API to handle a state that only happens once - the first API call, where the singleton **maybe** isn't initialized yet.
