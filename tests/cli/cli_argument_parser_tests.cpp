@@ -80,3 +80,19 @@ TEST_F(CliArgumentParserTest, MixedFlagFormats) {
     EXPECT_EQ(args.flags.at("--count"), "5");
     EXPECT_EQ(args.flags.at("--verbose"), "true");
 }
+
+TEST_F(CliArgumentParserTest, DetectsPrintConfig) {
+    const char* argv[] = {"prog", "--print-config"};
+    const ParsedArguments args = CliArgumentParser::parse(2, const_cast<char**>(argv));
+    
+    EXPECT_TRUE(args.print_config);
+    EXPECT_FALSE(args.print_config_verbose);
+}
+
+TEST_F(CliArgumentParserTest, DetectsPrintConfigVerbose) {
+    const char* argv[] = {"prog", "--print-config-verbose"};
+    const ParsedArguments args = CliArgumentParser::parse(2, const_cast<char**>(argv));
+    
+    EXPECT_FALSE(args.print_config);
+    EXPECT_TRUE(args.print_config_verbose);
+}
