@@ -1,90 +1,95 @@
 #include "configs_loader.hpp"
 #include <gtest/gtest.h>
 
-struct TestConfigs {
-    Config<std::string> filename{
-        .default_value = "default.txt", 
-        .flags = {"--file", "-f"},
-        .description = "Input file to process"
-    };
-    Config<int> count{
-        .default_value = 10, 
-        .flags = {"--count", "-c"},
-        .description = "Number of iterations"
-    };
-    Config<bool> verbose{
-        .default_value = false, 
-        .flags = {"--verbose", "-v"},
-        .description = "Enable verbose output"
-    };
+using namespace lightshield::config;
 
-    REGISTER_CONFIG_FIELDS(filename, count, verbose)
+class ConfigsLoaderTest : public ::testing::Test {
+protected:
+    struct TestConfigs {
+        Config<std::string> filename{
+            .default_value = "default.txt", 
+            .flags = {"--file", "-f"},
+            .description = "Input file to process"
+        };
+        Config<int> count{
+            .default_value = 10, 
+            .flags = {"--count", "-c"},
+            .description = "Number of iterations"
+        };
+        Config<bool> verbose{
+            .default_value = false, 
+            .flags = {"--verbose", "-v"},
+            .description = "Enable verbose output"
+        };
+
+        REGISTER_CONFIG_FIELDS(filename, count, verbose)
+    };
 };
 
-TEST(ConfigsLoaderTest, DefaultConstructorUsesDefaults) {
+TEST_F(ConfigsLoaderTest, DefaultConstructorUsesDefaults) {
     ConfigsLoader<TestConfigs> loader;
     EXPECT_EQ(loader.configs.filename.value, "default.txt");
     EXPECT_EQ(loader.configs.count.value, 10);
     EXPECT_FALSE(loader.configs.verbose.value);
 }
 
-TEST(ConfigsLoaderTest, ParsesLongFlagWithSpace) {
+TEST_F(ConfigsLoaderTest, ParsesLongFlagWithSpace) {
     const char* argv[] = {"prog", "--file", "test.txt"};
     ConfigsLoader<TestConfigs> loader(3, const_cast<char**>(argv));
     EXPECT_EQ(loader.configs.filename.value, "test.txt");
 }
 
-TEST(ConfigsLoaderTest, ParsesShortFlagWithSpace) {
-    const char* argv[] = {"prog", "-f", "short.txt"};
+TEST_F(ConfigsLoaderTest, ParsesShortFlagWithSpace) {
+    const char* argv[] = {"prog", "-f", "test.txt"};
     ConfigsLoader<TestConfigs> loader(3, const_cast<char**>(argv));
-    EXPECT_EQ(loader.configs.filename.value, "short.txt");
+    EXPECT_EQ(loader.configs.filename.value, "test.txt");
 }
 
-TEST(ConfigsLoaderTest, ParsesLongFlagWithEquals) {
-    const char* argv[] = {"prog", "--file=equals.txt"};
+TEST_F(ConfigsLoaderTest, ParsesLongFlagWithEquals) {
+    const char* argv[] = {"prog", "--file=test.txt"};
     ConfigsLoader<TestConfigs> loader(2, const_cast<char**>(argv));
-    EXPECT_EQ(loader.configs.filename.value, "equals.txt");
+    EXPECT_EQ(loader.configs.filename.value, "test.txt");
 }
 
-TEST(ConfigsLoaderTest, ParsesIntegerValue) {
+TEST_F(ConfigsLoaderTest, ParsesIntegerValue) {
     const char* argv[] = {"prog", "--count", "42"};
     ConfigsLoader<TestConfigs> loader(3, const_cast<char**>(argv));
     EXPECT_EQ(loader.configs.count.value, 42);
 }
 
-TEST(ConfigsLoaderTest, ParsesBooleanTrue) {
+TEST_F(ConfigsLoaderTest, ParsesBooleanTrue) {
     const char* argv[] = {"prog", "--verbose", "true"};
     ConfigsLoader<TestConfigs> loader(3, const_cast<char**>(argv));
     EXPECT_TRUE(loader.configs.verbose.value);
 }
 
-TEST(ConfigsLoaderTest, ParsesBooleanOne) {
-    const char* argv[] = {"prog", "-v", "1"};
+TEST_F(ConfigsLoaderTest, ParsesBooleanOne) {
+    const char* argv[] = {"prog", "--verbose", "1"};
     ConfigsLoader<TestConfigs> loader(3, const_cast<char**>(argv));
     EXPECT_TRUE(loader.configs.verbose.value);
 }
 
-TEST(ConfigsLoaderTest, ParsesMultipleArguments) {
-    const char* argv[] = {"prog", "--file", "multi.txt", "--count", "99", "-v", "true"};
+TEST_F(ConfigsLoaderTest, ParsesMultipleArguments) {
+    const char* argv[] = {"prog", "--file", "test.txt", "--count", "5", "--verbose", "true"};
     ConfigsLoader<TestConfigs> loader(7, const_cast<char**>(argv));
-    EXPECT_EQ(loader.configs.filename.value, "multi.txt");
-    EXPECT_EQ(loader.configs.count.value, 99);
+    EXPECT_EQ(loader.configs.filename.value, "test.txt");
+    EXPECT_EQ(loader.configs.count.value, 5);
     EXPECT_TRUE(loader.configs.verbose.value);
 }
 
-TEST(ConfigsLoaderTest, LastValueWinsForDuplicates) {
-    const char* argv[] = {"prog", "--count", "10", "--count", "20"};
+TEST_F(ConfigsLoaderTest, LastValueWinsForDuplicates) {
+    const char* argv[] = {"prog", "--count", "5", "--count", "10"};
     ConfigsLoader<TestConfigs> loader(5, const_cast<char**>(argv));
-    EXPECT_EQ(loader.configs.count.value, 20);
+    EXPECT_EQ(loader.configs.count.value, 10);
 }
 
-TEST(ConfigsLoaderTest, UnknownFlagsAreIgnored) {
-    const char* argv[] = {"prog", "--unknown", "value", "--file", "known.txt"};
+TEST_F(ConfigsLoaderTest, UnknownFlagsAreIgnored) {
+    const char* argv[] = {"prog", "--unknown", "value", "--file", "test.txt"};
     ConfigsLoader<TestConfigs> loader(5, const_cast<char**>(argv));
-    EXPECT_EQ(loader.configs.filename.value, "known.txt");
+    EXPECT_EQ(loader.configs.filename.value, "test.txt");
 }
 
-TEST(ConfigsLoaderTest, RequiredFieldThrowsWhenNotSet) {
+TEST_F(ConfigsLoaderTest, RequiredFieldThrowsWhenNotSet) {
     struct RequiredConfigs {
         Config<std::string> required_field{
             .default_value = "",
@@ -92,249 +97,206 @@ TEST(ConfigsLoaderTest, RequiredFieldThrowsWhenNotSet) {
             .required = true
         };
         REGISTER_CONFIG_FIELDS(required_field)
-    };
-    
-    const char* argv[] = {"prog"};
-    EXPECT_THROW({
-        ConfigsLoader<RequiredConfigs> loader(1, const_cast<char**>(argv));
-    }, std::runtime_error);
-}
-
-TEST(ConfigsLoaderTest, RequiredFieldDoesNotThrowWhenSet) {
-    struct RequiredConfigs {
-        Config<std::string> required_field{
-            .default_value = "",
-            .flags = {"--required"},
-            .required = true
-        };
-        REGISTER_CONFIG_FIELDS(required_field)
-    };
-    
-    const char* argv[] = {"prog", "--required", "value"};
-    EXPECT_NO_THROW({
-        ConfigsLoader<RequiredConfigs> loader(3, const_cast<char**>(argv));
-    });
-}
-
-TEST(ConfigsLoaderTest, MixedFlagFormats) {
-    const char* argv[] = {"prog", "--file=mixed.txt", "-c", "50"};
-    ConfigsLoader<TestConfigs> loader(4, const_cast<char**>(argv));
-    EXPECT_EQ(loader.configs.filename.value, "mixed.txt");
-    EXPECT_EQ(loader.configs.count.value, 50);
-}
-
-TEST(ConfigsLoaderTest, PresetFlagIsReserved) {
-    struct BadConfigs {
-        Config<std::string> preset{
-            .default_value = "",
-            .flags = {"--preset"}
-        };
-        REGISTER_CONFIG_FIELDS(preset)
-    };
-    
-    const char* argv[] = {"prog"};
-    EXPECT_THROW({
-        ConfigsLoader<BadConfigs> loader(1, const_cast<char**>(argv));
-    }, std::runtime_error);
-}
-
-TEST(ConfigsLoaderTest, PresetShortFlagIsReserved) {
-    struct BadConfigs {
-        Config<std::string> my_preset{
-            .default_value = "",
-            .flags = {"-p"}
-        };
-        REGISTER_CONFIG_FIELDS(my_preset)
-    };
-    
-    const char* argv[] = {"prog"};
-    EXPECT_THROW({
-        ConfigsLoader<BadConfigs> loader(1, const_cast<char**>(argv));
-    }, std::runtime_error);
-}
-
-TEST(ConfigsLoaderTest, IsNotInitializedByDefault) {
-    ConfigsLoader<TestConfigs> loader;
-    EXPECT_FALSE(loader.is_initialized());
-}
-
-TEST(ConfigsLoaderTest, IsInitializedAfterInit) {
-    const char* argv[] = {"prog", "--file", "test.txt"};
-    ConfigsLoader<TestConfigs> loader;
-    loader.init(3, const_cast<char**>(argv));
-    EXPECT_TRUE(loader.is_initialized());
-}
-
-TEST(ConfigsLoaderTest, GenerateHelpIncludesAllFields) {
-    ConfigsLoader<TestConfigs> loader;
-    std::string help = loader.generate_help("test_prog");
-    
-    EXPECT_NE(help.find("test_prog"), std::string::npos);
-    EXPECT_NE(help.find("--file"), std::string::npos);
-    EXPECT_NE(help.find("-f"), std::string::npos);
-    EXPECT_NE(help.find("--count"), std::string::npos);
-    EXPECT_NE(help.find("-c"), std::string::npos);
-    EXPECT_NE(help.find("--verbose"), std::string::npos);
-    EXPECT_NE(help.find("-v"), std::string::npos);
-    EXPECT_NE(help.find("--preset"), std::string::npos);
-}
-
-TEST(ConfigsLoaderTest, GenerateHelpShowsDefaults) {
-    ConfigsLoader<TestConfigs> loader;
-    std::string help = loader.generate_help();
-    
-    EXPECT_NE(help.find("default: \"default.txt\""), std::string::npos);
-    EXPECT_NE(help.find("default: 10"), std::string::npos);
-    EXPECT_NE(help.find("default: false"), std::string::npos);
-}
-
-TEST(ConfigsLoaderTest, GenerateHelpMarksRequired) {
-    struct RequiredConfigs {
-        Config<std::string> required_field{
-            .default_value = "",
-            .flags = {"--required"},
-            .required = true,
-            .description = "A required configuration field"
-        };
-        Config<std::string> optional_field{
-            .default_value = "opt",
-            .flags = {"--optional"},
-            .description = "An optional configuration field"
-        };
-        REGISTER_CONFIG_FIELDS(required_field, optional_field)
     };
     
     ConfigsLoader<RequiredConfigs> loader;
-    std::string help = loader.generate_help();
-    
-    // Find the Options section
-    size_t options_start = help.find("Options:");
-    ASSERT_NE(options_start, std::string::npos);
-    
-    // Search only within the Options section
-    std::string options_section = help.substr(options_start);
-    
-    // Check that [Required] and --required both appear
-    EXPECT_NE(options_section.find("[Required]"), std::string::npos);
-    EXPECT_NE(options_section.find("--required"), std::string::npos);
-    
-    // Check ordering within options section
-    size_t help_pos = options_section.find("--help");
-    size_t preset_pos = options_section.find("--preset");
-    size_t required_marker_pos = options_section.find("[Required]");
-    size_t optional_pos = options_section.find("--optional");
-    
-    EXPECT_LT(help_pos, preset_pos);
-    EXPECT_LT(preset_pos, required_marker_pos);
-    EXPECT_LT(required_marker_pos, optional_pos);
-    
-    // Check descriptions appear
-    EXPECT_NE(help.find("A required configuration field"), std::string::npos);
-    EXPECT_NE(help.find("An optional configuration field"), std::string::npos);
+    const char* argv[] = {"prog"};
+    EXPECT_EQ(loader.init(1, const_cast<char**>(argv)), 1);
+    EXPECT_FALSE(loader.is_initialized());
 }
 
-TEST(ConfigsLoaderTest, GenerateHelpShowsDefaultDescriptionWhenMissing) {
-    struct NoDescConfigs {
+TEST_F(ConfigsLoaderTest, RequiredFieldDoesNotThrowWhenSet) {
+    struct RequiredConfigs {
+        Config<std::string> required_field{
+            .default_value = "",
+            .flags = {"--required"},
+            .required = true
+        };
+        REGISTER_CONFIG_FIELDS(required_field)
+    };
+    
+    ConfigsLoader<RequiredConfigs> loader;
+    const char* argv[] = {"prog", "--required", "value"};
+    EXPECT_EQ(loader.init(3, const_cast<char**>(argv)), 0);
+    EXPECT_TRUE(loader.is_initialized());
+    EXPECT_EQ(loader.configs.required_field.value, "value");
+}
+
+TEST_F(ConfigsLoaderTest, MixedFlagFormats) {
+    const char* argv[] = {"prog", "-f", "test.txt", "--count=5", "--verbose", "true"};
+    ConfigsLoader<TestConfigs> loader(6, const_cast<char**>(argv));
+    EXPECT_EQ(loader.configs.filename.value, "test.txt");
+    EXPECT_EQ(loader.configs.count.value, 5);
+    EXPECT_TRUE(loader.configs.verbose.value);
+}
+
+TEST_F(ConfigsLoaderTest, PresetFlagIsReserved) {
+    struct BadConfigs {
         Config<std::string> field{
-            .default_value = "test",
-            .flags = {"--field"}
+            .default_value = "",
+            .flags = {"--preset"}
         };
         REGISTER_CONFIG_FIELDS(field)
     };
     
-    ConfigsLoader<NoDescConfigs> loader;
-    std::string help = loader.generate_help();
-    
-    EXPECT_NE(help.find("No description provided for this config"), std::string::npos);
+    ConfigsLoader<BadConfigs> loader;
+    const char* argv[] = {"prog"};
+    EXPECT_EQ(loader.init(1, const_cast<char**>(argv)), 1);
+    EXPECT_FALSE(loader.is_initialized());
 }
 
-TEST(ConfigsLoaderTest, DumpConfigsShowsAllValues) {
+TEST_F(ConfigsLoaderTest, IsNotInitializedByDefault) {
     ConfigsLoader<TestConfigs> loader;
-    const char* argv[] = {"prog", "--file", "custom.txt", "--count", "42"};
-    loader.init(5, const_cast<char**>(argv));
+    EXPECT_FALSE(loader.is_initialized());
+}
+
+TEST_F(ConfigsLoaderTest, IsInitializedAfterInit) {
+    ConfigsLoader<TestConfigs> loader;
+    const char* argv[] = {"prog"};
+    EXPECT_EQ(loader.init(1, const_cast<char**>(argv)), 0);
+    EXPECT_TRUE(loader.is_initialized());
+}
+
+TEST_F(ConfigsLoaderTest, MultipleRequiredFieldsReportedTogether) {
+    struct MultiRequiredConfigs {
+        Config<std::string> field1{
+            .default_value = "",
+            .flags = {"--field1"},
+            .required = true,
+            .description = "First required field"
+        };
+        Config<std::string> field2{
+            .default_value = "",
+            .flags = {"--field2"},
+            .required = true,
+            .description = "Second required field"
+        };
+        Config<std::string> field3{
+            .default_value = "",
+            .flags = {"--field3"},
+            .required = true,
+            .description = "Third required field"
+        };
+        REGISTER_CONFIG_FIELDS(field1, field2, field3)
+    };
     
+    ConfigsLoader<MultiRequiredConfigs> loader;
+    const char* argv[] = {"prog"};
+    
+    testing::internal::CaptureStderr();
+    const int result = loader.init(1, const_cast<char**>(argv));
+    const std::string error_output = testing::internal::GetCapturedStderr();
+    
+    EXPECT_EQ(result, 1);
+    EXPECT_FALSE(loader.is_initialized());
+    EXPECT_NE(error_output.find("3 error(s)"), std::string::npos);
+    EXPECT_NE(error_output.find("--field1"), std::string::npos);
+    EXPECT_NE(error_output.find("--field2"), std::string::npos);
+    EXPECT_NE(error_output.find("--field3"), std::string::npos);
+}
+
+TEST_F(ConfigsLoaderTest, VerifierFailuresReported) {
+    struct ValidatedConfigs {
+        Config<int> port{
+            .default_value = 8080,
+            .flags = {"--port"},
+            .description = "Server port",
+            .verifier = [](int p) { return p > 0 && p < 65536; }
+        };
+        Config<std::string> email{
+            .default_value = "",
+            .flags = {"--email"},
+            .description = "Contact email",
+            .verifier = [](const std::string& e) { return e.find('@') != std::string::npos; }
+        };
+        REGISTER_CONFIG_FIELDS(port, email)
+    };
+    
+    ConfigsLoader<ValidatedConfigs> loader;
+    const char* argv[] = {"prog", "--port", "99999", "--email", "invalid"};
+    
+    testing::internal::CaptureStderr();
+    const int result = loader.init(5, const_cast<char**>(argv));
+    const std::string error_output = testing::internal::GetCapturedStderr();
+    
+    EXPECT_EQ(result, 1);
+    EXPECT_FALSE(loader.is_initialized());
+    EXPECT_NE(error_output.find("2 error(s)"), std::string::npos);
+    EXPECT_NE(error_output.find("--port"), std::string::npos);
+    EXPECT_NE(error_output.find("Server port"), std::string::npos);
+    EXPECT_NE(error_output.find("99999"), std::string::npos);
+    EXPECT_NE(error_output.find("--email"), std::string::npos);
+    EXPECT_NE(error_output.find("Contact email"), std::string::npos);
+    EXPECT_NE(error_output.find("invalid"), std::string::npos);
+}
+
+TEST_F(ConfigsLoaderTest, ConfigGroupImplicitConversionWorks) {
+    struct NestedConfig {
+        Config<int> value{
+            .default_value = 42,
+            .flags = {"--value"}
+        };
+        REGISTER_CONFIG_FIELDS(value)
+    };
+    
+    struct GroupedConfigs {
+        ConfigGroup<NestedConfig> group{
+            .config = {},
+            .name_ = "group"
+        };
+        REGISTER_CONFIG_FIELDS(group)
+    };
+    
+    ConfigsLoader<GroupedConfigs> loader;
+    
+    // Direct access with .config
+    EXPECT_EQ(loader.configs.group.config.value.value, 42);
+    
+    // Implicit conversion - no .config needed
+    const NestedConfig& nested = loader.configs.group;
+    EXPECT_EQ(nested.value.value, 42);
+    
+    // Access name via get_name()
+    EXPECT_EQ(loader.configs.group.get_name(), "group");
+    
+    // Direct access to name_ still works
+    EXPECT_EQ(loader.configs.group.name_, "group");
+}
+
+TEST_F(ConfigsLoaderTest, DumpConfigsShowsAllValues) {
+    ConfigsLoader<TestConfigs> loader;
     std::string dump = loader.dump_configs();
     
-    EXPECT_NE(dump.find("--file=\"custom.txt\""), std::string::npos);
-    EXPECT_NE(dump.find("--count=42"), std::string::npos);
+    EXPECT_NE(dump.find("--file=\"default.txt\""), std::string::npos);
+    EXPECT_NE(dump.find("--count=10"), std::string::npos);
     EXPECT_NE(dump.find("--verbose=false"), std::string::npos);
 }
 
-TEST(ConfigsLoaderTest, DumpConfigsOnlyChangesShowsOnlyChanges) {
-    ConfigsLoader<TestConfigs> loader;
-    const char* argv[] = {"prog", "--file", "custom.txt", "--count", "42"};
-    loader.init(5, const_cast<char**>(argv));
+TEST_F(ConfigsLoaderTest, DumpConfigsOnlyChangesShowsModified) {
+    const char* argv[] = {"prog", "--count", "42"};
+    ConfigsLoader<TestConfigs> loader(3, const_cast<char**>(argv));
+    std::string dump = loader.dump_configs(SerializationFormat::CLI, true);
     
-    std::string dump = loader.dump_configs(true);
-    
-    // Changed values should appear
-    EXPECT_NE(dump.find("--file=\"custom.txt\""), std::string::npos);
     EXPECT_NE(dump.find("--count=42"), std::string::npos);
-    
-    // Unchanged value should NOT appear
+    EXPECT_EQ(dump.find("--file"), std::string::npos);
     EXPECT_EQ(dump.find("--verbose"), std::string::npos);
 }
 
-TEST(ConfigsLoaderTest, DumpConfigsOnlyChangesEmptyWhenAllDefaults) {
+TEST_F(ConfigsLoaderTest, DumpConfigsTomlShowsAllValues) {
     ConfigsLoader<TestConfigs> loader;
-    const char* argv[] = {"prog"};
-    loader.init(1, const_cast<char**>(argv));
+    std::string dump = loader.dump_configs(SerializationFormat::TOML);
     
-    std::string dump = loader.dump_configs(true);
-    
-    // Should be empty since all values are defaults
-    EXPECT_TRUE(dump.empty() || dump.find("--") == std::string::npos);
+    EXPECT_NE(dump.find("file = \"default.txt\""), std::string::npos);
+    EXPECT_NE(dump.find("count = 10"), std::string::npos);
+    EXPECT_NE(dump.find("verbose = false"), std::string::npos);
 }
 
-TEST(ConfigsLoaderTest, DumpToTomlFormat) {
-    ConfigsLoader<TestConfigs> loader;
-    const char* argv[] = {"prog", "--file", "test.txt", "--count", "99"};
-    loader.init(5, const_cast<char**>(argv));
+TEST_F(ConfigsLoaderTest, DumpConfigsTomlOnlyChangesShowsModified) {
+    const char* argv[] = {"prog", "--count", "42"};
+    ConfigsLoader<TestConfigs> loader(3, const_cast<char**>(argv));
+    std::string dump = loader.dump_configs(SerializationFormat::TOML, true);
     
-    std::string toml = loader.dump_to_toml();
-    
-    // Should have TOML format (key = value)
-    EXPECT_NE(toml.find("file = \"test.txt\""), std::string::npos);
-    EXPECT_NE(toml.find("count = 99"), std::string::npos);
-    EXPECT_NE(toml.find("verbose = false"), std::string::npos);
+    EXPECT_NE(dump.find("count = 42"), std::string::npos);
+    EXPECT_EQ(dump.find("file"), std::string::npos);
+    EXPECT_EQ(dump.find("verbose"), std::string::npos);
 }
-
-TEST(ConfigsLoaderTest, DumpToTomlOnlyChanges) {
-    ConfigsLoader<TestConfigs> loader;
-    const char* argv[] = {"prog", "--file", "changed.txt"};
-    loader.init(3, const_cast<char**>(argv));
-    
-    std::string toml = loader.dump_to_toml(true);
-    
-    // Should only have changed value
-    EXPECT_NE(toml.find("file = \"changed.txt\""), std::string::npos);
-    EXPECT_EQ(toml.find("count"), std::string::npos);
-    EXPECT_EQ(toml.find("verbose"), std::string::npos);
-}
-
-#ifdef CONFIGS_LOADER_ENABLE_TOML
-TEST(ConfigsLoaderTest, RoundTripTomlDumpAndLoad) {
-    // Create initial config
-    ConfigsLoader<TestConfigs> loader1;
-    const char* argv[] = {"prog", "--file", "original.txt", "--count", "42", "--verbose", "true"};
-    loader1.init(7, const_cast<char**>(argv));
-    
-    // Dump to TOML
-    std::string toml = loader1.dump_to_toml();
-    
-    // Write to file
-    std::ofstream out("/tmp/roundtrip.toml");
-    out << toml;
-    out.close();
-    
-    // Load from TOML preset
-    ConfigsLoader<TestConfigs> loader2;
-    const char* argv2[] = {"prog", "--preset", "/tmp/roundtrip.toml"};
-    loader2.init(3, const_cast<char**>(argv2));
-    
-    // Values should match
-    EXPECT_EQ(loader2.configs.filename.value, "original.txt");
-    EXPECT_EQ(loader2.configs.count.value, 42);
-    EXPECT_TRUE(loader2.configs.verbose.value);
-}
-#endif

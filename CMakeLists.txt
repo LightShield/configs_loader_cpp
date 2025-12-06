@@ -20,7 +20,7 @@ target_include_directories(configs_loader_cpp
 
 # Preset parser implementation (not header-only)
 add_library(configs_loader_preset_parser
-    src/parsers/preset_parser.cpp
+    src/serialization/preset_parser.cpp
 )
 
 target_include_directories(configs_loader_preset_parser
@@ -48,7 +48,7 @@ if(ENABLE_TOML_PRESETS)
     endif()
     
     target_sources(configs_loader_preset_parser PRIVATE
-        src/parsers/toml_parser.cpp
+        src/serialization/toml_parser.cpp
     )
     
     target_link_libraries(configs_loader_preset_parser PUBLIC
@@ -121,22 +121,48 @@ target_link_libraries(configs_loader_tests
 
 target_compile_options(configs_loader_tests PRIVATE ${WARNING_FLAGS})
 
-add_executable(toml_parser_tests
-    tests/toml_parser_tests.cpp
+add_executable(help_generator_tests
+    tests/help/help_generator_tests.cpp
 )
 
-target_link_libraries(toml_parser_tests
+target_link_libraries(help_generator_tests
     PRIVATE
         configs_loader_cpp
         GTest::gtest_main
 )
 
-target_compile_options(toml_parser_tests PRIVATE ${WARNING_FLAGS})
+target_compile_options(help_generator_tests PRIVATE ${WARNING_FLAGS})
+
+add_executable(cli_argument_parser_tests
+    tests/cli/cli_argument_parser_tests.cpp
+)
+
+target_link_libraries(cli_argument_parser_tests
+    PRIVATE
+        configs_loader_cpp
+        GTest::gtest_main
+)
+
+target_compile_options(cli_argument_parser_tests PRIVATE ${WARNING_FLAGS})
+
+add_executable(toml_deserializer_tests
+    tests/serialization/toml_deserializer_tests.cpp
+)
+
+target_link_libraries(toml_deserializer_tests
+    PRIVATE
+        configs_loader_cpp
+        GTest::gtest_main
+)
+
+target_compile_options(toml_deserializer_tests PRIVATE ${WARNING_FLAGS})
 
 include(GoogleTest)
 gtest_discover_tests(config_tests)
 gtest_discover_tests(configs_loader_tests)
-gtest_discover_tests(toml_parser_tests)
+gtest_discover_tests(cli_argument_parser_tests)
+gtest_discover_tests(help_generator_tests)
+gtest_discover_tests(toml_deserializer_tests)
 endif()
 
 # Examples (optional)

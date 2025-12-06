@@ -1,10 +1,13 @@
 #pragma once
 
 #include "config.hpp"
+#include "help/help_generator.hpp"
+#include "serialization/serialization_format.hpp"
+#include <functional>
+#include <optional>
 #include <string>
 
-// Forward declarations
-class PresetParser;
+namespace lightshield::config {
 
 // Current macro - requires listing all fields (C++20)
 #define REGISTER_CONFIG_FIELDS(...) \
@@ -20,59 +23,40 @@ class PresetParser;
 #define REGISTER_CONFIG_STRUCT(StructName) \
     static_assert(false, "REGISTER_CONFIG_STRUCT requires C++26 reflection - use REGISTER_CONFIG_FIELDS for now");
 
-// TODO(C++26): Move preset flag validation to compile-time using reflection
-// Currently checked at Init() time due to C++20 limitations
-
 template<typename ConfigsType>
 class ConfigsLoader {
 public:
     ConfigsType configs;
+    HelpFormat help_format;
 
     ConfigsLoader() = default;
     ConfigsLoader(int argc, char* argv[]);
 
     // Initialize from command-line arguments
-    // Automatically handles --help/-h flags (prints help and exits)
-    void init(int argc, char* argv[]);
+    // Returns 0 on success, non-zero on error
+    // Prints error messages to stderr
+    // Automatically handles --help/-h flags (prints help and exits with 0)
+    int init(int argc, char* argv[]);
 
     // Check if init() has been called
     [[nodiscard]] bool is_initialized() const;
 
     // Generate help text
-    // max_width: Maximum line width for text wrapping (default: 80)
-    [[nodiscard]] std::string generate_help(const std::string& program_name = "program", size_t max_width = 80) const;
+    // filter: Optional filter for interactive help (e.g., "required", "group_name")
+    // format: Optional custom format (defaults to help_format member)
+    [[nodiscard]] std::string generate_help(const std::string& filter = "", 
+                                            std::optional<std::reference_wrapper<const HelpFormat>> format = std::nullopt) const;
 
     // Dump current configuration values
+    // format: Output format (CLI or TOML)
     // only_changes: If true, only dump values that differ from defaults
-    [[nodiscard]] std::string dump_configs(bool only_changes = false) const;
-    
-    // Dump configuration to TOML format
-    // only_changes: If true, only dump values that differ from defaults
-    [[nodiscard]] std::string dump_to_toml(bool only_changes = false) const;
+    [[nodiscard]] std::string dump_configs(SerializationFormat format = SerializationFormat::CLI, bool only_changes = false) const;
 
 private:
     bool m_initialized = false;
-    
-    // Implementation details in configs_loader_impl.hpp
-    struct FieldInfo;
-    
-    std::optional<std::string> extract_preset_path(int argc, char* argv[]);
-    void load_preset_file(const std::string& path);
-    void parse_cli_arguments(int argc, char* argv[]);
-    void validate_required_fields();
-    void validate_no_preset_override();
-    void try_set_config_value(const std::string& flag, const std::string& value);
-    void wrap_text(std::ostringstream& out, const std::string& text, size_t indent_col, size_t max_width) const;
-    
-    template<typename T> bool try_set_field_value(Config<T>& field, const std::string& flag, const std::string& value);
-    template<typename T> void validate_field(const Config<T>& field);
-    template<typename T> void check_not_preset_flag(const Config<T>& field);
-    template<typename T> void append_usage_field(std::ostringstream& usage, const Config<T>& field) const;
-    template<typename T> void collect_field_info(const Config<T>& field, std::vector<FieldInfo>& required, std::vector<FieldInfo>& optional) const;
-    template<typename T> void dump_field(std::ostringstream& out, const Config<T>& field, bool only_changed) const;
-    template<typename T> void dump_field_toml(std::ostringstream& out, const Config<T>& field, bool only_changed) const;
-    template<typename T> void load_field_from_parser(Config<T>& field, const PresetParser& parser);
 };
+
+}  // namespace lightshield::config
 
 // Include implementation
 #include "configs_loader_impl.hpp"
