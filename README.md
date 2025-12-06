@@ -344,9 +344,9 @@ Initialization helpers are ephemeral to minimize memory footprint during busines
 
 ### Why Require Manual init() and Not Use a Singleton?
 
-The manual initialization pattern indeed isn't the common practice - it separates memory allocation from initialization. It's even discussed in books like "Beautiful C++: 30 Core Guidelines". However, the primary reason is performance.
+The manual initialization pattern indeed isn't the common practice - it separates memory allocation from initialization. It's even discussed in books like "Beautiful C++: 30 Core Guidelines". However, the primary reason is performance - I can easily reason here what would be the common case and optimize for it.
 
-Singletons require checking `is_initialized()` before every API call - a cost paid on every access in the hot path:
+Singletons require checking `is_initialized()` before **every** API call:
 
 ```cpp
 // Singleton pattern:
@@ -354,9 +354,13 @@ Config& Config::instance() {
     if (!initialized) { initialize(); }  // Branch on every call
     return config;
 }
-```
 
-Even with branch prediction, this is wasted work in the hot path. ConfigsLoader is statically initialized with the default constructor (compiler has an address), then user-initialized with `init(argc, argv)`. If not initialized, it runs with default values.
+
+This is a cost paid on every access to the API to handle a state that only happens once - the first API call, where the singleton **maybe** isn't initialized yet.
+
+Even with branch prediction accounted for, this is wasted work in the hot path & common case. Instead, this ConfigsLoader is statically initialized with the default constructor (and the compiler can know the address of the "singleton" at compile-time). Afterwards we have the user-initialized ConfigsLoader with `init(argc, argv)`. More wasteful for the rare case, better for the common case.
+
+This is inspired by the "root node" anecdote from Mike Acton's C++Con 2014 talk ["Data-Oriented Design and C++"](https://youtu.be/rX0ItVEVjHc?si=NY5uPFXobrB7f8lb&t=3990) (~1:06:30).
 
 ### Why Not Runtime Reflection?
 
