@@ -38,6 +38,13 @@ int main(int argc, char* argv[]) {
 }
 ```
 
+**See [examples/](examples/) for more features and realistic use-cases:**
+- [01_basic](examples/01_basic/) - Minimal example
+- [02_cli](examples/02_cli/) - CLI argument parsing
+- [03_help](examples/03_help/) - Help generation features
+- [05_hierarchy](examples/05_hierarchy/) - Hierarchical configurations
+- [07_real_world](examples/07_real_world/) - Complete application example
+
 
 ## Building
 
