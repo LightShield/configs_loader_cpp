@@ -105,7 +105,7 @@ This library uses struct-based access for compile-time validation:
 int timeout = loader.configs.server.timout.value; // Compile error
 ```
 
-Shift-left approach: catch errors during compilation, not during execution. IDE autocomplete works perfectly.
+Shift-left approach: catch errors during compilation, not during execution. IDE autocomplete now works on config names as well.
 
 **Partial Initialization**
 
@@ -171,7 +171,7 @@ std::string help = loader.generate_help("", std::cref(custom));
 The library provides several reserved flags:
 
 - `--help, -h` - Show help message (exits after displaying)
-- `--preset, -p <file>` - Load configuration from preset file
+- `--preset <file>` - Load configuration from preset file
 - `--print-config` - Print current config to stdout (only changes from defaults)
 - `--print-config-verbose` - Print current config to stdout (all values)
 
@@ -191,7 +191,7 @@ Usage: ./myapp [OPTIONS] --input <string>
 
 Options:
   --help, -h   <void>  Show this help message
-  --preset, -p <file>  Load configuration from file
+  --preset <file>  Load configuration from file
   [Required] --input, -i  <string>  Input file path (default: "input.txt")
   --output, -o  <string>  Output file path (default: "output.txt")
   --verbose, -v  <bool>  Enable verbose output (default: false)
@@ -281,10 +281,10 @@ Multiple syntax styles supported:
 ./myapp --host=localhost --port=8080
 
 # Short flags
-./myapp -h localhost -p 8080
+./myapp -h localhost --port 8080
 
 # Mixed
-./myapp --host=localhost -p 8080 --verbose true
+./myapp --host=localhost --port 8080 --verbose true
 ```
 
 ## Quick Start

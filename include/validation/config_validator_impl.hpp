@@ -96,7 +96,7 @@ template<typename T>
 void ConfigValidator<ConfigsType>::check_reserved_flags(const Config<T>& field) {
     // TODO(C++26): This should be a static_assert with reflection
     for (const auto& flag : field.flags) {
-        if (flag == "--preset" || flag == "-p") {
+        if (flag == "--preset") {
             m_errors.push_back({
                 .field_name = "field",
                 .flag = flag,

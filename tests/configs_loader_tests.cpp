@@ -143,21 +143,6 @@ TEST_F(ConfigsLoaderTest, PresetFlagIsReserved) {
     EXPECT_FALSE(loader.is_initialized());
 }
 
-TEST_F(ConfigsLoaderTest, PresetShortFlagIsReserved) {
-    struct BadConfigs {
-        Config<std::string> field{
-            .default_value = "",
-            .flags = {"-p"}
-        };
-        REGISTER_CONFIG_FIELDS(field)
-    };
-    
-    ConfigsLoader<BadConfigs> loader;
-    const char* argv[] = {"prog"};
-    EXPECT_EQ(loader.init(1, const_cast<char**>(argv)), 1);
-    EXPECT_FALSE(loader.is_initialized());
-}
-
 TEST_F(ConfigsLoaderTest, IsNotInitializedByDefault) {
     ConfigsLoader<TestConfigs> loader;
     EXPECT_FALSE(loader.is_initialized());

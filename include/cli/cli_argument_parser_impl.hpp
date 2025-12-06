@@ -19,7 +19,7 @@ inline ParsedArguments CliArgumentParser::parse(int argc, char* argv[]) {
             continue;
         }
 
-        if (arg == "--preset" || arg == "-p") {
+        if (arg == "--preset") {
             if (i + 1 < argc) {
                 result.preset_path = argv[i + 1];
                 ++i;
@@ -43,7 +43,7 @@ inline ParsedArguments CliArgumentParser::parse(int argc, char* argv[]) {
         const size_t equals_pos = arg.find('=');
         if (equals_pos != std::string::npos) {
             const std::string flag = arg.substr(0, equals_pos);
-            if (flag == "--preset" || flag == "-p") {
+            if (flag == "--preset") {
                 result.preset_path = arg.substr(equals_pos + 1);
                 continue;
             }
