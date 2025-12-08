@@ -1,7 +1,8 @@
 #pragma once
 
-#include "config.hpp"
 #include <sstream>
+
+#include "config.hpp"
 
 namespace lightshield::config {
 
@@ -45,10 +46,16 @@ std::string ConfigValidator<ConfigsType>::get_error_report() const {
 template<typename ConfigsType>
 template<typename T>
 void ConfigValidator<ConfigsType>::validate_field(const Config<T>& field, const std::string& prefix) {
-    const std::string flag = field.flags.empty() ? "unknown" : 
-        (prefix.empty() ? field.flags[0] : "--" + prefix + "." + field.flags[0].substr(2));
+    std::string flag;
+    if (field.flags.empty()) {
+        flag = "unknown";
+    } else if (prefix.empty()) {
+        flag = field.flags[0];
+    } else {
+        flag = "--" + prefix + "." + field.flags[0].substr(2);
+    }
     
-    if (field.is_required() && !field.is_set()) {
+    if (field.is_required() && !field.is_set) {
         std::string msg = "Required field '" + flag + "' is not set";
         if (!field.description.empty()) {
             msg += " [" + field.description + "]";
@@ -61,7 +68,7 @@ void ConfigValidator<ConfigsType>::validate_field(const Config<T>& field, const 
         });
     }
     
-    if (field.is_set() && !field.verifier(field.value)) {
+    if (field.is_set && !field.verifier(field.value)) {
         std::string msg = "Validation failed for field '" + flag + "'";
         if (!field.description.empty()) {
             msg += " [" + field.description + "]";

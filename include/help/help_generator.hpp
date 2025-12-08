@@ -10,9 +10,10 @@ namespace lightshield::config {
 
 struct HelpFormat {
     std::string program_name = "program";
+    size_t max_width = 80;
+    size_t indent_spaces = 2;
     bool use_colors = true;
     bool enable_interactive = true;
-    size_t max_width = 80;
     bool show_current_values = true;
 };
 
@@ -20,16 +21,17 @@ template<typename ConfigsType>
 class HelpGenerator {
     const ConfigsType& m_configs;
     const std::string& m_program_name;
+    const size_t m_max_width;
+    const size_t m_indent_spaces;
     const bool m_use_colors;
     const bool m_enable_interactive;
-    const size_t m_max_width;
     const bool m_show_current_values;
 
 public:
     HelpGenerator(const ConfigsType& configs, const HelpFormat& format)
-        : m_configs(configs), m_program_name(format.program_name), m_use_colors(format.use_colors), 
-          m_enable_interactive(format.enable_interactive), m_max_width(format.max_width), 
-          m_show_current_values(format.show_current_values) {}
+        : m_configs(configs), m_program_name(format.program_name), m_max_width(format.max_width), 
+          m_indent_spaces(format.indent_spaces), m_use_colors(format.use_colors), 
+          m_enable_interactive(format.enable_interactive), m_show_current_values(format.show_current_values) {}
 
     std::string generate(const std::string& filter) const;
 
