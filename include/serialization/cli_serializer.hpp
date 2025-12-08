@@ -1,5 +1,9 @@
 #pragma once
 
+#include <sstream>
+#include <type_traits>
+
+#include "config.hpp"
 #include "config_serializer.hpp"
 
 namespace lightshield::config {

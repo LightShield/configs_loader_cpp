@@ -75,7 +75,7 @@ template<typename T>
 void HelpGenerator<ConfigsType>::print_field_hierarchical(std::ostringstream& out, const Config<T>& field, size_t indent, const std::string& prefix) const {
     if (field.flags.empty()) return;
     
-    const std::string indent_str(indent * 2, ' ');
+    const std::string indent_str(indent * m_indent_spaces, ' ');
     out << "  " << indent_str;
     
     if (field.is_required()) {
@@ -85,12 +85,14 @@ void HelpGenerator<ConfigsType>::print_field_hierarchical(std::ostringstream& ou
     std::ostringstream flags_str;
     for (size_t i = 0; i < field.flags.size(); ++i) {
         if (i > 0) flags_str << ", ";
-        const std::string flag = [&]() {
-            if (!prefix.empty() && field.flags[i].starts_with("--")) {
-                return "--" + prefix + "." + field.flags[i].substr(2);
-            }
-            return field.flags[i];
-        }();
+        
+        std::string flag;
+        if (!prefix.empty() && field.flags[i].starts_with("--")) {
+            flag = "--" + prefix + "." + field.flags[i].substr(2);
+        } else {
+            flag = field.flags[i];
+        }
+        
         flags_str << flag;
     }
     out << colorize(flags_str.str(), ansi::CYAN, m_use_colors);
@@ -100,7 +102,7 @@ void HelpGenerator<ConfigsType>::print_field_hierarchical(std::ostringstream& ou
     const std::string desc = field.description.empty() ? "No description provided for this config" : field.description;
     out << "  " << desc;
     
-    if (m_show_current_values && field.is_set() && field.value != field.default_value) {
+    if (m_show_current_values && field.is_set && field.value != field.default_value) {
         if constexpr (std::is_same_v<T, std::string>) {
             out << " " << colorize("(current: \"" + field.value + "\", default: \"" + field.default_value + "\")", ansi::GRAY, m_use_colors);
         } else if constexpr (std::is_same_v<T, bool>) {
@@ -126,7 +128,7 @@ void HelpGenerator<ConfigsType>::print_field_hierarchical(std::ostringstream& ou
 template<typename ConfigsType>
 template<typename T>
 void HelpGenerator<ConfigsType>::print_field_hierarchical(std::ostringstream& out, const ConfigGroup<T>& group, size_t indent, const std::string& prefix) const {
-    const std::string indent_str(indent * 2, ' ');
+    const std::string indent_str(indent * m_indent_spaces, ' ');
     
     out << "  " << indent_str << colorize(group.get_name() + ":", ansi::GREEN, m_use_colors) << "\n";
     
@@ -216,7 +218,7 @@ void HelpGenerator<ConfigsType>::print_group_structure(std::ostringstream&, cons
 template<typename ConfigsType>
 template<typename T>
 void HelpGenerator<ConfigsType>::print_group_structure(std::ostringstream& out, const ConfigGroup<T>& group, size_t indent, const std::string& prefix) const {
-    const std::string indent_str(indent * 2, ' ');
+    const std::string indent_str(indent * m_indent_spaces, ' ');
     const std::string full_prefix = prefix.empty() ? group.get_name() : prefix + "." + group.get_name();
     
     out << "  " << indent_str << colorize(group.get_name(), ansi::GREEN, m_use_colors) 

@@ -10,13 +10,13 @@ TEST(ConfigTest, DefaultValueIsSet) {
 
 TEST(ConfigTest, IsNotSetInitially) {
     Config<int> field{.default_value = 42};
-    EXPECT_FALSE(field.is_set());
+    EXPECT_FALSE(field.is_set);
 }
 
 TEST(ConfigTest, SetValueMarksAsSet) {
     Config<int> field{.default_value = 42};
     EXPECT_TRUE(field.set_value(100));
-    EXPECT_TRUE(field.is_set());
+    EXPECT_TRUE(field.is_set);
     EXPECT_EQ(field.value, 100);
 }
 
@@ -24,7 +24,7 @@ TEST(ConfigTest, ResetRestoresDefault) {
     Config<int> field{.default_value = 42};
     field.set_value(100);
     field.reset();
-    EXPECT_FALSE(field.is_set());
+    EXPECT_FALSE(field.is_set);
     EXPECT_EQ(field.value, 42);
 }
 

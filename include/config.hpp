@@ -10,15 +10,13 @@ namespace lightshield::config {
 template<typename T>
 struct Config {
     T default_value;
-    std::vector<std::string> flags = {};
-    bool required = false;
-    std::string description = "";
-    std::function<bool(const T&)> verifier = [](const T&) { return true; };
-
     T value = default_value;
-    uint8_t m_is_set = 0u;
+    std::function<bool(const T&)> verifier = [](const T&) { return true; };
+    std::vector<std::string> flags = {};
+    std::string description = "";
+    bool required = false;
+    bool is_set = false;
 
-    [[nodiscard]] bool is_set() const { return m_is_set != 0u; }
     [[nodiscard]] bool is_required() const { return required; }
 
     bool set_value(const T& val) {
@@ -26,13 +24,13 @@ struct Config {
             return false;
         }
         value = val;
-        m_is_set = 1u;
+        is_set = true;
         return true;
     }
 
     void reset() {
         value = default_value;
-        m_is_set = 0u;
+        is_set = false;
     }
 };
 
@@ -50,7 +48,7 @@ struct ConfigGroup {
     auto get_fields() const { return config.get_fields(); }
 };
 
-#define CONFIG_GROUP(Type, name) \
-    ConfigGroup<Type> name{.name_ = #name}
+#define CONFIG_GROUP(Type, var_name) \
+    ConfigGroup<Type> var_name{.config = {}, .name_ = #var_name}
 
 }  // namespace lightshield::config

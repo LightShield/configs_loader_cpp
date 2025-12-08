@@ -1,9 +1,10 @@
 #pragma once
 
-#include "config.hpp"
-#include "serialization/preset_deserializer.hpp"
 #include <algorithm>
 #include <type_traits>
+
+#include "config.hpp"
+#include "serialization/preset_deserializer.hpp"
 
 namespace lightshield::config {
 
