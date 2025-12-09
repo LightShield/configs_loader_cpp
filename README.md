@@ -44,6 +44,7 @@ int main(int argc, char* argv[]) {
 - [03_help](examples/03_help/) - Help generation features
 - [05_hierarchy](examples/05_hierarchy/) - Hierarchical configurations
 - [07_real_world](examples/07_real_world/) - Complete application example
+- [08_enum](examples/08_enum/) - Enum support with string conversion
 
 
 ## Building
@@ -189,6 +190,21 @@ Config<int> port{
     .verifier = [](int p) { return p > 0 && p < 65536; }
 };
 ```
+
+**Enum Support**
+
+Use type-safe enums with string conversion. Provide `parser` and `to_string` for CLI/TOML integration:
+
+```cpp
+Config<LogLevel> log_level{
+    .default_value = LogLevel::Info,
+    .parser = log_level_from_string,
+    .to_string = [](const LogLevel& l) { return std::string(to_string(l)); },
+    .flags = {"--log-level"}
+};
+```
+
+See [examples/08_enum](examples/08_enum/) for details.
 
 **Print Configuration**
 
