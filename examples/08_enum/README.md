@@ -6,15 +6,17 @@ Demonstrates how to use enum types with configs_loader.
 
 ### Enum Configuration
 
-Enums require two helper functions:
+Enums require two helper functions provided via `enum_traits`:
 1. **Parser**: Converts string to enum (for CLI and TOML input)
 2. **to_string**: Converts enum to string (for serialization and help text)
 
 ```cpp
 Config<LogLevel> log_level{
     .default_value = LogLevel::Info,
-    .parser = log_level_from_string,
-    .to_string = [](const LogLevel& level) { return std::string(log_level_to_string(level)); },
+    .enum_traits = {
+        .parser = log_level_from_string,
+        .to_string = [](const LogLevel& level) { return std::string(log_level_to_string(level)); }
+    },
     .flags = {"--log-level", "-l"},
     .description = "Logging verbosity (error, warn, info, debug)"
 };
@@ -30,7 +32,7 @@ Even if your enum has numeric values, you must provide string names for user inp
 
 ### Numeric Fallback
 
-If you don't provide `to_string`, the enum will serialize as its numeric value:
+If you don't provide `to_string` in `enum_traits`, the enum will serialize as its numeric value:
 - **With to_string**: `log-level = "debug"`
 - **Without to_string**: `log-level = 3`
 
