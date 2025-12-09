@@ -20,6 +20,7 @@ template<typename ConfigsType>
 class ConfigApplier {
     ConfigsType& m_configs;
     std::vector<ApplyError> m_errors;
+    std::vector<std::string> m_unknown_flags;
 
 public:
     explicit ConfigApplier(ConfigsType& configs) : m_configs(configs) {}
@@ -29,6 +30,7 @@ public:
     
     bool has_errors() const { return !m_errors.empty(); }
     const std::vector<ApplyError>& get_errors() const { return m_errors; }
+    const std::vector<std::string>& get_unknown_flags() const { return m_unknown_flags; }
 
 private:
     template<typename T> bool try_set_field(Config<T>& field, const std::string& flag, const std::string& value);

@@ -52,6 +52,21 @@ int ConfigsLoader<ConfigsType>::init(int argc, char* argv[]) {
     
     applier.apply_from_cli(args.flags);
     
+    if (!applier.get_unknown_flags().empty()) {
+        if (unknown_flag_behavior == UnknownFlagBehavior::Error) {
+            std::cerr << "Unknown flag(s) provided:\n";
+            for (const auto& flag : applier.get_unknown_flags()) {
+                std::cerr << "  • " << flag << "\n";
+            }
+            return 1;
+        } else if (unknown_flag_behavior == UnknownFlagBehavior::Warn) {
+            std::cerr << "Warning: Unknown flag(s) ignored:\n";
+            for (const auto& flag : applier.get_unknown_flags()) {
+                std::cerr << "  • " << flag << "\n";
+            }
+        }
+    }
+    
     if (applier.has_errors()) {
         std::cerr << "Configuration application failed with " << applier.get_errors().size() << " error(s):\n\n";
         for (const auto& error : applier.get_errors()) {

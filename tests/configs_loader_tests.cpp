@@ -85,7 +85,9 @@ TEST_F(ConfigsLoaderTest, LastValueWinsForDuplicates) {
 
 TEST_F(ConfigsLoaderTest, UnknownFlagsAreIgnored) {
     const char* argv[] = {"prog", "--unknown", "value", "--file", "test.txt"};
-    ConfigsLoader<TestConfigs> loader(5, const_cast<char**>(argv));
+    ConfigsLoader<TestConfigs> loader;
+    loader.unknown_flag_behavior = UnknownFlagBehavior::Ignore;
+    loader.init(5, const_cast<char**>(argv));
     EXPECT_EQ(loader.configs.filename.value, "test.txt");
 }
 

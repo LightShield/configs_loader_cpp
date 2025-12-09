@@ -9,6 +9,12 @@
 
 namespace lightshield::config {
 
+enum class UnknownFlagBehavior : uint8_t {
+    Ignore = 0,
+    Warn,
+    Error
+};
+
 // Current macro - requires listing all fields (C++20)
 #define REGISTER_CONFIG_FIELDS(...) \
     auto get_fields() { \
@@ -28,6 +34,7 @@ class ConfigsLoader {
 public:
     ConfigsType configs;
     HelpFormat help_format;
+    UnknownFlagBehavior unknown_flag_behavior = UnknownFlagBehavior::Error;
 
     ConfigsLoader() = default;
     ConfigsLoader(int argc, char* argv[]);

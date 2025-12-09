@@ -11,9 +11,13 @@ template<typename ConfigsType>
 void ConfigApplier<ConfigsType>::apply_from_cli(const std::unordered_map<std::string, std::string>& flags) {
     for (const auto& [flag, value] : flags) {
         auto fields = m_configs.get_fields();
-        std::apply([&](auto&... field) {
-            (try_set_field(field, flag, value) || ...);
+        bool found = std::apply([&](auto&... field) {
+            return (try_set_field(field, flag, value) || ...);
         }, fields);
+        
+        if (!found) {
+            m_unknown_flags.push_back(flag);
+        }
     }
 }
 
