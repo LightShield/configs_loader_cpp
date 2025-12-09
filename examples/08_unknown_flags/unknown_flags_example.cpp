@@ -14,6 +14,9 @@ struct AppConfig {
 };
 
 int main(int argc, char* argv[]) {
+    // Try: ./unknown_flags_example --unknown test --input data.txt
+    // The --unknown flag will trigger different behaviors below
+    
     std::cout << "=== Error Behavior (default) ===\n";
     {
         ConfigsLoader<AppConfig> loader;
