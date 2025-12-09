@@ -22,15 +22,17 @@ struct AppConfig {
     // WITH to_string - shows string names
     Config<Priority> priority_with_string{
         .default_value = Priority::Medium,
-        .parser = priority_from_string,
-        .to_string = [](const Priority& p) {
-            switch (p) {
-                case Priority::Low: return std::string("low");
-                case Priority::Medium: return std::string("medium");
-                case Priority::High: return std::string("high");
-                case Priority::Critical: return std::string("critical");
+        .enum_traits = {
+            .parser = priority_from_string,
+            .to_string = [](const Priority& p) {
+                switch (p) {
+                    case Priority::Low: return std::string("low");
+                    case Priority::Medium: return std::string("medium");
+                    case Priority::High: return std::string("high");
+                    case Priority::Critical: return std::string("critical");
+                }
+                return std::string("unknown");
             }
-            return std::string("unknown");
         },
         .flags = {"--priority-named"},
         .description = "Priority level with string names"
@@ -39,7 +41,9 @@ struct AppConfig {
     // WITHOUT to_string - shows numeric values
     Config<Priority> priority_numeric{
         .default_value = Priority::High,
-        .parser = priority_from_string,
+        .enum_traits = {
+            .parser = priority_from_string
+        },
         .flags = {"--priority-numeric"},
         .description = "Priority level with numeric fallback"
     };

@@ -31,8 +31,10 @@ LogLevel log_level_from_string(const std::string& str) noexcept {
 struct AppConfig {
     Config<LogLevel> log_level{
         .default_value = LogLevel::Info,
-        .parser = log_level_from_string,
-        .to_string = [](const LogLevel& level) { return std::string(log_level_to_string(level)); },
+        .enum_traits = {
+            .parser = log_level_from_string,
+            .to_string = [](const LogLevel& level) { return std::string(log_level_to_string(level)); }
+        },
         .flags = {"--log-level", "-l"},
         .description = "Logging verbosity (error, warn, info, debug)"
     };

@@ -48,8 +48,8 @@ void ConfigApplier<ConfigsType>::load_field(PresetDeserializer& deserializer, Co
         } else if constexpr (std::is_same_v<T, double>) {
             value = deserializer.get_double(key);
         } else if constexpr (std::is_enum_v<T>) {
-            if (auto str = deserializer.get_string(key); str.has_value() && field.parser) {
-                value = field.parser(*str);
+            if (auto str = deserializer.get_string(key); str.has_value() && field.enum_traits.parser) {
+                value = field.enum_traits.parser(*str);
             }
         }
         
@@ -87,10 +87,10 @@ bool ConfigApplier<ConfigsType>::try_set_field(Config<T>& field, const std::stri
     } else if constexpr (std::is_same_v<T, double>) {
         converted_value = std::stod(value);
     } else if constexpr (std::is_enum_v<T>) {
-        if (!field.parser) {
+        if (!field.enum_traits.parser) {
             return false;
         }
-        converted_value = field.parser(value);
+        converted_value = field.enum_traits.parser(value);
     } else {
         return false;
     }

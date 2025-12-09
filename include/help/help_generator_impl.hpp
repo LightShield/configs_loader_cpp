@@ -107,9 +107,9 @@ void HelpGenerator<ConfigsType>::print_field_hierarchical(std::ostringstream& ou
             out << " " << colorize("(current: " + std::string(field.value ? "true" : "false") + 
                                    ", default: " + std::string(field.default_value ? "true" : "false") + ")", ansi::GRAY, m_use_colors);
         } else if constexpr (std::is_enum_v<T>) {
-            if (field.to_string) {
-                out << " " << colorize("(current: " + field.to_string(field.value) + 
-                                       ", default: " + field.to_string(field.default_value) + ")", ansi::GRAY, m_use_colors);
+            if (field.enum_traits.to_string) {
+                out << " " << colorize("(current: " + field.enum_traits.to_string(field.value) + 
+                                       ", default: " + field.enum_traits.to_string(field.default_value) + ")", ansi::GRAY, m_use_colors);
             } else {
                 out << " " << colorize("(current: " + std::to_string(static_cast<int>(field.value)) + 
                                        ", default: " + std::to_string(static_cast<int>(field.default_value)) + ")", ansi::GRAY, m_use_colors);
@@ -124,8 +124,8 @@ void HelpGenerator<ConfigsType>::print_field_hierarchical(std::ostringstream& ou
         } else if constexpr (std::is_same_v<T, bool>) {
             out << " " << colorize("(default: " + std::string(field.default_value ? "true" : "false") + ")", ansi::GRAY, m_use_colors);
         } else if constexpr (std::is_enum_v<T>) {
-            if (field.to_string) {
-                out << " " << colorize("(default: " + field.to_string(field.default_value) + ")", ansi::GRAY, m_use_colors);
+            if (field.enum_traits.to_string) {
+                out << " " << colorize("(default: " + field.enum_traits.to_string(field.default_value) + ")", ansi::GRAY, m_use_colors);
             } else {
                 out << " " << colorize("(default: " + std::to_string(static_cast<int>(field.default_value)) + ")", ansi::GRAY, m_use_colors);
             }
