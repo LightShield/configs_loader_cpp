@@ -38,6 +38,30 @@ If you don't provide `to_string` in `enum_traits`, the enum will serialize as it
 
 Always provide `to_string` for better usability.
 
+### Parser Validation
+
+Your parser can handle invalid values in two ways:
+
+**Lenient** (returns default):
+```cpp
+LogLevel log_level_from_string(const std::string& str) noexcept {
+    if (str == "debug") return LogLevel::Debug;
+    // ... other cases
+    return LogLevel::Info;  // Default for invalid input
+}
+```
+
+**Strict** (throws exception):
+```cpp
+LogLevel log_level_from_string_strict(const std::string& str) {
+    if (str == "debug") return LogLevel::Debug;
+    // ... other cases
+    throw std::invalid_argument("Invalid log level: " + str);
+}
+```
+
+Strict parsers catch user errors immediately. See `enum_strict_parser.cpp` for example.
+
 ## Running
 
 ```bash
