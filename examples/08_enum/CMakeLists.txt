@@ -1,2 +1,5 @@
 add_executable(enum_example enum_example.cpp)
 target_link_libraries(enum_example PRIVATE configs_loader_cpp)
+
+add_executable(enum_numeric_fallback enum_numeric_fallback.cpp)
+target_link_libraries(enum_numeric_fallback PRIVATE configs_loader_cpp)
