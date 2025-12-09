@@ -71,6 +71,12 @@ void ConfigValidator<ConfigsType>::validate_field(const Config<T>& field, const 
             msg += ": value = \"" + field.value + "\"";
         } else if constexpr (std::is_same_v<T, bool>) {
             msg += ": value = " + std::string(field.value ? "true" : "false");
+        } else if constexpr (std::is_enum_v<T>) {
+            if (field.to_string) {
+                msg += ": value = " + field.to_string(field.value);
+            } else {
+                msg += ": value = " + std::to_string(static_cast<int>(field.value));
+            }
         } else {
             msg += ": value = " + std::to_string(field.value);
         }

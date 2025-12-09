@@ -40,6 +40,12 @@ void CliSerializer<ConfigsType>::serialize_field(std::ostringstream& out, const 
         out << "\"" << field.value << "\"";
     } else if constexpr (std::is_same_v<T, bool>) {
         out << (field.value ? "true" : "false");
+    } else if constexpr (std::is_enum_v<T>) {
+        if (field.to_string) {
+            out << "\"" << field.to_string(field.value) << "\"";
+        } else {
+            out << static_cast<int>(field.value);
+        }
     } else {
         out << field.value;
     }

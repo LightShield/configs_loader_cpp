@@ -28,6 +28,7 @@ constexpr const char* get_type_name() {
     else if constexpr (std::is_same_v<T, int>) return "int";
     else if constexpr (std::is_same_v<T, bool>) return "bool";
     else if constexpr (std::is_same_v<T, double>) return "double";
+    else if constexpr (std::is_enum_v<T>) return "enum";
     else return "unknown";
 }
 

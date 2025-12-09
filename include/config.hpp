@@ -10,12 +10,13 @@ namespace lightshield::config {
 template<typename T>
 struct Config {
     T default_value;
-    std::vector<std::string> flags = {};
-    bool required = false;
-    std::string description = "";
-    std::function<bool(const T&)> verifier = [](const T&) { return true; };
-
     T value = default_value;
+    std::function<bool(const T&)> verifier = [](const T&) { return true; };
+    std::function<T(const std::string&)> parser = nullptr;  // For enums: string -> enum
+    std::function<std::string(const T&)> to_string = nullptr;  // For enums: enum -> string
+    std::vector<std::string> flags = {};
+    std::string description = "";
+    bool required = false;
     uint8_t m_is_set = 0u;
 
     [[nodiscard]] bool is_set() const { return m_is_set != 0u; }
