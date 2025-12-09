@@ -193,18 +193,30 @@ Config<int> port{
 
 **Enum Support**
 
-Use type-safe enums with string conversion. Provide `parser` and `to_string` for CLI/TOML integration:
+Use type-safe enums with string conversion. Provide `parser` and `to_string` via `enum_traits`:
 
 ```cpp
 Config<LogLevel> log_level{
     .default_value = LogLevel::Info,
-    .parser = log_level_from_string,
-    .to_string = [](const LogLevel& l) { return std::string(to_string(l)); },
+    .enum_traits = {
+        .parser = log_level_from_string,
+        .to_string = [](const LogLevel& l) { return std::string(to_string(l)); }
+    },
     .flags = {"--log-level"}
 };
 ```
 
 See [examples/08_enum](examples/08_enum/) for details.
+
+**Unknown Flag Handling**
+
+Control how unknown flags are handled (default: Error):
+
+```cpp
+ConfigsLoader<MyConfig> loader;
+loader.unknown_flag_behavior = UnknownFlagBehavior::Warn;  // or Ignore, or Error
+loader.init(argc, argv);
+```
 
 **Print Configuration**
 
