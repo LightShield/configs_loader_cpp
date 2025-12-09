@@ -1,0 +1,2 @@
+add_executable(unknown_flags_example unknown_flags_example.cpp)
+target_link_libraries(unknown_flags_example PRIVATE configs_loader_cpp)

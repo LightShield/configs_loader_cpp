@@ -44,7 +44,8 @@ int main(int argc, char* argv[]) {
 - [03_help](examples/03_help/) - Help generation features
 - [05_hierarchy](examples/05_hierarchy/) - Hierarchical configurations
 - [07_real_world](examples/07_real_world/) - Complete application example
-- [08_enum](examples/08_enum/) - Enum support with string conversion
+- [08_unknown_flags](examples/08_unknown_flags/) - Unknown flag handling (Error/Warn/Ignore)
+- [09_enum](examples/09_enum/) - Enum support with string conversion
 
 
 ## Building
@@ -206,7 +207,7 @@ Config<LogLevel> log_level{
 };
 ```
 
-See [examples/08_enum](examples/08_enum/) for details.
+See [examples/09_enum](examples/09_enum/) for details.
 
 **Unknown Flag Handling**
 
@@ -217,6 +218,8 @@ ConfigsLoader<MyConfig> loader;
 loader.unknown_flag_behavior = UnknownFlagBehavior::Warn;  // or Ignore, or Error
 loader.init(argc, argv);
 ```
+
+See [examples/08_unknown_flags](examples/08_unknown_flags/) for details.
 
 **Print Configuration**
 

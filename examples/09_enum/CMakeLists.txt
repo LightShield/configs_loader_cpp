@@ -6,3 +6,6 @@ target_link_libraries(enum_numeric_fallback PRIVATE configs_loader_cpp)
 
 add_executable(enum_no_parser enum_no_parser.cpp)
 target_link_libraries(enum_no_parser PRIVATE configs_loader_cpp)
+
+add_executable(plain_enum_test plain_enum_test.cpp)
+target_link_libraries(plain_enum_test PRIVATE configs_loader_cpp)
