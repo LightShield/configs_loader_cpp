@@ -20,9 +20,9 @@ struct Config {
     std::function<bool(const T&)> verifier = [](const T&) { return true; };
     std::vector<std::string> flags = {};
     std::string description = "";
+    EnumTraits<T> enum_traits = {};  // Only used when T is enum
     bool required = false;
     uint8_t m_is_set = 0u;
-    EnumTraits<T> enum_traits = {};  // Only used when T is enum
 
     [[nodiscard]] bool is_set() const { return m_is_set != 0u; }
     [[nodiscard]] bool is_required() const { return required; }

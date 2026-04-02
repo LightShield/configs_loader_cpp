@@ -6,6 +6,7 @@
 #include <functional>
 #include <optional>
 #include <string>
+#include <tuple>
 
 namespace lightshield::config {
 
@@ -29,37 +30,66 @@ enum class UnknownFlagBehavior : uint8_t {
 #define REGISTER_CONFIG_STRUCT(StructName) \
     static_assert(false, "REGISTER_CONFIG_STRUCT requires C++26 reflection - use REGISTER_CONFIG_FIELDS for now");
 
+/**
+ * @brief Orchestrates configuration loading from various sources (CLI, presets, etc.).
+ * 
+ * @tparam ConfigsType A struct containing lightshield::config::Config fields and a 
+ *                     REGISTER_CONFIG_FIELDS(...) macro call.
+ */
 template<typename ConfigsType>
 class ConfigsLoader {
 public:
+    /// The actual configuration instance
     ConfigsType configs;
+
+    /// Customization options for help generation
     HelpFormat help_format;
+
     UnknownFlagBehavior unknown_flag_behavior = UnknownFlagBehavior::Error;
 
-    ConfigsLoader() = default;
+    /**
+     * @brief Construct a new ConfigsLoader and automatically initialize.
+     * 
+     * @note This will call std::exit(1) if initialization fails.
+     *       Use the default constructor + init() for manual error handling.
+     */
     ConfigsLoader(int argc, char* argv[]);
 
-    // Initialize from command-line arguments
-    // Returns 0 on success, non-zero on error
-    // Prints error messages to stderr
-    // Automatically handles --help/-h flags (prints help and exits with 0)
+    /**
+     * @brief Default constructor for manual initialization.
+     */
+    ConfigsLoader() = default;
+
+    /**
+     * @brief Initialize configurations from command line and presets.
+     * 
+     * @return int 0 on success, non-zero on failure.
+     */
     int init(int argc, char* argv[]);
 
-    // Check if init() has been called
+    /**
+     * @brief Check if the loader was successfully initialized.
+     */
     [[nodiscard]] bool is_initialized() const;
 
-    // Generate help text
-    // filter: Optional filter for interactive help (e.g., "required", "group_name")
-    // format: Optional custom format (defaults to help_format member)
+    /**
+     * @brief Get the internal error report if initialization failed.
+     */
+    [[nodiscard]] std::string get_error() const { return m_error_report; }
+
+    /**
+     * @brief Generate a formatted help string for the current configurations.
+     */
     [[nodiscard]] std::string generate_help(const std::string& filter = "", 
                                             std::optional<std::reference_wrapper<const HelpFormat>> format = std::nullopt) const;
 
-    // Dump current configuration values
-    // format: Output format (CLI or TOML)
-    // only_changes: If true, only dump values that differ from defaults
+    /**
+     * @brief Dump the current configuration state to a string.
+     */
     [[nodiscard]] std::string dump_configs(SerializationFormat format = SerializationFormat::CLI, bool only_changes = false) const;
 
 private:
+    std::string m_error_report;
     bool m_initialized = false;
 };
 

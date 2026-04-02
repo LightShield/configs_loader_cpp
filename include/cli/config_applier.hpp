@@ -1,7 +1,7 @@
 #pragma once
 
+#include <map>
 #include <string>
-#include <unordered_map>
 #include <vector>
 
 namespace lightshield::config {
@@ -26,7 +26,7 @@ public:
     explicit ConfigApplier(ConfigsType& configs) : m_configs(configs) {}
 
     void apply_from_preset(PresetDeserializer& deserializer);
-    void apply_from_cli(const std::unordered_map<std::string, std::string>& flags);
+    void apply_from_cli(const std::map<std::string, std::string>& flags);
     
     bool has_errors() const { return !m_errors.empty(); }
     const std::vector<ApplyError>& get_errors() const { return m_errors; }
