@@ -4,7 +4,7 @@
 
 #ifdef CONFIGS_LOADER_ENABLE_TOML
 
-#include <toml++/toml.h>
+#include <toml++/toml.hpp>
 #include <memory>
 
 namespace lightshield::config {

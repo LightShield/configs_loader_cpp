@@ -89,8 +89,8 @@ public:
     [[nodiscard]] std::string dump_configs(SerializationFormat format = SerializationFormat::CLI, bool only_changes = false) const;
 
 private:
-    std::string m_error_report;
     bool m_initialized = false;
+    std::string m_error_report;
 };
 
 }  // namespace lightshield::config
