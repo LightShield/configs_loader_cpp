@@ -60,8 +60,8 @@ TEST_F(HelpGeneratorTest, MarksRequired) {
         Config<std::string> required_field{
             .default_value = "",
             .flags = {"--required"},
-            .required = true,
-            .description = "A required configuration field"
+            .description = "A required configuration field",
+            .required = true
         };
         Config<std::string> optional_field{
             .default_value = "opt",
@@ -71,10 +71,10 @@ TEST_F(HelpGeneratorTest, MarksRequired) {
         REGISTER_CONFIG_FIELDS(required_field, optional_field)
     };
     
-    ConfigsLoader<RequiredConfigs> loader;
-    loader.help_format.use_colors = false;
-    loader.help_format.enable_interactive = false;
-    std::string help = loader.generate_help();
+    ConfigsLoader<RequiredConfigs> req_loader;
+    req_loader.help_format.use_colors = false;
+    req_loader.help_format.enable_interactive = false;
+    std::string help = req_loader.generate_help();
     
     size_t options_start = help.find("Options:");
     ASSERT_NE(options_start, std::string::npos);
@@ -106,41 +106,41 @@ TEST_F(HelpGeneratorTest, ShowsDefaultDescriptionWhenMissing) {
         REGISTER_CONFIG_FIELDS(field)
     };
     
-    ConfigsLoader<NoDescConfigs> loader;
-    loader.help_format.use_colors = false;
-    loader.help_format.enable_interactive = false;
-    std::string help = loader.generate_help();
+    ConfigsLoader<NoDescConfigs> no_desc_loader;
+    no_desc_loader.help_format.use_colors = false;
+    no_desc_loader.help_format.enable_interactive = false;
+    std::string help = no_desc_loader.generate_help();
     
     EXPECT_NE(help.find("No description provided for this config"), std::string::npos);
 }
 
 TEST_F(HelpGeneratorTest, ShowsCurrentValueWhenDifferentFromDefault) {
     const char* argv[] = {"prog", "--count", "42"};
-    ConfigsLoader<TestConfigs> loader(3, const_cast<char**>(argv));
-    loader.help_format.use_colors = false;
-    loader.help_format.enable_interactive = false;
-    loader.help_format.show_current_values = true;
+    ConfigsLoader<TestConfigs> local_loader(3, const_cast<char**>(argv));
+    local_loader.help_format.use_colors = false;
+    local_loader.help_format.enable_interactive = false;
+    local_loader.help_format.show_current_values = true;
     
-    std::string help = loader.generate_help();
+    std::string help = local_loader.generate_help();
     
     EXPECT_NE(help.find("current: 42"), std::string::npos);
     EXPECT_NE(help.find("default: 10"), std::string::npos);
 }
 
 TEST_F(HelpGeneratorTest, DoesNotShowCurrentWhenSameAsDefault) {
-    ConfigsLoader<TestConfigs> loader;
-    loader.help_format.use_colors = false;
-    loader.help_format.enable_interactive = false;
-    loader.help_format.show_current_values = true;
+    ConfigsLoader<TestConfigs> local_loader;
+    local_loader.help_format.use_colors = false;
+    local_loader.help_format.enable_interactive = false;
+    local_loader.help_format.show_current_values = true;
     
-    std::string help = loader.generate_help();
+    std::string help = local_loader.generate_help();
     
     EXPECT_EQ(help.find("current:"), std::string::npos);
     EXPECT_NE(help.find("default: 10"), std::string::npos);
 }
 
 TEST_F(HelpGeneratorTest, AcceptsCustomFormat) {
-    ConfigsLoader<TestConfigs> loader;
+    ConfigsLoader<TestConfigs> local_loader;
     
     HelpFormat custom_format{
         .program_name = "custom_prog",
@@ -148,9 +148,8 @@ TEST_F(HelpGeneratorTest, AcceptsCustomFormat) {
         .enable_interactive = false
     };
     
-    std::string help = loader.generate_help("", std::cref(custom_format));
+    std::string help = local_loader.generate_help("", std::cref(custom_format));
     
     EXPECT_NE(help.find("custom_prog"), std::string::npos);
     EXPECT_EQ(help.find("test_prog"), std::string::npos);
 }
-

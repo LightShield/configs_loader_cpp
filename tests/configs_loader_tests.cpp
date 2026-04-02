@@ -164,20 +164,20 @@ TEST_F(ConfigsLoaderTest, MultipleRequiredFieldsReportedTogether) {
         Config<std::string> field1{
             .default_value = "",
             .flags = {"--field1"},
-            .required = true,
-            .description = "First required field"
+            .description = "First required field",
+            .required = true
         };
         Config<std::string> field2{
             .default_value = "",
             .flags = {"--field2"},
-            .required = true,
-            .description = "Second required field"
+            .description = "Second required field",
+            .required = true
         };
         Config<std::string> field3{
             .default_value = "",
             .flags = {"--field3"},
-            .required = true,
-            .description = "Third required field"
+            .description = "Third required field",
+            .required = true
         };
         REGISTER_CONFIG_FIELDS(field1, field2, field3)
     };
@@ -201,15 +201,15 @@ TEST_F(ConfigsLoaderTest, VerifierFailuresReported) {
     struct ValidatedConfigs {
         Config<int> port{
             .default_value = 8080,
+            .verifier = [](int p) { return p > 0 && p < 65536; },
             .flags = {"--port"},
-            .description = "Server port",
-            .verifier = [](int p) { return p > 0 && p < 65536; }
+            .description = "Server port"
         };
         Config<std::string> email{
             .default_value = "",
+            .verifier = [](const std::string& e) { return e.find('@') != std::string::npos; },
             .flags = {"--email"},
-            .description = "Contact email",
-            .verifier = [](const std::string& e) { return e.find('@') != std::string::npos; }
+            .description = "Contact email"
         };
         REGISTER_CONFIG_FIELDS(port, email)
     };
