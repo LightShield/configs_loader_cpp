@@ -4,15 +4,29 @@
 #include <functional>
 #include <string>
 #include <vector>
+#include <type_traits>
 
 namespace lightshield::config {
 
-template<typename T>
+/**
+ * @brief Traits for Enum support.
+ * Specialized to be empty for non-enum types to avoid memory bloat.
+ */
+template<typename T, typename Enable = void>
 struct EnumTraits {
+    // Empty for non-enums
+};
+
+template<typename T>
+struct EnumTraits<T, std::enable_if_t<std::is_enum_v<T>>> {
     std::function<T(const std::string&)> parser = nullptr;
     std::function<std::string(const T&)> to_string = nullptr;
 };
 
+/**
+ * @brief Core configuration field.
+ * Designed for high-performance direct memory access.
+ */
 template<typename T>
 struct Config {
     T default_value;
@@ -21,10 +35,12 @@ struct Config {
     std::vector<std::string> flags = {};
     std::string description = "";
     bool required = false;
-    uint8_t m_is_set = 0u;
-    EnumTraits<T> enum_traits = {};  // Only used when T is enum
+    bool m_is_set = false;
+    
+    // Only pays cost (64-128 bytes) when T is an enum
+    [[maybe_unused]] EnumTraits<T> enum_traits = {};
 
-    [[nodiscard]] bool is_set() const { return m_is_set != 0u; }
+    [[nodiscard]] bool is_set() const { return m_is_set; }
     [[nodiscard]] bool is_required() const { return required; }
 
     bool set_value(const T& val) {
@@ -32,13 +48,13 @@ struct Config {
             return false;
         }
         value = val;
-        m_is_set = 1u;
+        m_is_set = true;
         return true;
     }
 
     void reset() {
         value = default_value;
-        m_is_set = 0u;
+        m_is_set = false;
     }
 };
 
